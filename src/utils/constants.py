@@ -6,9 +6,9 @@ import platform
 if platform.system() == "Linux":
     if platform.node() == "power":
         NETWORK_PATH = os.path.join("/mnt", "gce")
-        NETWORK_PATH = os.path.join("/home", "gfreundt", "NoPasaNadaPE - Server")
+        NETWORK_PATH = os.path.join("/home", "gfreundt", "NoPasaNadaPE-Server")
     elif platform.node() == "nopasanada-server":
-        NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE - Server")
+        NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
 elif platform.system() == "Windows":
     NETWORK_PATH = os.path.join(
         r"\\192.168.68.110",
