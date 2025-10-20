@@ -5,7 +5,7 @@ from datetime import datetime as dt
 
 # local imports
 from src.utils.utils import get_local_ip
-from src.server import settings, oauth, updater
+from src.server import settings, oauth, updater, alta_usuario
 from src.ui import (
     login,
     mis_vencimientos,
@@ -68,7 +68,6 @@ class Server:
             "INSERT INTO StatusLogs VALUES (?,?,?)",
             (kwargs["type"], kwargs["message"], str(dt.now())),
         )
-        # self.db.conn.commit()
 
     def load_user_data_into_session(self, correo):
         # get user data from database
@@ -131,7 +130,13 @@ class Server:
     def update(self):
         return updater.update(self)
 
+    def alta_usuario(self):
+        return alta_usuario.alta(self)
+
     # redirect endpoint (OAuth)
     def redir(self):
         self.all_params = request.args.to_dict()
         oauth.get_oauth2_token(self)
+
+
+# TODO: oauth still work in progress
