@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="to" content="{{to}}">
+    <meta name="bcc" content="{{bcc}}">
+    <meta name="subject" content="{{subject}}">
+    <meta name="msgTypes" content="{{msg_types}}">
+    <meta name="idMember" content="{{idMember}}">
+    <meta name="timestamp" content="{{timestamp}}">
+    <meta name="hashcode" content="{{hashcode}}">
+    {% for attachment_path in attachment_paths %}
+    <meta name="attachment" content="{{attachment_path}}">
+    {% endfor %}
+    <meta charset="UTF-8">
+    <title>Código de Registro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #007BFF;
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+        }
+        .content p {
+            margin: 15px 0;
+        }
+        .alert-box {
+            background-color: #e2f0fb;
+            color: #084298;
+            border: 1px solid #b6d4fe;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 20px;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        .highlight-box {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+        .highlight-box a {
+            color: #007BFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888888;
+            margin-top: 30px;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 95% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            No Pasa Nada PE
+        </div>
+        <div class="content">
+            <p>Hola {{nombre}},</p>
+            <p>Este es tu código de autorización:</p>
+            <div class="alert-box">
+                {{codigo}}
+            </div>
+            <p>Válido por los próximos 10 minutos.</p>
+            <p>Si no solicitaste este código, puedes ignorar este mensaje.</p>
+            <p>Gracias por confiar en nosotros.</p>
+            <div class="highlight-box">
+                Visítanos en <a href="https://nopasanadape.com" target="_blank">nopasanadape.com</a>
+            </div>
+            
+        </div>
+        
+    </div>
+</body>
+</html>

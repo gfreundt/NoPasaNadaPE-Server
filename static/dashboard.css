@@ -1,0 +1,62 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f5f7fa; /* light, clean neutral */
+}
+
+/* Status card colors */
+.status-0 {
+    background-color: #f1f3f5 !important;  /* Inactive - soft gray */
+}
+.status-1 {
+    background-color: #e6f4ea !important;  /* Active - mint green */
+}
+.status-2 {
+    background-color: #fdecea !important;  /* Crashed - soft alert red */
+}
+.status-3 {
+    background-color: #fff9e6 !important;  /* Finished ok - light gold */
+}
+
+/* Info panels */
+.info-1,
+.info-2 {
+    padding: 15px;
+    padding-top: 10px;
+    background-color: #f8f9fb !important;  /* Slightly tinted white */
+    font-size: smaller;
+    border-left: 4px solid #0d6efd;
+}
+
+/* General status (top-right box) */
+.general-0 {
+    background-color: #dee2e6 !important;  /* Neutral gray */
+    color: #212529;
+}
+.general-1 {
+    background-color: #198754 !important;  /* Success green */
+    color: white;
+}
+.general-2 {
+    background-color: #ffc107 !important;  /* Warning yellow */
+    color: black;
+}
+.general-3 {
+    background-color: #b95c51 !important;  /* Alert red */
+    color: black;
+}
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+/* Set all table cells to same width and center text */
+.inner-table td {
+width: 80px; /* adjust as needed */
+text-align: center;
+padding: 8px;
+}
+
+/* Center the inner table inside the outer column */
+.outer-table td {
+text-align: center;
+}

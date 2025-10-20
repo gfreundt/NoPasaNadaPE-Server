@@ -1,0 +1,77 @@
+{% extends "ui-pagina-base.html" %}
+
+{% block title %}
+    Acerca de Nosotros
+{% endblock %}
+
+{% block content %}
+<!-- Insert tracking id for testing script -->
+<div id="test-marker" tracking-id="ui-acerca" hidden></div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header text-white" style="background-color: #2196f3;">
+                <h5 class="mb-0">Sobre la Plataforma</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Este servicio te permite registrar de manera sencilla tu información personal, incluyendo tu DNI y las placas de hasta tres vehículos.
+                    Una vez registrado, recibirás mensualmente un boletín personalizado —de forma totalmente gratuita— que reúne en un solo lugar datos
+                    clave sobre tu situación como conductor, además de alertas anticipadas sobre el vencimiento de tus documentos importantes.
+                </p>
+                <p>El boletín incluye información sobre:</p>
+                <ul>
+                    <li>Licencia de conducir</li>
+                    <li>SOAT</li>
+                    <li>Revisión técnica vehicular</li>
+                    <li>Récord de conductor</li>
+                    <li>Deudas y multas del SAT Lima</li>
+                    <li>Fichas vehiculares de SUNARP</li>
+                    <li>Multas impuestas por SUTRAN</li>
+                    <li>Multas electorales registradas en el JNE</li>
+                    <li>Estado del RUC en SUNAT</li>
+                    <li>Afiliación o historial de afiliación a partidos políticos</li>
+                    <li>Líneas telefónicas registradas en OSIPTEL</li>
+                </ul>
+                </p>
+                <p>Las alertas incluyen vencimientos de:</p>
+                <ul>
+                    <li>Licencia de conducir</li>
+                    <li>SOAT</li>
+                    <li>Revisión técnica vehicular</li>
+                    <li>DNI (si eliges ingresar la fecha)</li>
+                    <li>Pasaportes / Visas (si eliges ingresar la fecha)</li>
+                </ul>
+                <p>
+                    Puedes acceder a <a href="https://www.nopasanadape.com" target="_blank">www.nopasanadape.com</a> en cualquier momento para actualizar tu información o eliminar tu cuenta de forma sencilla y segura.
+                </p>
+                <p>
+                    Si tienes alguna duda o sugerencia, escríbenos a <strong>info@nopasanadape.com</strong>.
+                </p>
+                <p class="mt-4 mb-0">
+                    Gracias por confiar en nosotros.
+                </p>
+                    Atentamente,
+                    <strong>El equipo de No Te Pases PE</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enlaces legales -->
+<div class="row justify-content-center mt-3">
+    <div class="col-md-8 text-center">
+        <p>📜
+            <a href="/terminos-y-condiciones" target="_blank">
+                Términos y Condiciones
+            </a>| 🔒
+            <a href="/politica-de-privacidad" target="_blank">
+                 Política de Privacidad
+            </a>
+        </p>
+    </div>
+</div>
+
+{% endblock content %}

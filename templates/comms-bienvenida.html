@@ -1,0 +1,95 @@
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #007BFF;
+            color: #ffffff;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+            font-size: 24px;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+        }
+        .content p {
+            margin: 15px 0;
+        }
+        .alert-box {
+            background-color: #e2f0fb;
+            color: #084298;
+            border: 1px solid #b6d4fe;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 20px;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        .alert-box a {
+            text-decoration: none;
+            color: #084298;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            ¡Bienvenido a No Pasa Nada PE!
+        </div>
+        <div class="content">
+            <p>Hola {{nombre}},</p>
+
+            <p>
+                🎉 Nos alegra que te hayas registrado en nuestra plataforma. Recibirás tu primer boletín dentro de las próximas 24 horas.
+            </p>
+
+            <p>
+                Si aún no lo haces, recuerda que puedes inscribir hasta <strong>3 placas</strong> 
+                para recibir alertas e información actualizada de tu vehículo:
+            </p>
+
+            <div class="alert-box">
+                <a href="https://nopasanadape.com">nopasanadape.com</a>
+            </div>
+
+            <p>
+                Tambien puedes registrar fechas de vencimiento de DNI,  
+                pasaportes y visas para recibir alertas.
+            </p>
+            <p>
+                Si necesitas ayuda, escríbenos a 
+                <a href="mailto:info@nopasanadape.com">info@nopasanadape.com</a>.
+            </p>
+
+            <p>
+                Gracias por confiar en nosotros,
+            </p>
+            <p>
+                <strong>El equipo de No Pasa Nada PE</strong>
+            </p>
+
+        </div>
+    </div>
+
+    <meta content="{{to}}" name="to"/>
+    <meta content="{{bcc}}" name="bcc"/>
+    <meta content="{{subject}}" name="subject"/>
+    <meta content="{{idMember}}" name="idMember"/>
+    <meta content="{{timestamp}}" name="timestamp"/>
+</body>

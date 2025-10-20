@@ -1,0 +1,25 @@
+{% extends "ui-pagina-base.html" %}
+
+{% block title %}
+    Fin de Registro
+{% endblock %}
+
+
+{% block content %}
+<!-- Insert tracking id for testing script -->
+<div id="test-marker" tracking-id="ui-registro-3" hidden></div>
+
+<div class="container mt-5 text-center">
+    <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Tu usuario ha sido creado con éxito. </h4>           
+        <p>Recibirás un correo de bienvenida dentro de las próximas 24 horas con toda tu información actualizada.</p>
+        <p><b>No olvides ingresar tus placas en la siguiente pantalla.</b></p>
+    </div>
+    <a href="/mis-datos" class="btn btn-primary mt-3">
+        Ingresar Placas
+    </a>
+</div>
+{% endblock %}
+
+
+ 

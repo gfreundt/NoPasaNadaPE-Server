@@ -1,0 +1,108 @@
+{% extends "ui-pagina-base.html" %}
+
+{% block title %}
+    Bienvenido
+{% endblock %}
+
+{% block content %}
+<!-- Insert tracking id for testing script -->
+<div id="test-marker" tracking-id="ui-login" hidden></div>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="warning">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mt-5 p-4 shadow-lg">
+            <!-- Formulario de correo y contraseña -->
+            <h2 class="mb-4">
+                Ingresa tus datos para acceder
+            </h2>
+
+            <form method="POST" action="">
+                <fieldset class = "form-group">
+
+                    <!-- Campo de correo -->
+                    <div class="form-group justify-content-between align-items-center form-floating mb-3">      
+                        <input 
+                            type="text" 
+                            class="form-control {% if errors.get('correo') %} is-invalid {% endif %}" 
+                            id="correo" 
+                            name="correo" 
+                            value="{{ user.get('correo', '') }}", placeholder="empty">
+                        <label for="correo" class="form-label">
+                            Correo
+                        </label>
+                        <!-- Mensajes de error -->
+                        {% if errors.get("correo") %}
+                            <div class="mt-2">
+                                {% for error in errors.correo %}
+                                    <small class="text-danger">
+                                        {{ error }}
+                                    </small>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Campo de password -->
+                    <div class="form-group justify-content-between align-items-center form-floating mb-2">
+                        <input 
+                            type="password" 
+                            class="form-control {% if errors.get('password') %} is-invalid {% endif %}" 
+                            id="password" 
+                            name="password" 
+                            value="{{ user.get('password', '') }}", placeholder="empty">
+                        <label for="password" class="form-label">
+                            Contraseña
+                        </label>
+
+                        <!-- Mensajes de error -->
+                        {% if errors.get("password") %}
+                            <div class="mt-2">
+                                {% for error in errors.password %}
+                                    <small class="text-danger">
+                                        {{ error }}
+                                    </small>
+                                    <br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </fieldset>
+
+                <!-- Link de recuperar contraseña -->
+                <div class = "mb-3">
+                    <a href="/recuperar" class="h6 text-decoration-none text-primary">Recuperar contraseña</a>
+                </div>
+
+                <!-- Boton para logearse -->
+                <button id="btn-login-empezar" type="submit" class="btn btn-primary mt-3">
+                    Empezar
+                </button>
+            </form>
+        </div>
+
+        <!-- Link para crear nueva cuenta -->
+        <div class="mb-3 mt-2 p-3">
+            No tienes usuario?
+            <a href="/registro" class="h6 text-decoration-none text-primary">
+                Crear cuenta nueva
+            </a>
+        </div>
+    </div>
+</div>  
+
+{% endblock content %}
+

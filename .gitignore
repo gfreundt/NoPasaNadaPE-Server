@@ -1,0 +1,9 @@
+.venv/
+.vscode/
+data/
+other/
+outbound/
+security/
+chromedriver*
+__pycache__/
+*.pyc
