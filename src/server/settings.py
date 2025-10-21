@@ -77,6 +77,20 @@ def set_routes(self):
         view_func=self.update,
         methods=["POST"],
     )
+    self.app.add_url_rule(
+        rule="/alta",
+        endpoint="alta",
+        view_func=self.alta_usuario,
+        methods=["POST"],
+    )
+
+    # client-routes
+    self.app.add_url_rule(
+        rule="/maquinarias",
+        endpoint="maquinarias",
+        view_func=self.maquinarias,
+        methods=["GET", "POST"],
+    )
 
     # redirect route (OAuth2)
     self.app.add_url_rule(

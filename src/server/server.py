@@ -126,6 +126,9 @@ class Server:
     def pdp(self):
         return render_template("ui-politica-de-privacidad.html")
 
+    def maquinarias(self):
+        return render_template("ui-landing-maquinarias.html")
+
     # BACKEND ENDPOINTS
     def update(self):
         return updater.update(self)
