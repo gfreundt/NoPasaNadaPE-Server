@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options as WebDriverOptions
 from selenium.webdriver.chrome.service import Service
 
 
-def init_driver(self, **kwargs):
+def init_driver(**kwargs):
     """Returns a ChromeDriver object with commonly used parameters allowing for some optional settings"""
 
     # set defaults that can be overridden by passed parameters
@@ -50,11 +50,6 @@ def init_driver(self, **kwargs):
         if "Windows" in platform.uname().system
         else "/usr/bin/chromedriver"
     )
-
-    try:
-        self.driver_update(verbose=False)
-    except KeyboardInterrupt:
-        print("*** Cannot update Chromedriver ***")
 
     return wd.Chrome(service=Service(_path, log_path=os.devnull), options=options)
 
