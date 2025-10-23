@@ -1,6 +1,6 @@
 import time
 from selenium.webdriver.common.by import By
-import os
+import os, atexit, shutil, tempfile
 import platform
 from selenium import webdriver as wd
 from selenium.webdriver.chrome.options import Options as WebDriverOptions
@@ -8,6 +8,10 @@ from selenium.webdriver.chrome.service import Service
 
 
 def init_driver(**kwargs):
+
+    user_data_dir = tempfile.mkdtemp(prefix="selenium-profile-")
+    atexit.register(lambda: shutil.rmtree(user_data_dir, ignore_errors=True))
+
     """Returns a ChromeDriver object with commonly used parameters allowing for some optional settings"""
 
     # set defaults that can be overridden by passed parameters
@@ -24,6 +28,7 @@ def init_driver(**kwargs):
     options = WebDriverOptions()
 
     # configurable options
+    options.add_argument(f"--user-data-dir={user_data_dir}")
     if parameters["incognito"]:
         options.add_argument("--incognito")
     if parameters["headless"]:
@@ -48,7 +53,7 @@ def init_driver(**kwargs):
     _path = (
         os.path.join("src", "chromedriver.exe")
         if "Windows" in platform.uname().system
-        else "/usr/bin/chromedriver"
+        else "/usr/local/bin/chromedriver"
     )
 
     return wd.Chrome(service=Service(_path, log_path=os.devnull), options=options)
