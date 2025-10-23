@@ -28,7 +28,7 @@ def init_driver(**kwargs):
     options = WebDriverOptions()
 
     # configurable options
-    options.add_argument(f"--user-data-dir={user_data_dir}")
+    # options.add_argument(f"--user-data-dir={user_data_dir}")
     if parameters["incognito"]:
         options.add_argument("--incognito")
     if parameters["headless"]:
@@ -39,9 +39,7 @@ def init_driver(**kwargs):
         )
 
     # fixed options
-    options.add_argument(
-        "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.104 Safari/537.36"
-    )
+
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--silent")
     options.add_argument("--disable-notifications")
