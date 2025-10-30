@@ -5,13 +5,13 @@ def set_routes(self):
         rule="/",
         endpoint="ui-root",
         view_func=self.login,
-        methods=["GET", "POST"],
+        methods=["GET", "POST", "HEAD"],
     )
     self.app.add_url_rule(
         rule="/login",
         endpoint="ui-login",
         view_func=self.login,
-        methods=["GET", "POST"],
+        methods=["GET", "POST", "HEAD"],
     )
     self.app.add_url_rule(
         rule="/recuperar",

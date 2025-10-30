@@ -5,6 +5,11 @@ from flask import redirect, request, render_template
 # login endpoint
 def main(self):
 
+    # respuesta para solicitud de HEAD (robots revisando status de la pagina
+    if request.method == "HEAD":
+        return ("", 200)
+    
+
     # cargando la data de la pagina
     if request.method == "GET":
         return render_template("ui-login.html", user={}, errors={})
