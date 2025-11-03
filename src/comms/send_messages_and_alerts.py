@@ -1,9 +1,8 @@
 import os
 from datetime import datetime as dt, timedelta as td
 from bs4 import BeautifulSoup
-import base64
 from src.utils.email import Email
-from src.utils.constants import NETWORK_PATH, ZOHO_INFO_PASSWORD
+from src.utils.constants import NETWORK_PATH, ZEPTOMAIL_INFO_TOKEN
 
 
 def send(db_cursor, db_conn, max=12):
@@ -18,8 +17,8 @@ def send(db_cursor, db_conn, max=12):
 
     # activate send account
     email = Email(
-        from_account=("No Pasa Nada PE", "info@nopasanadape.com"),
-        password=ZOHO_INFO_PASSWORD,
+        from_account={"name":"No Pasa Nada PE", "address":"info@nopasanadape.com"},
+        token=ZEPTOMAIL_INFO_TOKEN,
     )
 
     # iterate on all html files in outbound folder
@@ -36,7 +35,7 @@ def send(db_cursor, db_conn, max=12):
         # email requires: to, bcc, subject, html_content, attachments
         meta = soup.find_all("meta")
         msg = {
-            "to": [i["content"] for i in meta if i["name"] == "to"][0],
+            "to_address": [i["content"] for i in meta if i["name"] == "to"][0],
             "bcc": [i["content"] for i in meta if i["name"] == "bcc"][0],
             "subject": [i["content"] for i in meta if i["name"] == "subject"][0],
             "hashcode": [i["content"] for i in meta if i["name"] == "hashcode"][0],
@@ -53,10 +52,9 @@ def send(db_cursor, db_conn, max=12):
 
         attachments = [
             {
-                "filename": i,
-                "bytes_data": base64.b64decode(j),
-                "maintype": k.split("/")[0],
-                "subtype": k.split("/")[1],
+                "name": i,
+                "content": j,
+                "mime_type": k
             }
             for i, j, k in zip(a, b, c)
         ]
@@ -64,7 +62,7 @@ def send(db_cursor, db_conn, max=12):
         msg.update({"attachments": attachments})
 
         # send
-        response = email.send_email(msg)
+        response = email.send_zeptomail(msg)
 
         # register message sent in mensajes table (if email sent correctly)
         if response:
@@ -81,7 +79,7 @@ def send(db_cursor, db_conn, max=12):
 
             # update message sent list
             db_cursor.execute(
-                f"SELECT IdMember FROM InfoMiembros WHERE Correo = '{msg["to"]}'"
+                f"SELECT IdMember FROM InfoMiembros WHERE Correo = '{msg["to_address"]}'"
             )
             _id_member = db_cursor.fetchone()[0]
 
@@ -94,7 +92,7 @@ def send(db_cursor, db_conn, max=12):
             if msg.get("reset_next_send"):
                 db_cursor.execute(
                     "UPDATE InfoMiembros SET ForceMsg = 0, NextMessageSend = ? WHERE Correo = ?",
-                    (_next, msg["to"]),
+                    (_next, msg["to_address"]),
                 )
 
             db_conn.commit()

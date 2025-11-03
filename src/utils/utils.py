@@ -3,7 +3,8 @@ import re
 import requests
 import base64
 import socket
-from src.utils.constants import MONTHS_3_LETTERS
+import bcrypt
+from src.utils.constants import MONTHS_3_LETTERS, TRUECAPTCHA_KEY
 
 
 def date_to_db_format(data):
@@ -83,7 +84,7 @@ def use_truecaptcha(image):
     _url = "https://api.apitruecaptcha.org/one/gettext"
     _data = {
         "userid": "gabfre@gmail.com",
-        "apikey": "UEJgzM79VWFZh6MpOJgh",
+        "apikey": TRUECAPTCHA_KEY,
         "data": base64.b64encode(image.read()).decode("ascii"),
     }
     response = requests.post(url=_url, json=_data)
@@ -103,3 +104,26 @@ def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 1))  # connect() for UDP doesn't send packets
     return s.getsockname()[0]
+
+
+def hash_text(text_string):
+
+    # plain text to bytes
+    text_bytes = text_string.encode("utf-8")
+
+    # generate random salt
+    _salt = bcrypt.gensalt(rounds=12)
+
+    # hash bytes using salt and return as plain text
+    hash_bytes = bcrypt.hashpw(text_bytes, _salt)
+    return hash_bytes.decode("utf-8")
+
+
+def compare_text_to_hash(text_string, hash_string):
+
+    # convert strings to bytes
+    text_bytes = text_string.encode("utf-8")
+    hash_bytes = hash_string.strip().encode("utf-8")
+
+    # return boolean on match
+    return bcrypt.checkpw(text_bytes, hash_bytes)

@@ -2,10 +2,11 @@ from functools import wraps
 from flask import request, session, redirect, render_template
 import threading
 from datetime import datetime as dt
+import time
 
 # local imports
 from src.utils.utils import get_local_ip
-from src.server import settings, oauth, updater, alta_usuario
+from src.server import settings, oauth, updater, api
 from src.ui import (
     login,
     mis_vencimientos,
@@ -93,6 +94,8 @@ class Server:
         return login.main(self)
 
     def login(self):
+        if request.method == "HEAD":
+            return ("", 200)
         return login.main(self)
 
     def registro(self):
@@ -133,8 +136,9 @@ class Server:
     def update(self):
         return updater.update(self)
 
-    def alta_usuario(self):
-        return alta_usuario.alta(self)
+    def api_request(self, version):
+        timer_start = time.perf_counter()
+        return api.version_select(self, version, timer_start)
 
     # redirect endpoint (OAuth)
     def redir(self):

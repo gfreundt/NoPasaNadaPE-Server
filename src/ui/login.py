@@ -1,6 +1,8 @@
 from datetime import datetime as dt
 from flask import redirect, request, render_template
 
+from src.utils.utils import compare_text_to_hash
+
 
 # login endpoint
 def main(self):
@@ -55,17 +57,18 @@ def validation(db, form_response):
         "intentos": [],
     }
 
-    # check if correo exists
-    cmd = "SELECT * FROM InfoMiembros WHERE Correo = ?"
+    # extract record information
+    cmd = "SELECT Password FROM InfoMiembros WHERE Correo = ?"
     db.cursor.execute(cmd, (form_response["correo"],))
-    if not db.cursor.fetchone():
+    user_record = db.cursor.fetchone()
+
+    # check if correo exists
+    if not user_record:
         errors.update({"correo": ["Correo no registrado"]})
         return errors
 
     # check if password correct for that correo
-    cmd = "SELECT * FROM InfoMiembros WHERE Correo = ? AND Password = ?"
-    db.cursor.execute(cmd, (form_response["correo"], form_response["password"]))
-    if not db.cursor.fetchone():
+    if not compare_text_to_hash(text_string=form_response["password"], hash_string=user_record[0]):
         errors.update({"password": ["Contraseña equivocada"]})
 
     # TODO: check if exceeded login attempts

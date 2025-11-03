@@ -1,13 +1,15 @@
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
+import requests
+import pprint
 
 
 class Email:
 
-    def __init__(self, from_account, password):
+    def __init__(self, from_account, token):
         self.from_account = from_account
-        self.password = password
+        self.token = token
 
     def send_email(self, emails):
 
@@ -51,3 +53,40 @@ class Email:
                     return True
             except Exception:
                 return False
+
+    def send_zeptomail(self, email):
+
+        url = "https://api.zeptomail.com/v1.1/email"
+
+        payload = {
+            "from": {
+                "address": self.from_account["address"],
+                "name": self.from_account["name"],
+            },
+            "to": [
+                {
+                    "email_address": {
+                        "address": email["to_address"],
+                        "name": "",
+                    }
+                }
+            ],
+            "subject": email["subject"],
+            "htmlbody": email["html_content"],
+            "attachments": email.get("attachments", []),
+        }
+
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "authorization": self.token,
+        }
+
+        for i in payload["attachments"]:
+            pprint.pprint(i["name"])
+
+        response = requests.request("POST", url, json=payload, headers=headers)
+
+        print(response.content)
+
+        return response

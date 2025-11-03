@@ -3,6 +3,7 @@ from datetime import datetime as dt, timedelta as td
 from flask import render_template, redirect, request, flash
 
 from src.comms import send_instant_email
+from src.utils.utils import hash_text,compare_text_to_hash
 
 
 def main(self):
@@ -126,7 +127,7 @@ def main(self):
                 # update contraseña if changed
                 if "Contraseña" in changes_made:
                     self.db.cursor.execute(
-                        f"""    UPDATE InfoMiembros SET Password = '{form_response["contra2"]}'
+                        f"""    UPDATE InfoMiembros SET Password = '{hash_text(form_response["contra2"])}'
                                 WHERE IdMember = {self.session["loaded_user"]['IdMember']}
                         """
                     )
@@ -237,7 +238,7 @@ def validation(form_response, db):
         )
         _password = db.cursor.fetchone()[0]
 
-        if _password != str(form_response["contra1"]):
+        if not compare_text_to_hash(form_response["contra1"], _password): #password != str(form_response["contra1"]):
             errors["contra1"].append("Contraseña equivocada")
 
         # contraseña nueva
@@ -275,8 +276,3 @@ def validation_changes(user, placas, post):
 
     return changes
 
-
-def update_password(correo, password, db):
-    cmd = f"UPDATE InfoMiembros SET Password = '{password}' WHERE Correo = '{correo}'"
-    db.cursor.execute(cmd)
-    db.conn.commit()

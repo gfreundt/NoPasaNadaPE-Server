@@ -78,9 +78,9 @@ def set_routes(self):
         methods=["POST"],
     )
     self.app.add_url_rule(
-        rule="/alta",
-        endpoint="alta",
-        view_func=self.alta_usuario,
+        rule="/api/<version>",
+        endpoint="api_version",
+        view_func=self.api_request,
         methods=["POST"],
     )
 

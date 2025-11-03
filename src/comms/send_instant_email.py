@@ -1,7 +1,7 @@
 from threading import Thread
 from jinja2 import Environment, FileSystemLoader
 from src.utils.email import Email
-from src.utils.constants import ZOHO_INFO_PASSWORD
+from src.utils.constants import ZEPTOMAIL_INFO_TOKEN
 
 
 def send_code(codigo, correo, nombre):
@@ -12,21 +12,20 @@ def send_code(codigo, correo, nombre):
 
     # crea objeto para enviar correo desde info@
     email = Email(
-        from_account=("No Pasa Nada PE", "info@nopasanadape.com"),
-        password=ZOHO_INFO_PASSWORD,
+        from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
+        token=ZEPTOMAIL_INFO_TOKEN,
     )
 
     # crear contenido del correo
     msg = {
-        "to": correo,
+        "to_address": correo,
         "bcc": "gabfre@gmail.com",
-        "from": email.from_account,
-        "subject": "Código Único de Validación",
+        "subject": "Código Temporal de Validación",
         "html_content": template.render({"codigo": codigo, "nombre": nombre}),
     }
 
     # enviar
-    email.send_email(msg)
+    response = email.send_zeptomail(msg)
 
 
 def send_welcome(correo, nombre):
@@ -37,21 +36,20 @@ def send_welcome(correo, nombre):
 
     # crea objeto para enviar correo desde info@
     email = Email(
-        from_account=("No Pasa Nada PE", "info@nopasanadape.com"),
-        password=ZOHO_INFO_PASSWORD,
+        from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
+        token=ZEPTOMAIL_INFO_TOKEN,
     )
 
     # crear contenido del correo
     msg = {
-        "to": correo,
+        "to_address": correo,
         "bcc": "gabfre@gmail.com",
-        "from": email.from_account,
         "subject": "Bienvenido a No Pasa Nada PE",
         "html_content": template.render({"nombre": nombre}),
     }
 
     # enviar
-    email.send_email(msg)
+    response = email.send_zeptomail(msg)
 
 
 def send_cancel(correo, nombre):
@@ -62,18 +60,17 @@ def send_cancel(correo, nombre):
 
     # crea objeto para enviar correo desde info@
     email = Email(
-        from_account=("No Pasa Nada PE", "info@nopasanadape.com"),
-        password=ZOHO_INFO_PASSWORD,
+        from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
+        token=ZEPTOMAIL_INFO_TOKEN,
     )
 
     # crear contenido del correo
     msg = {
-        "to": correo,
+        "to_address": correo,
         "bcc": "gabfre@gmail.com",
-        "from": email.from_account,
         "subject": "Anulación de Cuenta de No Pasa Nada PE",
         "html_content": template.render({"nombre": nombre}),
     }
 
     # enviar
-    email.send_email(msg)
+    response = email.send_zeptomail(msg)

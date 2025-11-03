@@ -6,6 +6,7 @@ from string import ascii_uppercase
 from flask import render_template, request, flash, redirect
 
 from src.comms import send_instant_email
+from src.utils.utils import hash_text
 
 
 def main(self):
@@ -88,7 +89,7 @@ def main(self):
                 "LastUpdateJneAfiliaciones": default_date,
                 "LastLoginDatetime": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "CountFailedLogins": 0,
-                "Password": request.form["password1"],
+                "Password": hash_text(request.form["password1"]),
                 "ForceMsg": 0,
                 "NextMessageSend": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
             }
