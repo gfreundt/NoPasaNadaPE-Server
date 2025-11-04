@@ -13,7 +13,10 @@ logging.getLogger("werkzeug").disabled = True
 
 class Database:
     def __init__(self):
-        self.conn = sqlite3.connect(DB_NETWORK_PATH, check_same_thread=False)
+        self.conn = sqlite3.connect(
+            DB_NETWORK_PATH, check_same_thread=False, timeout=5.0
+        )
+        self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
 
