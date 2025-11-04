@@ -26,7 +26,7 @@ def craft(db_cursor):
                 db_cursor,
                 member["IdMember_FK"],
                 template=template_regular,
-                subject="Tu Boletín de No Pasa Nada PE - Septiembre 2025",
+                subject="Tu Boletín de No Pasa Nada PE - Noviembre 2025",
             )
         )
 
