@@ -20,14 +20,14 @@ def update(self):
     instruction = post.get("instruction")
 
     if instruction == "get_records_to_update":
-        return jsonify(get_records_to_update.get_records(self.db.cursor))
+        return jsonify(get_records_to_update.get_records(self.db.cursor()))
 
     if instruction == "do_updates":
         do_update(post.get("data", {}), self.db.cursor, self.db.conn)
         return jsonify({"status": "Update OK"})
 
     if instruction == "create_messages":
-        do_create_messages(self.db.cursor)
+        do_create_messages(self.db.cursor())
         payload = {}
         out_dir = os.path.join(NETWORK_PATH, "outbound")
         for msg in os.listdir(out_dir):
@@ -41,13 +41,13 @@ def update(self):
         return jsonify(result)
 
     if instruction == "get_kpis":
-        return jsonify(do_get_kpis(self.db.cursor))
+        return jsonify(do_get_kpis(self.db.cursor()))
 
     if instruction == "get_logs":
         return jsonify(do_get_logs(self.db.cursor, max=post.get("max", 50)))
 
     if instruction == "get_info_data":
-        return jsonify(do_get_info_data(self.db.cursor))
+        return jsonify(do_get_info_data(self.db.cursor()))
 
     return jsonify({"error": "Unknown instruction"}), 400
 
