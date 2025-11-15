@@ -23,7 +23,7 @@ def update(self):
         return jsonify(get_records_to_update.get_records(self.db.cursor()))
 
     if instruction == "do_updates":
-        do_update(post.get("data", {}), self.db.cursor(), self.db.conn())
+        do_update(post.get("data", {}), self.db.cursor(), self.db.conn)
         return jsonify({"status": "Update OK"})
 
     if instruction == "create_messages":
@@ -37,7 +37,7 @@ def update(self):
 
     if instruction == "send_messages":
         print("Client Request --> SEND MESSAGES")
-        result = send_messages_and_alerts.send(self.db.cursor(), self.db.conn())
+        result = send_messages_and_alerts.send(self.db.cursor(), self.db.conn)
         return jsonify(result)
 
     if instruction == "get_kpis":
