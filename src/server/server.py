@@ -45,7 +45,7 @@ class Database:
             if self.conn is not None:
                 try:
                     self.conn.close()
-                except:
+                except Exception:
                     pass
 
             self.conn = sqlite3.connect(
@@ -69,7 +69,7 @@ class Database:
         if self.conn:
             try:
                 self.conn.close()
-            except:
+            except Exception:
                 pass
             self.conn = None
             self._pid = None
