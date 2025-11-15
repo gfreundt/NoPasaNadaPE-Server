@@ -1,14 +1,14 @@
-from flask import redirect, request, render_template
+from flask import redirect, request, render_template, url_for
 
 
 def main(self):
 
-    # cargando la data de la pagina
-    if request.method == "GET":
+    # si no hay usuario loggeado, volver a pagina de login
+    if not self.session.get("loaded_user"):
+        return redirect(url_for("ui-login"))
 
-        # in case no user data loaded
-        if not self.session["loaded_user"]:
-            self.load_user_data_into_session(self.session["login_correo"])
+    # primera carga de pagina
+    if request.method == "GET":
 
         # get member id for all the database searches
         member_id = self.session["loaded_user"]["IdMember"]

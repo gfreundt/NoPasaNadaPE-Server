@@ -1,10 +1,20 @@
+from datetime import timedelta as td
+from src.utils.constants import (
+    FLASK_SECRET_KEY,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    FACEBOOK_CLIENT_ID,
+    FACEBOOK_CLIENT_SECRET,
+)
+
+
 def set_routes(self):
 
     # user interface routes
     self.app.add_url_rule(
         rule="/",
         endpoint="ui-root",
-        view_func=self.login,
+        view_func=self.root,
         methods=["GET", "POST", "HEAD"],
     )
     self.app.add_url_rule(
@@ -80,8 +90,80 @@ def set_routes(self):
     self.app.add_url_rule(
         rule="/api/<version>",
         endpoint="api_version",
-        view_func=self.api_request,
+        view_func=self.api_externo,
         methods=["POST"],
+    )
+    self.app.add_url_rule(
+        rule="/admin",
+        endpoint="admin",
+        view_func=self.api_admin,
+        methods=["POST"],
+    )
+    self.app.add_url_rule(
+        rule="/google_login",
+        endpoint="google_login",
+        view_func=self.google_login,
+    )
+    self.app.add_url_rule(
+        rule="/google_callback",
+        endpoint="google_authorize",
+        view_func=self.google_authorize,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/maq_google_login",
+        endpoint="maq_google_login",
+        view_func=self.maq_google_login,
+    )
+    self.app.add_url_rule(
+        rule="/maq_google_callback",
+        endpoint="maq_google_authorize",
+        view_func=self.maq_google_authorize,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/facebook_login",
+        endpoint="facebook_login",
+        view_func=self.facebook_login,
+    )
+    self.app.add_url_rule(
+        rule="/facebook_callback",
+        endpoint="facebook_authorize",
+        view_func=self.facebook_authorize,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/instagram_login",
+        endpoint="instagram_login",
+        view_func=self.instagram_login,
+    )
+    self.app.add_url_rule(
+        rule="/instagram_callback",
+        endpoint="instagram_authorize",
+        view_func=self.instagram_authorize,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/microsoft_login",
+        endpoint="microsoft_login",
+        view_func=self.microsoft_login,
+    )
+    self.app.add_url_rule(
+        rule="/microsoft_callback",
+        endpoint="microsoft_authorize",
+        view_func=self.microsoft_authorize,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/apple_login",
+        endpoint="apple_login",
+        view_func=self.apple_login,
+    )
+    self.app.add_url_rule(
+        rule="/apple_callback",
+        endpoint="apple_authorize",
+        view_func=self.apple_authorize,
+        methods=["GET", "POST"],
     )
 
     # client-routes
@@ -91,16 +173,58 @@ def set_routes(self):
         view_func=self.maquinarias,
         methods=["GET", "POST"],
     )
-
-    # redirect route (OAuth2)
     self.app.add_url_rule(
-        rule="/redir",
-        endpoint="backend-redirect-zohomail",
-        view_func=self.redir,
-        methods=["POST"],
+        rule="/maquinarias/registro",
+        endpoint="maq-registro",
+        view_func=self.maquinarias_registro,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/maquinarias/mi-cuenta",
+        endpoint="maq-mi-cuenta",
+        view_func=self.maquinarias_mi_cuenta,
+        methods=["GET", "POST"],
     )
 
 
-def set_config(self):
-    self.app.config["SECRET_KEY"] = "sdlkfjsdlojf3r49tgf8"
+def set_flask_config(self):
+    self.app.secret_key = FLASK_SECRET_KEY
     self.app.config["TEMPLATES_AUTO_RELOAD"] = True
+    self.app.config["PERMANENT_SESSION_LIFETIME"] = td(minutes=10)
+    self.app.config.update(
+        SESSION_COOKIE_SECURE=False,
+        SESSION_COOKIE_SAMESITE=None,  # <-- Important: allow external redirect from Google
+    )
+    self.app.config["SESSION_COOKIE_DOMAIN"] = None
+
+
+def set_oauth_config(self):
+    self.oauth.register(
+        name="google",
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        client_kwargs={"scope": "openid email profile"},
+    )
+
+    self.oauth.register(
+        name="facebook",
+        client_id=FACEBOOK_CLIENT_ID,
+        client_secret=FACEBOOK_CLIENT_SECRET,
+        api_base_url="https://graph.facebook.com/",
+        access_token_url="https://graph.facebook.com/v20.0/oauth/access_token",
+        authorize_url="https://www.facebook.com/v20.0/dialog/oauth",
+        client_kwargs={"scope": "email,public_profile"},
+    )
+
+    """
+    self.oauth.register(
+        name="linkedin",
+        client_id=LINKEDIN_CLIENT_ID,
+        client_secret=LINKEDIN_CLIENT_SECRET,
+        server_metadata_url="https://www.linkedin.com/oauth/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid profile email"},
+        client_auth_method="client_secret_post",
+        token_endpoint_auth_method="client_secret_post",
+    )
+    """

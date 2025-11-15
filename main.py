@@ -1,40 +1,32 @@
 import os
-import sqlite3
 import logging
-import atexit
 from flask import Flask
 
-# local imports
 from src.server import server
-from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
+from src.utils.constants import NETWORK_PATH
+from src.utils.utils import get_local_ip
 
 logging.getLogger("werkzeug").disabled = True
 
 
-class Database:
-    def __init__(self):
-        self.conn = sqlite3.connect(
-            DB_NETWORK_PATH, check_same_thread=False, timeout=5.0
-        )
-        self.conn.execute("PRAGMA journal_mode=WAL")
-        self.conn.row_factory = sqlite3.Row
-        self.cursor = self.conn.cursor()
+def create_app():
+    print(f" > SERVER RUNNING ON: http://{get_local_ip()}:5000")
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(NETWORK_PATH, "templates"),
+        static_folder=os.path.join(NETWORK_PATH, "static"),
+    )
+
+    db = server.Database()  # <-- Worker-safe DB
+    backend = server.Server(db=db, app=app)
+    app.backend = backend  # <-- Expose backend to app
+
+    return app
 
 
-def run_at_exit(backend, db):
-    print("Running on Empty")
-    backend.log(message="Soft Exit", type=1)
-    db.conn.close()
+# Gunicorn entry point
+app = create_app()
 
-
-db = Database()
-app = Flask(
-    __name__,
-    template_folder=os.path.join(NETWORK_PATH, "templates"),
-    static_folder=os.path.join(NETWORK_PATH, "static"),
-)
-backend = server.Server(db=db, app=app)
-atexit.register(run_at_exit, backend, db)
 
 if __name__ == "__main__":
-    backend.run()
+    app.run()

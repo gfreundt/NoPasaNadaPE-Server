@@ -1,10 +1,17 @@
-from flask import redirect
+from flask import redirect, url_for
 
 
 def main(self):
-    if self.session.get("user"):
+
+    # If user is logged in → log the logout event
+    if self.session.get("loaded_user"):
+        user = self.session["loaded_user"]
         self.log(
-            message=f"Logout {self.session['user']['CodMember']} | {self.session['user']['NombreCompleto']} | {self.session['user']['DocNum']} | {self.session['user']['Correo']}"
+            message=f"Logout {user['CodMember']} | {user['NombreCompleto']} | {user['DocNum']} | {user['Correo']}"
         )
+
+    # Clear session
     self.session.clear()
-    return redirect("login")
+
+    # Redirect to login page
+    return redirect(url_for("ui-login"))
