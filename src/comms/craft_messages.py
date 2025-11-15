@@ -52,9 +52,7 @@ def grab_message_info(db_cursor, IdMember, template, subject):
     """
 
     # Información del miembro
-    db_cursor.execute(
-        "SELECT * FROM InfoMiembros WHERE IdMember = ?", (IdMember,)
-    )
+    db_cursor.execute("SELECT * FROM InfoMiembros WHERE IdMember = ?", (IdMember,))
     member = db_cursor.fetchone()
     if not member:
         return ""  # evita crasheos si el IdMember está huérfano
@@ -72,7 +70,19 @@ def grab_message_info(db_cursor, IdMember, template, subject):
     )
 
     # Placas asociadas
-    db_cursor.execute(
-        "SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (IdMember,)
+    db_cursor.execute("SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (IdMember,))
+    placas = [row["Placa"] for row in db_cursor.fetchall()]
+
+    # Generar hash único para email tracking
+    email_id = f"{member['CodMember']}|{str(uuid.uuid4())[-12:]}"
+
+    # Crear HTML final usando tu mega función compose()
+    return craft_messages_compose.compose(
+        db_cursor=db_cursor,
+        member=member,
+        template=template,
+        email_id=email_id,
+        subject=subject,
+        alertas=alertas,
+        placas=placas,
     )
-    placas = [row["Placa"] for row in db_cursor.fetchall(_]()
