@@ -3,7 +3,6 @@ import sqlite3
 import threading
 import time
 from datetime import datetime as dt
-
 from flask import session, redirect, render_template, url_for
 from authlib.integrations.flask_client import OAuth
 from authlib.common.security import generate_token
