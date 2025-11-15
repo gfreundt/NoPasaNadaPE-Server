@@ -10,89 +10,114 @@ from src.maintenance import maintenance
 
 def update(self):
 
-    post = request.json
+    post = request.json or {}
 
-    if post["token"] != UPDATER_TOKEN:
+    # ----- Auth Check -----
+    if post.get("token") != UPDATER_TOKEN:
         print("Authentication Error")
-        return "Auth Error!"
+        return jsonify({"error": "Auth Error"}), 401
 
-    if post["instruction"] == "get_records_to_update":
+    instruction = post.get("instruction")
+
+    if instruction == "get_records_to_update":
         return jsonify(get_records_to_update.get_records(self.db.cursor))
 
-    if post["instruction"] == "do_updates":
-        do_update(post["data"], self.db.cursor, self.db.conn)
-        return "Update OK"
+    if instruction == "do_updates":
+        do_update(post.get("data", {}), self.db.cursor, self.db.conn)
+        return jsonify({"status": "Update OK"})
 
-    if post["instruction"] == "create_messages":
+    if instruction == "create_messages":
         do_create_messages(self.db.cursor)
-        _json = {}
-        for msg in os.listdir(os.path.join(NETWORK_PATH, "outbound")):
-            with open(os.path.join(NETWORK_PATH, "outbound", msg), mode="r") as file:
-                _json.update({msg: file.read()})
-        return jsonify(_json)
+        payload = {}
+        out_dir = os.path.join(NETWORK_PATH, "outbound")
+        for msg in os.listdir(out_dir):
+            with open(os.path.join(out_dir, msg), "r") as f:
+                payload[msg] = f.read()
+        return jsonify(payload)
 
-    if post["instruction"] == "send_messages":
+    if instruction == "send_messages":
         print("Client Request --> SEND MESSAGES")
-        _json = send_messages_and_alerts.send(self.db.cursor, self.db.conn)
-        return jsonify(_json)
+        result = send_messages_and_alerts.send(self.db.cursor, self.db.conn)
+        return jsonify(result)
 
-    if post["instruction"] == "get_kpis":
-        _json = do_get_kpis(self.db.cursor)
-        return jsonify(_json)
+    if instruction == "get_kpis":
+        return jsonify(do_get_kpis(self.db.cursor))
 
-    if post["instruction"] == "get_logs":
-        _json = do_get_logs(self.db.cursor, max=post["max"])
-        return jsonify(_json)
+    if instruction == "get_logs":
+        return jsonify(do_get_logs(self.db.cursor, max=post.get("max", 50)))
 
-    if post["instruction"] == "get_info_data":
-        _json = do_get_info_data(self.db.cursor)
-        return jsonify(_json)
+    if instruction == "get_info_data":
+        return jsonify(do_get_info_data(self.db.cursor))
+
+    return jsonify({"error": "Unknown instruction"}), 400
 
 
+# -------------------------------------------------------------------------
+# ---------------------------  DO UPDATE  ---------------------------------
+# -------------------------------------------------------------------------
 def do_update(data, db_cursor, db_conn):
 
     print("Client Request --> DO UPDATE")
+    today = dt.now().strftime("%Y-%m-%d")
 
-    _now = dt.now().strftime("%Y-%m-%d")
+    for table, rows in data.items():
 
-    for table in data:
+        if table not in SQL_TABLES:
+            continue
 
-        # select table, key and foreign key for SQL commands
-        if SQL_TABLES[table] == "DOC":
+        table_type = SQL_TABLES[table]
+
+        # Identify corresponding Info-table + keys
+        if table_type == "DOC":
             info_table = "InfoMiembros"
             info_id = "IdMember"
             info_fk = "IdMember_FK"
 
-        elif SQL_TABLES[table] == "PLACA":
+        elif table_type == "PLACA":
             info_table = "InfoPlacas"
             info_id = "Placa"
             info_fk = "PlacaValidate"
 
-        elif SQL_TABLES[table] == "COD":
+        elif table_type == "COD":
             info_table = "InfoMiembros"
             info_id = "IdMember"
             info_fk = "Codigo"
 
-        # get all unique foreign keys
-        all_member_ids = tuple({f"{i[info_fk]}" for i in data[table]})
+        else:
+            continue  # unknown mapping
 
-        # delete all previous records with same foreign key and update info table with latest update timestamp
-        for id in all_member_ids:
-            cmd1 = f"DELETE FROM {table} WHERE {info_fk} = '{id}'"
-            cmd2 = ""
-            if SQL_TABLES[table] in ("DOC", "PLACA"):
-                cmd2 = f"UPDATE {info_table} SET LastUpdate{table[4:]} = '{_now}' WHERE {info_id} = '{id}';"
-            db_cursor.executescript(f"{cmd1};{cmd2}")
+        # Extract unique foreign keys from payload
+        keys = {str(row.get(info_fk)) for row in rows if info_fk in row}
+        keys = tuple(keys)
 
-        # loop an all records that need updating and insert them one by one unless it is empty
-        for record in data[table]:
-            if "Empty" not in record.keys():
-                cmd = f"INSERT INTO {table} {tuple(record.keys())} VALUES {tuple(record.values())}"
-                db_cursor.execute(cmd)
+        # Delete old records + update timestamp
+        for key in keys:
+            db_cursor.execute(f"DELETE FROM {table} WHERE {info_fk} = ?", (key,))
+            if table_type in ("DOC", "PLACA"):
+                field = f"LastUpdate{table[4:]}"
+                db_cursor.execute(
+                    f"UPDATE {info_table} SET {field} = ? WHERE {info_id} = ?",
+                    (today, key),
+                )
+
+        # Insert new rows
+        for record in rows:
+            if "Empty" in record:
+                continue
+
+            cols = list(record.keys())
+            vals = list(record.values())
+            placeholders = ", ".join("?" for _ in vals)
+
+            sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders})"
+            db_cursor.execute(sql, vals)
 
     db_conn.commit()
 
 
+# -------------------------------------------------------------------------
+# ----------------------- MESSAGE GENERATION ------------------------------
+# -------------------------------------------------------------------------
 def do_create_messages(db_cursor):
 
     print("Client Request --> CREATE MESSAGES")
@@ -103,6 +128,9 @@ def do_create_messages(db_cursor):
     craft_alerts.craft(db_cursor)
 
 
+# -------------------------------------------------------------------------
+# ------------------------------ KPIS -------------------------------------
+# -------------------------------------------------------------------------
 def do_get_kpis(db_cursor):
 
     db_cursor.execute("SELECT COUNT(*) FROM InfoMiembros")
@@ -111,29 +139,33 @@ def do_get_kpis(db_cursor):
     db_cursor.execute("SELECT COUNT(*) FROM InfoPlacas")
     total_placas = db_cursor.fetchone()[0]
 
-    # TODO: kpi truecaptcha
-
     return [{"total_miembros": total_miembros}, {"total_placas": total_placas}]
 
 
+# -------------------------------------------------------------------------
+# ------------------------------ LOGS -------------------------------------
+# -------------------------------------------------------------------------
 def do_get_logs(db_cursor, max):
-    db_cursor.execute(f"SELECT * FROM StatusLogs ORDER BY Fecha DESC LIMIT {max}")
-    latest_logs = db_cursor.fetchall()
+
+    db_cursor.execute("SELECT * FROM StatusLogs ORDER BY Fecha DESC LIMIT ?", (max,))
+    latest = db_cursor.fetchall()
 
     return {
         "latest_logs": [
-            f"[{i['Fecha']}] {i['Tipo']}-{i['Ocurrencia']}" for i in latest_logs
+            f"[{row['Fecha']}] {row['Tipo']}-{row['Ocurrencia']}" for row in latest
         ]
     }
 
 
+# -------------------------------------------------------------------------
+# ---------------------------- RAW DATA -----------------------------------
+# -------------------------------------------------------------------------
 def do_get_info_data(db_cursor):
-    # Get members
+
     db_cursor.execute("SELECT * FROM InfoMiembros")
-    _miembros = [dict(row) for row in db_cursor.fetchall()]
+    members = [dict(r) for r in db_cursor.fetchall()]
 
-    # Get plates
     db_cursor.execute("SELECT * FROM InfoPlacas")
-    _placas = [dict(row) for row in db_cursor.fetchall()]
+    plates = [dict(r) for r in db_cursor.fetchall()]
 
-    return {"InfoMiembros": _miembros, "InfoPlacas": _placas}
+    return {"InfoMiembros": members, "InfoPlacas": plates}

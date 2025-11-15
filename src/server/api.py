@@ -10,136 +10,147 @@ def version_select(self, version, timer_start):
     if version == "v1":
         return run_v1(self, timer_start)
 
-    else:
-        return jsonify(f"Version API {version} no soportada."), 404
+    return jsonify(f"Version API {version} no soportada."), 404
 
 
 def run_v1(self, timer_start):
 
-    # informacion de la solicitud
-    id_solicitud = False
+    # extract request data safely
     token = request.args.get("token")
-    solicitud = request.args.get("solicitud").lower()
+    solicitud = (request.args.get("solicitud") or "").lower()
     correo = request.args.get("correo")
     usuario = request.args.get("usuario")
-
-    print(token, solicitud, correo, usuario)
 
     log_data = {
         "TipoSolicitud": solicitud,
         "Endpoint": "/api/v1",
-        "UsuarioSolicitando": usuario,
+        "UsuarioSolicitando": usuario or "",
     }
 
-    # casuistica de solicitud api
     autenticado = True
+    id_solicitud = None  # Track if alta already wrote a log
 
-    # error en token de seguridad
+    # ========== TOKEN ERROR ==========
     if token != EXTERNAL_AUTH_TOKEN:
-        respuesta_mensaje = "Error en Token de Autorizacion."
-        respuesta_codigo = 401
-        autenticado = False
+        return finalize(
+            self,
+            timer_start,
+            log_data,
+            "Error en Token de Autorizacion.",
+            401,
+            autenticado=False,
+        )
 
-    # error en usuario (en blanco)
-    elif not usuario:
-        respuesta_mensaje = "Se debe especificar el nombre del usuario autorizando."
-        respuesta_codigo = 400
+    # ========== MISSING USER ==========
+    if not usuario:
+        return finalize(
+            self,
+            timer_start,
+            log_data,
+            "Se debe especificar el nombre del usuario autorizando.",
+            400,
+        )
 
-    # usuario de prueba TST-00
-    elif log_data.get("UsuarioSolicitando") == "TST-00":
-        respuesta_mensaje = "Prueba exitosa."
-        respuesta_codigo = 200
+    # ========== TEST USER ==========
+    if usuario == "TST-00":
+        return finalize(self, timer_start, log_data, "Prueba exitosa.", 200)
 
-    # solicitud de informacion de base de datos
-    elif solicitud == "info":
+    # ========== REQUEST: INFO ==========
+    if solicitud == "info":
         self.db.cursor.execute("SELECT Correo FROM InfoClientesAutorizados")
-        respuesta_mensaje = [dict(i) for i in self.db.cursor.fetchall()]
-        respuesta_codigo = 200
+        registros = [dict(i) for i in self.db.cursor.fetchall()]
+        return finalize(self, timer_start, log_data, registros, 200)
 
-    # error en correo enviado (en blanco o no cumple con formato)
-    elif not correo:
-        respuesta_mensaje = "Correo en blanco o formato equivocado."
-        respuesta_codigo = 400
+    # ========== INVALID EMPTY EMAIL ==========
+    if not correo:
+        return finalize(
+            self, timer_start, log_data, "Correo en blanco o formato equivocado.", 400
+        )
 
-    # solicitud de alta de cliente
-    elif solicitud == "alta":
+    # ========== REQUEST: ALTA (CREATE CLIENT) ==========
+    if solicitud == "alta":
+
         respuesta_mensaje = f"Correo: {correo} autorizado."
         respuesta_codigo = 200
 
-        # mas adelante asociar con usuario
         perfil = "MAQ-001"
 
-        # informacion necesaria para registro de la solicitud api en base de datos
-        log_data.update(
-            {
-                "Autenticado": int(autenticado),
-                "RespuestaStatus": respuesta_codigo,
-                "RespuestaMensaje": str(respuesta_mensaje)[:30],
-                "RespuestaTiempo": time.perf_counter() - timer_start,
-                "RespuestaTamano": 0.01,
-            }
+        # Write log BEFORE inserting new authorized client
+        id_solicitud = update_api_log(
+            self,
+            build_log_entry(
+                log_data,
+                respuesta_codigo,
+                respuesta_mensaje,
+                timer_start,
+                autenticado=True,
+            ),
         )
 
-        # actualizar tabla de registro de consultas api y recibir correlativo de solicitud
-        id_solicitud = update_api_log(self, log_data)
-
-        # si solicitud de registro ha sido correcta, actualizar tabla de clientes autorizados a inscribirse
+        # Now add authorized client
         self.db.cursor.execute(
             "INSERT INTO InfoClientesAutorizados VALUES (?,?,?)",
             (id_solicitud, correo, perfil),
         )
         self.db.conn.commit()
 
-    # solicitd de baja de cliente
-    elif solicitud == "baja":
+        return jsonify(respuesta_mensaje), respuesta_codigo
 
-        # intentar borrar correo
+    # ========== REQUEST: BAJA (DELETE CLIENT) ==========
+    if solicitud == "baja":
+
         self.db.cursor.execute(
             "DELETE FROM InfoClientesAutorizados WHERE Correo = ?",
             (correo,),
         )
 
-        # determinar filas afectadas
         rows_deleted = self.db.cursor.rowcount
 
         if rows_deleted > 0:
-            # filas afectadas: grabar cambios
-            respuesta_mensaje = f"Correo: {correo} eliminado correctamente."
-            respuesta_codigo = 200
             self.db.conn.commit()
+            msg = f"Correo: {correo} eliminado correctamente."
+            code = 200
         else:
-            # filas no afectadas: no hay cambios
-            respuesta_mensaje = f"Correo: {correo} no encontrado."
-            respuesta_codigo = 404
+            msg = f"Correo: {correo} no encontrado."
+            code = 404
 
-    # error generico para casuisticas no especificas
-    else:
-        respuesta_mensaje = "Error en solicitud."
-        respuesta_codigo = 400
+        return finalize(self, timer_start, log_data, msg, code)
 
-    # registro de la solicitud api en base de datos (evitar en caso de alta porque ya se hizo)
-    if not id_solicitud:
-        log_data.update(
-            {
-                "Autenticado": int(autenticado),
-                "RespuestaStatus": respuesta_codigo,
-                "RespuestaMensaje": str(respuesta_mensaje)[:30],
-                "RespuestaTiempo": time.perf_counter() - timer_start,
-                "RespuestaTamano": 0.01,
-            }
-        )
-
-    # actualizar tabla de registro de consultas api
-    update_api_log(self, log_data)
-
-    return jsonify(respuesta_mensaje), respuesta_codigo
+    # ========== UNKNOWN REQUEST ==========
+    return finalize(self, timer_start, log_data, "Error en solicitud.", 400)
 
 
-def update_api_log(self, log_data):
+# =============================================================
+# HELPERS
+# =============================================================
 
-    # completar data para registrar solicitud
-    log_data.update(
+
+def finalize(self, timer_start, log_data, mensaje, codigo, autenticado=True):
+    """
+    Safely write the API log (unless alta already wrote it)
+    and return the final API response.
+    """
+
+    entry = build_log_entry(log_data, codigo, mensaje, timer_start, autenticado)
+
+    update_api_log(self, entry)
+
+    return jsonify(mensaje), codigo
+
+
+def build_log_entry(log_data, code, msg, timer_start, autenticado):
+    """
+    Prepares a complete log row with timing, IP, and response metadata.
+    """
+    entry = dict(log_data)  # copy
+
+    entry.update(
         {
+            "Autenticado": int(autenticado),
+            "RespuestaStatus": code,
+            "RespuestaMensaje": str(msg)[:30],
+            "RespuestaTiempo": time.perf_counter() - timer_start,
+            "RespuestaTamano": 0.01,
             "Timestamp": str(dt.now()),
             "DireccionIP": request.headers.get("X-Forwarded-For")
             or request.remote_addr,
@@ -147,9 +158,17 @@ def update_api_log(self, log_data):
         }
     )
 
-    # registrar solicitud en base de datos
-    _cmd = f'INSERT INTO StatusApiLogs ({", ".join([i for i in log_data.keys()])}) VALUES ({"?, "*(len(log_data)-1)}?)'
-    self.db.cursor.execute(_cmd, tuple(i for i in log_data.values()))
+    return entry
 
-    # devolver el indice para relacionar solicitud con autorizaciones
+
+def update_api_log(self, log_data):
+    """
+    Inserts a row into StatusApiLogs and returns rowid.
+    """
+
+    columns = ", ".join(log_data.keys())
+    placeholders = ", ".join("?" for _ in log_data)
+
+    cmd = f"INSERT INTO StatusApiLogs ({columns}) VALUES ({placeholders})"
+    self.db.cursor.execute(cmd, tuple(log_data.values()))
     return self.db.cursor.lastrowid
