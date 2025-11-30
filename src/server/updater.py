@@ -2,10 +2,10 @@ import os
 from datetime import datetime as dt
 from flask import request, jsonify
 
-from src.updates import get_records_to_update, get_recipients
 from src.utils.constants import SQL_TABLES, NETWORK_PATH, UPDATER_TOKEN
-from src.comms import craft_messages, send_messages_and_alerts, craft_alerts
+from src.comms import send_messages_and_alerts, generar_mensajes
 from src.maintenance import maintenance
+from src.updates import datos_actualizar, necesitan_mensajes
 
 
 def update(self):
@@ -17,37 +17,58 @@ def update(self):
         print("Authentication Error")
         return jsonify({"error": "Auth Error"}), 401
 
+    db_cursor, db_conn = self.db.cursor(), self.db.conn
     instruction = post.get("instruction")
 
-    if instruction == "get_records_to_update":
-        return jsonify(get_records_to_update.get_records(self.db.cursor()))
+    if instruction == "datos_alerta":
+        return jsonify(datos_actualizar.alertas(db_cursor))
+
+    if instruction == "datos_boletin":
+        return jsonify(datos_actualizar.boletines(db_cursor))
 
     if instruction == "do_updates":
-        do_update(post.get("data", {}), self.db.cursor(), self.db.conn)
+        do_update(post.get("data", {}), db_cursor, db_conn)
         return jsonify({"status": "Update OK"})
 
-    if instruction == "create_messages":
-        do_create_messages(self.db.cursor())
-        payload = {}
-        out_dir = os.path.join(NETWORK_PATH, "outbound")
-        for msg in os.listdir(out_dir):
-            with open(os.path.join(out_dir, msg), "r") as f:
-                payload[msg] = f.read()
+    if "generar" in instruction:
+
+        # borrar /outbound
+        maintenance.clear_outbound_folder()
+
+        if instruction == "generar_alertas":
+            print("Client Request --> GENERAR ALERTAS")
+            maintenance.clear_outbound_folder("alertas")
+            x = necesitan_mensajes.alertas(db_cursor)
+            payload = generar_mensajes.alertas(db_cursor, x)
+
+        elif instruction == "generar_boletines":
+            print("Client Request --> GENERAR BOLETINES")
+            maintenance.clear_outbound_folder("boletines")
+            y = necesitan_mensajes.boletines(db_cursor)
+            payload = generar_mensajes.boletines(db_cursor, y)
+
+        # extraer copia de los mensajes generados para devolver a cliente
+        # payload = {}
+        # out_dir = os.path.join(NETWORK_PATH, "outbound")
+        # for msg in os.listdir(out_dir):
+        #     with open(os.path.join(out_dir, msg), "r") as f:
+        #         payload[msg] = f.read()
+
         return jsonify(payload)
 
     if instruction == "send_messages":
         print("Client Request --> SEND MESSAGES")
-        result = send_messages_and_alerts.send(self.db.cursor(), self.db.conn)
+        result = send_messages_and_alerts.send(db_cursor, db_conn)
         return jsonify(result)
 
     if instruction == "get_kpis":
-        return jsonify(do_get_kpis(self.db.cursor()))
+        return jsonify(do_get_kpis(db_cursor))
 
     if instruction == "get_logs":
         return jsonify(do_get_logs(self.db.cursor, max=post.get("max", 50)))
 
     if instruction == "get_info_data":
-        return jsonify(do_get_info_data(self.db.cursor()))
+        return jsonify(do_get_info_data(db_cursor))
 
     return jsonify({"error": "Unknown instruction"}), 400
 
@@ -57,7 +78,6 @@ def update(self):
 # -------------------------------------------------------------------------
 def do_update(data, db_cursor, db_conn):
 
-    print("Client Request --> DO UPDATE")
     today = dt.now().strftime("%Y-%m-%d")
 
     for table, rows in data.items():
@@ -84,7 +104,7 @@ def do_update(data, db_cursor, db_conn):
             info_fk = "Codigo"
 
         else:
-            continue  # unknown mapping
+            continue
 
         # Extract unique foreign keys from payload
         keys = {str(row.get(info_fk)) for row in rows if info_fk in row}
@@ -94,6 +114,7 @@ def do_update(data, db_cursor, db_conn):
         for key in keys:
             db_cursor.execute(f"DELETE FROM {table} WHERE {info_fk} = ?", (key,))
             if table_type in ("DOC", "PLACA"):
+
                 field = f"LastUpdate{table[4:]}"
                 db_cursor.execute(
                     f"UPDATE {info_table} SET {field} = ? WHERE {info_id} = ?",
@@ -113,19 +134,6 @@ def do_update(data, db_cursor, db_conn):
             db_cursor.execute(sql, vals)
 
     db_conn.commit()
-
-
-# -------------------------------------------------------------------------
-# ----------------------- MESSAGE GENERATION ------------------------------
-# -------------------------------------------------------------------------
-def do_create_messages(db_cursor):
-
-    print("Client Request --> CREATE MESSAGES")
-
-    get_recipients.need_alert(db_cursor)
-    maintenance.clear_outbound_folder()
-    craft_messages.craft(db_cursor)
-    craft_alerts.craft(db_cursor)
 
 
 # -------------------------------------------------------------------------

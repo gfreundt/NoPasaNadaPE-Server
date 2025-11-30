@@ -1,145 +1,144 @@
-{% extends "ui-pagina-base.html" %}
+{% extends "ui-pagina-base-maquinarias.html" %}
 
 {% block title %}
 Bienvenido a No Pasa Nada PE
 {% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column align-items-center" style="font-family: 'Inter', sans-serif; font-weight: 700;">
+<div class="d-flex flex-column align-items-center w-100 px-4 py-4"
+     style="font-family: 'Inter', sans-serif; font-weight: 700; max-width: 520px; margin: auto;">
 
-    <div class="d-flex justify-content-center pt-5 pb-3 align-items-center">
-        <img src="/static/images/nopasanadape-icon-azul.png" alt="No Pasa Nada PE Logo" style="width: 50px; height: 50px;" class="me-2">
-        <div style="height: 40px; width: 1px; background-color: black; margin-inline: 10px;"></div>
-        <img src="/static/images/maquinarias-icon.png" alt="Maquinarias Logo" style="height: 50px;" class="ms-2">
+    <!-- Logos -->
+    <div class="d-flex justify-content-center pt-4 pb-4 align-items-center w-100">
+        <img src="/static/images/logo-nopasanadape-transparente-negro.png"
+             style="width: 60px; height: auto;" class="me-3">
+
+        <div style="height: 45px; width: 1px; background-color: black;"></div>
+
+        <img src="/static/images/maquinarias-icon.png"
+             style="height: 60px; width: auto;" class="ms-3">
     </div>
-        
-    <div class="text-center mb-4" style="max-width: 380px;">
-        <h1 class="fw-bold mb-0" style="font-size: 2rem;">No Pasa Nada PE</h1>
-        <h2 class="fs-4 fw-normal text-secondary mb-1">un servicio exclusivo para</h2>
-        <div class="d-flex justify-content-center">
-            <img src="/static/images/maquinarias-logo.png" alt="Maquinarias Logo" style="height: 25px;">
+
+    <!-- Title -->
+    <div class="text-center mb-4 w-100">
+        <h1 class="fw-bold mb-1" style="font-size: 2.3rem;">No Pasa Nada PE</h1>
+        <h2 class="fs-5 fw-normal text-secondary mb-2">un servicio exclusivo para</h2>
+        <img src="/static/images/maquinarias-logo.png" style="height: 30px;">
+    </div>
+
+    <!-- Login Block -->
+    <div class="w-100" style="max-width: 500px; font-weight: 400;">
+
+        <!-- Divider -->
+        <div class="d-flex align-items-center my-4">
+            <div class="flex-grow-1 border-top opacity-50"></div>
+            <div class="text-secondary small mx-3" style="font-size: 1rem;">Inicia sesión con</div>
+            <div class="flex-grow-1 border-top opacity-50"></div>
         </div>
-    </div>
 
-    <div class="notion-login w-100" style="max-width: 360px; font-weight: 400;">
-        <div class="d-flex flex-column">
+        <!-- Social Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
 
-            <div class="d-flex align-items-center my-4 pt-2"> 
-                <div class="flex-grow-1 border-top border-secondary opacity-50"></div>
-                <div class="text-secondary small mx-3" style="font-weight: 400;">Inicia sesión con</div>
-                <div class="flex-grow-1 border-top border-secondary opacity-50"></div>
-            </div>
-            
-    <div class="d-flex flex-wrap justify-content-center gap-3">
-        
-        <a href="{{ url_for('google_login') }}" 
-        class="btn btn-light d-flex flex-column align-items-center justify-content-start py-3" 
-        style="width: 112px; height: 72px; border: 1px solid #E0E0E0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); font-weight: 500; text-decoration: none; color: inherit;">
-            <img src="/static/images/google-icon.png" alt="Google icon" style="width: 22px; height: 22px; margin-bottom: 2px;">
-            <span class="fs-6">Google</span>
-        </a>
-        
-        <a href="{{ url_for('apple_login') }}" 
-        class="btn btn-light d-flex flex-column align-items-center justify-content-start py-3" 
-        style="width: 112px; height: 72px; border: 1px solid #E0E0E0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); font-weight: 500; text-decoration: none; color: inherit;">
-            <img src="/static/images/apple-icon.png" alt="Apple icon" style="width: 22px; height: 22px; margin-bottom: 2px;">
-            <span class="fs-6">Apple</span>
-        </a>
-        
-        <a href="{{ url_for('microsoft_login') }}" 
-        class="btn btn-light d-flex flex-column align-items-center justify-content-start py-3" 
-        style="width: 112px; height: 72px; border: 1px solid #E0E0E0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); font-weight: 500; text-decoration: none; color: inherit;">
-            <img src="/static/images/microsoft-icon.png" alt="Microsoft icon" style="width: 22px; height: 22px; margin-bottom: 2px;">
-            <span class="fs-6">Microsoft</span>
-        </a>
-        
-        <a href="{{ url_for('facebook_login') }}" 
-        class="btn btn-light d-flex flex-column align-items-center justify-content-start py-3" 
-        style="width: 112px; height: 72px; border: 1px solid #E0E0E0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); font-weight: 500; text-decoration: none; color: inherit;">
-            <img src="/static/images/facebook-icon.png" alt="Facebook icon" style="width: 22px; height: 22px; margin-bottom: 2px;">
-            <span class="fs-6">Facebook</span>
-        </a>
-        
-        <a href="{{ url_for('instagram_login') }}" 
-        class="btn btn-light d-flex flex-column align-items-center justify-content-start py-3" 
-        style="width: 112px; height: 72px; border: 1px solid #E0E0E0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); font-weight: 500; text-decoration: none; color: inherit;">
-            <img src="/static/images/instagram-icon.png" alt="Instagram icon" style="width: 22px; height: 22px; margin-bottom: 2px;">
-            <span class="fs-6">Instagram</span>
-        </a>
-    </div>
+            {% set providers = [
+                ('google_login', 'google-icon.png', 'Google'),
+                ('apple_login', 'apple-icon.png', 'Apple'),
+                ('microsoft_login', 'microsoft-icon.png', 'Microsoft'),
+                ('facebook_login', 'facebook-icon.png', 'Facebook'),
+                ('instagram_login', 'instagram-icon.png', 'Instagram')
+            ] %}
 
-            <div class="d-flex align-items-center my-4">
-                <div class="flex-grow-1 border-top border-secondary opacity-50"></div>
-                <div class="text-secondary small mx-3" style="font-weight: 400;">o continúa con</div>
-                <div class="flex-grow-1 border-top border-secondary opacity-50"></div>
-            </div>
-            
-            <form action="" method="POST">
-
-                <input type="hidden" name="show_password_field" value="{{ 'true' if show_password_field else 'false' }}">
-                
-                <div class="d-flex justify-content-center">
-                    <label for="email-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-0">
-                        <img src="/static/images/email-icon.png" alt="Email Icon" style="height: 22px; width: 22px; margin-right: 5px;">
-                    </label>
-                </div>
-                
-                <input id="email-input" 
-                       name="correo_ingresado" 
-                       placeholder="Ingresa tu correo electrónico..." 
-                       value="{{ user_data.correo_ingresado if user_data.correo_ingresado }}" 
-                       autocomplete="email" 
-                       class="form-control mt-3 {% if email_error %}is-invalid{% endif %}" 
-                       aria-label="Ingresa tu correo electrónico..." 
-                       required 
-                       {% if show_password_field %}readonly{% endif %}
-                       style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-                       {% if show_password_field %}background-color: #f0f0f0;{% endif %}">
-                
-                {% if errors.correo %}
-                <div class="invalid-feedback text-center mb-3" style="display: block;">
-                    {{ errors.correo }}
-                </div>
-                {% else %}
-                <div class="form-text text-secondary mb-3 small" style="font-weight: 400;">Usa tu direccion de correo electrónico.</div>
-                {% endif %}
-                
-                {% if show_password_field %}
-                    <div class="d-flex justify-content-center mt-4">
-                        <label for="password-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-0">
-                            <img src="/static/images/password-icon.png" alt="Password Icon" style="height: 22px; width: 22px; margin-right: 5px;">
-                        </label>
-                    </div>
-                    <input id="password-input" 
-                           name="password_ingresado" 
-                           placeholder="Ingresa tu contraseña" 
-                           autocomplete="current-password" 
-                           type="password" 
-                           class="form-control mt-3 {% if password_error %}is-invalid{% endif %}" 
-                           aria-label="Ingresa tu contraseña" 
-                           required 
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    
-                    {% if errors.password %}
-                    <div class="invalid-feedback text-center mb-3" style="display: block;">
-                        {{ errors.password }}
-                    </div>
-                    {% endif %}
-                {% endif %}
-                <button type="submit" class="btn btn-primary w-100 fw-medium mt-4 mb-4" style="height: 40px; background-color: rgb(35, 131, 226); border-color: rgb(35, 131, 226); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">
-                    Continuar
-                </button>
-            </form>
-            
-            <div class="alert alert-danger text-center small" role="alert" style="display: none;"></div>
+            {% for route, icon, label in providers %}
+            <a href="{{ url_for(route) }}"
+               class="btn btn-light d-flex flex-column align-items-center justify-content-center py-3"
+               style="
+                    flex: 1 1 130px; 
+                    height: 90px; 
+                    border: 1px solid #D0D0D0;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+                    font-size: 1.05rem;
+                    font-weight: 600;
+                ">
+                <img src="/static/images/{{ icon }}" style="width: 28px; margin-bottom: 8px;">
+                <span>{{ label }}</span>
+            </a>
+            {% endfor %}
         </div>
+
+        <!-- Divider -->
+        <div class="d-flex align-items-center my-4">
+            <div class="flex-grow-1 border-top opacity-50"></div>
+            <div class="text-secondary small mx-3" style="font-size: 1rem;">o continúa con</div>
+            <div class="flex-grow-1 border-top opacity-50"></div>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" class="w-100">
+
+            <input type="hidden" name="show_password_field"
+                   value="{{ 'true' if show_password_field else 'false' }}">
+
+            <!-- Email -->
+            <label class="form-label text-secondary d-flex justify-content-center mb-1" style="font-size: 1rem;">
+                <img src="/static/images/email-icon.png" style="height: 26px; margin-right: 8px;">
+                Correo electrónico
+            </label>
+
+            <input id="email-input" name="correo_ingresado"
+                   class="form-control mt-2 p-3"
+                   style="height: 56px; font-size: 1.1rem; border-radius: 10px;"
+                   placeholder="Ingresa tu correo..."
+                   autocomplete="email"
+                   value="{{ user_data.correo_ingresado if user_data.correo_ingresado }}"
+                   required
+                   {% if show_password_field %}readonly style="background:#f0f0f0;"{% endif %}>
+
+            {% if errors.correo %}
+            <div class="invalid-feedback text-center mb-2 d-block">{{ errors.correo }}</div>
+            {% endif %}
+
+            {% if show_password_field %}
+            <!-- Password -->
+            <label class="form-label text-secondary d-flex justify-content-center mt-4 mb-1" style="font-size: 1rem;">
+                <img src="/static/images/password-icon.png" style="height: 26px; margin-right: 8px;">
+                Contraseña
+            </label>
+
+            <input id="password-input" name="password_ingresado"
+                   type="password" autocomplete="current-password"
+                   class="form-control mt-2 p-3"
+                   style="height: 56px; font-size: 1.1rem; border-radius: 10px;"
+                   placeholder="Ingresa tu contraseña"
+                   required>
+
+            {% if errors.password %}
+            <div class="invalid-feedback text-center mb-2 d-block">{{ errors.password }}</div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Button -->
+            <button type="submit"
+                class="btn btn-primary w-100 fw-bold mt-4"
+                style="
+                    height: 52px;
+                    font-size: 1.2rem;
+                    border-radius: 10px;
+                    background: rgb(35, 131, 226);
+                    border-color: rgb(35, 131, 226);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+                ">
+                Continuar
+            </button>
+        </form>
     </div>
 
-    <div class="w-100 text-center small text-secondary px-2 mt-4" style="font-weight: 400;">
-        <p class="mb-0">Al continuar, usted reconoce que comprende y acepta los 
-            <a href="https://www.notion.so/notion/Terms-and-Privacy-28ffdd083dc3473e9c2da6ec011b58ac" target="_blank" rel="noopener noreferrer" class="text-decoration-underline text-secondary">Términos y Condiciones</a> y 
-            <a href="https://www.notion.so/3468d120cf614d4c9014c09f6adc9091" target="_blank" rel="noopener noreferrer" class="text-decoration-underline text-secondary">Política de Privacidad</a>
-        </p>
-    </div>
+    <!-- Footer -->
+    <p class="text-center small mt-4" style="font-size: 0.95rem; color:#555;">
+    Si necesitas ayuda, escríbenos a 
+    <a href="mailto:info@nopasanadape.com" style="color: #555; text-decoration: none;">
+        info@nopasanadape.com
+    </a>.
+</p>
+
 </div>
 {% endblock %}

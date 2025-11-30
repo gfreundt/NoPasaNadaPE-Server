@@ -1,13 +1,14 @@
 import os
+import uuid
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime as dt
-import uuid
 
+from src.comms import create_within_expiration, redactar_boletines
 from src.utils.constants import NETWORK_PATH
 from src.utils.utils import date_to_mail_format
 
 
-def craft(db_cursor):
+def alertas(db_cursor, lista_de_alertas):
     """
     Crea el HTML de las alertas que deben ser enviadas en esta iteración y
     las guarda en el folder "outbound".
@@ -29,38 +30,32 @@ def craft(db_cursor):
 
     alerts = []
 
-    # Pull alert requirements
-    db_cursor.execute(
-        """
-        SELECT IdMember_FK, TipoAlerta, Vencido, FechaHasta, Placa, DocTipo
-        FROM _necesitan_alertas
-        """
-    )
+    # # Pull alert requirements
+    # db_cursor.execute(
+    #     """
+    #     SELECT IdMember_FK, TipoAlerta, Vencido, FechaHasta, Placa, DocTipo
+    #     FROM _actualizar_alertas
+    #     """
+    # )
 
-    for (
-        idmember,
-        tipo_alerta,
-        vencido,
-        fecha_hasta,
-        placa,
-        doc_tipo,
-    ) in db_cursor.fetchall():
+    for row in lista_de_alertas:
 
-        if not idmember:
+        if not row["IdMember"]:
             continue
 
         alerts.append(
-            compose_message(
+            redactar_alerta(
                 db_cursor=db_cursor,
-                idmember=idmember,
+                idmember=row["IdMember"],
                 template=template_alertas,
                 subject="ALERTA de No Pasa Nada PE",
-                msg_type=index_alertas.get(tipo_alerta),
-                tipo_alerta=tipo_alerta,
-                vencido=vencido,
-                fecha_hasta=fecha_hasta,
-                placa=placa,
-                doc_tipo=doc_tipo,
+                msg_type=index_alertas.get(row["TipoAlerta"]),
+                tipo_alerta=row["TipoAlerta"],
+                vencido=row["Vencido"],
+                fecha_hasta=row["FechaHasta"],
+                placa=row["Placa"],
+                doc_tipo=row["DocTipo"],
+                doc_num=row["DocNum"],
             )
         )
 
@@ -71,8 +66,10 @@ def craft(db_cursor):
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(alert)
 
+    return alerts
 
-def compose_message(
+
+def redactar_alerta(
     db_cursor,
     idmember,
     template,
@@ -83,6 +80,7 @@ def compose_message(
     fecha_hasta,
     placa,
     doc_tipo,
+    doc_num,
 ):
     """Construye el HTML final usando la plantilla Jinja2."""
 
@@ -144,3 +142,78 @@ def compose_message(
     }
 
     return template.render(info)
+
+
+def boletines(db_cursor, lista_de_boletines):
+    """
+    Crea mensajes regulares en HTML y los guarda en /outbound.
+    """
+
+    # Carga plantilla HTML
+    environment = Environment(loader=FileSystemLoader("templates/"))
+    template_regular = environment.get_template("comms-regular.html")
+
+    boletines = []
+    for row in lista_de_boletines:
+        member_id = row["IdMember"]
+
+        boletines.append(
+            obtener_datos(
+                db_cursor=db_cursor,
+                IdMember=member_id,
+                template=template_regular,
+                subject="Tu Boletín de No Pasa Nada PE - Noviembre 2025",
+            )
+        )
+
+    # Guardar los mensajes en la carpeta outbound
+    for boletin in boletines:
+        filename = f"message_{str(uuid.uuid4())[-6:]}.html"
+        path = os.path.join(NETWORK_PATH, "outbound", filename)
+
+        with open(path, "w", encoding="utf-8") as file:
+            file.write(boletin)
+
+    return list(boletines)
+
+
+def obtener_datos(db_cursor, IdMember, template, subject):
+    """
+    Arma toda la información necesaria para un mensaje HTML individual.
+    """
+
+    # Información del miembro
+    db_cursor.execute("SELECT * FROM InfoMiembros WHERE IdMember = ?", (IdMember,))
+    member = db_cursor.fetchone()
+    if not member:
+        return ""  # evita crasheos si el IdMember está huérfano
+
+    # Alertas (tipo, placa, vencido)
+    db_cursor.execute(
+        "SELECT TipoAlerta, Placa, Vencido FROM _expira30dias WHERE IdMember = ?",
+        (IdMember,),
+    )
+    alertas_raw = db_cursor.fetchall()
+    alertas = (
+        [[row["TipoAlerta"], row["Placa"], row["Vencido"]] for row in alertas_raw]
+        if alertas_raw
+        else []
+    )
+
+    # Placas asociadas
+    db_cursor.execute("SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (IdMember,))
+    placas = [row["Placa"] for row in db_cursor.fetchall()]
+
+    # Generar hash único para email tracking
+    email_id = f"{member['CodMember']}|{str(uuid.uuid4())[-12:]}"
+
+    # Crear HTML final usando tu mega función compose()
+    return redactar_boletines.compose(
+        db_cursor=db_cursor,
+        member=member,
+        template=template,
+        email_id=email_id,
+        subject=subject,
+        alertas=alertas,
+        placas=placas,
+    )

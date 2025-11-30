@@ -4,11 +4,24 @@ from datetime import datetime as dt
 from src.utils.constants import NETWORK_PATH
 
 
-def clear_outbound_folder():
+def clear_outbound_folder(tipo=None):
+    """
+    borra todos los archivos de /outbound que cumplan con formato indicado
+    default: todas las alertas y boletines
+    """
 
-    # erase all comms that might still be in outbound folder
+    # en caso no se pasan parametros, usar default
+    if not tipo:
+        tipo = ("alerta", "boletin")
+
+    # si solo tiene un string, convertir a lista
+    if isinstance(tipo, str):
+        tipo = [tipo]
+
     for file in os.listdir(os.path.join(NETWORK_PATH, "outbound")):
-        os.remove(os.path.join(NETWORK_PATH, "outbound", file))
+        for t in tipo:
+            if t in file:
+                os.remove(os.path.join(NETWORK_PATH, "outbound", file))
 
 
 def post_maint(db_cursor):
