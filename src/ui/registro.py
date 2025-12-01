@@ -9,6 +9,7 @@ from src.comms import send_instant_email
 from src.utils.utils import hash_text
 
 
+# fix
 def main(self):
 
     # cargando la data inicial de la pagina 1
