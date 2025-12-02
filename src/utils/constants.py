@@ -2,6 +2,7 @@ import os
 import platform
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(BASE_DIR)
 
 
 # paths
