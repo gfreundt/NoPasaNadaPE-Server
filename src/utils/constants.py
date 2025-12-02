@@ -1,6 +1,8 @@
 import os
 import platform
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 # paths
 if platform.system() == "Linux":
@@ -10,7 +12,11 @@ if platform.system() == "Linux":
     elif platform.node() == "nopasanada-server":
         NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
     else:
-        NETWORK_PATH = os.path.join("/var", "www", "nopasanadape", "app")
+        if "/var/www/app" in BASE_DIR:
+            NETWORK_PATH = "/var/www/nopasanadape/app"
+        elif "/var/www/app-dev" in BASE_DIR:
+            NETWORK_PATH = "/var/www/nopasanadape-dev/app"
+        # NETWORK_PATH = os.path.join("/var", "www", "nopasanadape", "app")
 elif platform.system() == "Windows":
     NETWORK_PATH = os.path.join(
         r"\\192.168.68.110",
