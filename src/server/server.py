@@ -23,7 +23,7 @@ from src.ui.maquinarias import (
     mi_cuenta as maq_mi_cuenta,
     registro as maq_registro,
 )
-from src.utils.constants import DB_NETWORK_PATH
+from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
 
 
 # ============================================================
@@ -146,6 +146,7 @@ class Server:
         return redirect(url_for("ui-login"))
 
     def login(self):
+        print(NETWORK_PATH)
         return login.main(self)
 
     def registro(self):
