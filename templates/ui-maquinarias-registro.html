@@ -1,7 +1,7 @@
 {% extends "ui-pagina-base-maquinarias.html" %}
 
 {% block title %}
-Editar Perfil | No Pasa Nada PE
+Editar Perfil | No Pasa Nada PE 
 {% endblock %}
 
 {% block content %}
@@ -28,8 +28,8 @@ Editar Perfil | No Pasa Nada PE
                         Correo Electrónico
                     </label>
                     <div class="form-control" 
-                         style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background-color: #f0f0f0; display: flex; align-items: center;"
-                         id="correo_display">
+                          style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background-color: #f0f0f0; display: flex; align-items: center;"
+                          id="correo_display">
                         {{ usuario.correo }}
                     </div>
                     <input type="hidden" name="correo" value="{{ usuario.correo }}">
@@ -41,11 +41,11 @@ Editar Perfil | No Pasa Nada PE
                         Nombre y Apellido
                     </label>
                     <input id="nombre-input" 
-                           name="nombre" 
-                           value="{{ usuario.nombre if usuario.nombre else '' }}" 
-                           class="form-control" 
-                           {% if password_only %} disabled {% endif %}
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            name="nombre" 
+                            value="{{ usuario.nombre if usuario.nombre else '' }}" 
+                            class="form-control" 
+                            {% if password_only %} disabled {% endif %}
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
                     {% if errors.nombre %}
                         <div class="invalid-feedback text-center mb-1" style="display: block;">
@@ -55,35 +55,51 @@ Editar Perfil | No Pasa Nada PE
                 </div>
 
                 <div class="form-group mb-3 
-                    {% if password_only %} d-none {% endif %}"> <label for="dni-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
-                        <img src="/static/images/dni-icon.png" alt="DNI Icon" style="height: 22px; width: 22px; margin-right: 5px;">
-                        DNI
+                    {% if password_only %} d-none {% endif %}"> 
+                    
+                    <label class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
+                        <img src="/static/images/dni-icon.png" alt="Document Icon" style="height: 22px; width: 22px; margin-right: 5px;">
+                        Documento de Identidad
                     </label>
-                    <input id="dni-input" 
-                           name="dni" 
-                           value="{{ usuario.dni if usuario.dni else '' }}" 
-                           class="form-control" 
-                           {% if password_only %} disabled {% endif %}
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+                    <div class="row g-2"> 
+                        <div class="col-4"> <select id="tipo_documento-select" 
+                                    name="tipo_documento" 
+                                    class="form-select"
+                                    {% if password_only %} disabled {% endif %}
+                                    style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding-right: 0.5rem; padding-left: 0.5rem;">
+                                
+                                <option value="DNI" {% if usuario.tipo_documento == 'DNI' %} selected {% endif %}>DNI</option>
+                                <option value="CE" {% if usuario.tipo_documento == 'CE' %} selected {% endif %}>CE</option>
+                                <option value="Pasaporte" {% if usuario.tipo_documento == 'Pasaporte' %} selected {% endif %}>Pasaporte</option>
+                            </select>
+                        </div>
+                        <div class="col-8"> <input id="numero_documento-input" 
+                                name="numero_documento" 
+                                value="{{ usuario.numero_documento if usuario.numero_documento else '' }}" 
+                                class="form-control" 
+                                {% if password_only %} disabled {% endif %}
+                                style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        </div>
+                    </div>
                 
-                    {% if errors.dni %}
+                    {% if errors.documento %}
                         <div class="invalid-feedback text-center mb-1" style="display: block;">
-                            {{ errors.dni }}
+                            {{ errors.documento }}
                         </div>
                     {% endif %}
                 </div>
-
                 <div class="form-group mb-3 
                     {% if password_only %} d-none {% endif %}"> <label for="celular-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
                         <img src="/static/images/celular-icon.png" alt="Phone Icon" style="height: 22px; width: 22px; margin-right: 5px;">
                         Celular
                     </label>
                     <input id="celular-input" 
-                           name="celular" 
-                           value="{{ usuario.celular if usuario.celular else '' }}" 
-                           class="form-control" 
-                           {% if password_only %} disabled {% endif %}
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            name="celular" 
+                            value="{{ usuario.celular if usuario.celular else '' }}" 
+                            class="form-control" 
+                            {% if password_only %} disabled {% endif %}
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 
                     {% if errors.celular %}
                         <div class="invalid-feedback text-center mb-1" style="display: block;">
@@ -98,11 +114,11 @@ Editar Perfil | No Pasa Nada PE
                         Placas
                     </label>
                     <input id="placas-input" 
-                           name="placas" 
-                           value="{{ usuario.placas if usuario.placas else '' }}" 
-                           class="form-control" 
-                           {% if password_only %} disabled {% endif %}
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            name="placas" 
+                            value="{{ usuario.placas if usuario.placas else '' }}" 
+                            class="form-control" 
+                            {% if password_only %} disabled {% endif %}
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 
                     {% if errors.placas %}
                         <div class="invalid-feedback text-center mb-1" style="display: block;">
@@ -132,14 +148,14 @@ Editar Perfil | No Pasa Nada PE
                         Nueva contraseña
                     </label>
                     <input id="password1-input" 
-                           name="password1" 
-                           type="password" class="form-control" 
-                           {% if third_party_login %} disabled {% endif %}
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            name="password1" 
+                            type="password" class="form-control" 
+                            {% if third_party_login %} disabled {% endif %}
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
-                    {% if errors.password %}
+                    {% if errors.password1 %}
                         <div class="invalid-feedback text-center mb-1" style="display: block;">
-                            {{ errors.password }}
+                            {{ errors.password1 }}
                         </div>
                     {% endif %}
                 </div>
@@ -151,10 +167,16 @@ Editar Perfil | No Pasa Nada PE
                         Confirmar contraseña
                     </label>
                     <input id="password2-input" 
-                           name="password2" 
-                           type="password" class="form-control" 
-                           {% if third_party_login %} disabled {% endif %}
-                           style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            name="password2" 
+                            type="password" class="form-control" 
+                            {% if third_party_login %} disabled {% endif %}
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+                    {% if errors.password2 %}
+                        <div class="invalid-feedback text-center mb-1" style="display: block;">
+                            {{ errors.password2 }}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="form-check small mb-1 {% if errors.get('acepta_terminos') %} is-invalid {% endif %}">
@@ -166,14 +188,9 @@ Editar Perfil | No Pasa Nada PE
                     <label class="form-check-label text-secondary fw-medium" for="acepta_terminos"> Acepto los <a href="/terminos-y-condiciones" target="_blank">
                         Términos y Condiciones</a>
                     </label>
-                    {% if errors.acepta_terminos %}
-                    <div class="invalid-feedback text-start mt-0">
-                        <small>{{ errors.acepta_terminos }}</small><br>
-                    </div>
-                    {% endif %}
                 </div>
 
-                <div class="form-check small mb-3 {% if errors.get('acepta_privacidad') %} is-invalid {% endif %}">
+                <div class="form-check small mb-3 {% if errors.get('acepta_legales') %} is-invalid {% endif %}">
                     <input class="form-check-input" 
                         type="checkbox" 
                         id="acepta_privacidad" 
@@ -182,16 +199,15 @@ Editar Perfil | No Pasa Nada PE
                     <label class="form-check-label text-secondary fw-medium" for="acepta_privacidad"> Acepto la <a href="/politica-de-privacidad" target="_blank">
                         Política de Privacidad</a>
                     </label>
-                    {% if errors.acepta_privacidad %}
-                    <div class="invalid-feedback text-start mt-0">
-                        Kaka
-                        <small>{{ errors.acepta_privacidad }}</small><br>
+                    {% if errors.acepta_legales %}
+                    <div class="invalid-feedback text-center mt-3 mb-1" style="display: block;">
+                        {{ errors.acepta_legales }}<br>
                     </div>
                     {% endif %}
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 fw-medium mt-2 mb-1" style="height: 40px; background-color: rgb(35, 131, 226); border-color: rgb(35, 131, 226); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">
-                    Finalizar Suscripcion
+                    Finalizar Suscripción
                 </button>
                 <button type="submit" class="btn btn-primary w-100 fw-medium mt-2 mb-4" style="height: 40px; background-color: rgb(224, 39, 19); border-color: rgb(211, 93, 19); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">
                     Regresar

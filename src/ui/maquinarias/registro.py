@@ -1,5 +1,9 @@
 import re
+import uuid
+from datetime import datetime as dt
 from flask import request, render_template, session
+
+from src.utils.utils import hash_text
 
 
 def main(self):
@@ -8,10 +12,11 @@ def main(self):
     if request.method == "GET":
 
         usuario = {
-            "correo": session.get("usuario").get("correo"),
-            "nombre": session.get("usuario").get("nombre"),
-            "dni": "",
-            "celular": "",
+            "correo": session["usuario"].get("correo"),
+            "nombre": session["usuario"].get("nombre"),
+            "tipo_documento": session["usuario"].get("tipo_documento"),
+            "numero_documento": session["usuario"].get("numero_documento"),
+            "celular": session["usuario"].get("celular"),
             "placas": "",
         }
 
@@ -28,15 +33,23 @@ def main(self):
 
         forma = dict(request.form)
 
+        # procesar texto ingresados de placas lo mejor que se pueda
+        if forma.get("placas"):
+            x = re.sub(r"\s{1,}", ",", forma.get("placas")).replace(";", ",")
+            forma["placas"] = ", ".join(
+                [i.strip().upper() for i in x.split(",") if i.strip()]
+            )
+
         usuario = {
             "correo": forma.get("correo"),
             "nombre": forma.get("nombre"),
-            "dni": forma.get("dni"),
+            "tipo_documento": forma.get("tipo_documento"),
+            "numero_documento": forma.get("numero_documento"),
             "celular": forma.get("celular"),
             "placas": forma.get("placas"),
         }
 
-        errores = validar_todo(self.db, forma)
+        errores = validaciones(self.db, forma)
 
         if errores:
             return render_template(
@@ -44,7 +57,68 @@ def main(self):
             )
 
         # No errors → proceed
+        inscribir(self.db, forma)
         return render_template("ui-maquinarias-mi-cuenta.html")
+
+
+# ==================================================================
+# INSCRIBIR NUEVO MIEMBRO EN BASE DE DATOS
+# ==================================================================
+
+
+def inscribir(db, forma):
+
+    cursor = db.cursor()
+
+    # extraer CodigoMiembroExterno de la informacion enviada por cliente externo
+    cursor.execute(
+        "SELECT CodigoClienteExterno FROM InfoClientesAutorizados WHERE Correo = ?",
+        (forma["correo"],),
+    )
+    codigo_externo = cursor.fetchone()
+
+    # write new record in members table and create record in last update table
+    fecha_base = "2020-01-01"
+
+    _nr = {
+        "CodMemberInterno": "NPN-" + str(uuid.uuid4())[-6:].upper(),
+        "CodMemberExterno": codigo_externo[0] if codigo_externo else "",
+        "NombreCompleto": forma["nombre"],
+        "DocTipo": forma.get("tipo_documento"),
+        "DocNum": forma.get("numero_documento"),
+        "Celular": forma.get("celular"),
+        "Correo": forma.get("correo"),
+        "LastUpdateMtcBrevetes": fecha_base,
+        "LastUpdateMtcRecordsConductores": fecha_base,
+        "LastUpdateSatImpuestosCodigos": fecha_base,
+        "LastLoginDatetime": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "CountFailedLogins": 0,
+        "Password": hash_text(forma.get("password1")),
+        "NextMessageSend": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "NextLoginAllowed": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    # crear nuevo miembro
+    cursor.execute(
+        f"INSERT INTO InfoMiembros ({", ".join(_nr.keys())}) VALUES ({", ".join(["?"] * len(_nr))})",
+        tuple(_nr.values()),
+    )
+    id = cursor.lastrowid
+
+    # crear placas para nuevo miembro si no existe, si placa ya existe, asignar a este usuario
+    for placa in forma.get("placas").split(", "):
+        cursor.execute(
+            """
+            INSERT INTO InfoPlacas
+            (IdMember_FK, Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas, LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas)
+            VALUES (?,?,?,?,?,?,?)
+            ON CONFLICT(Placa) DO UPDATE SET 
+            IdMember_FK = excluded.IdMember_FK
+            """,
+            (id, placa, fecha_base, fecha_base, fecha_base, fecha_base, fecha_base),
+        )
+
+    db.conn.commit()
 
 
 # ==================================================================
@@ -52,15 +126,16 @@ def main(self):
 # ==================================================================
 
 
-def validar_todo(db, forma):
+def validaciones(db, forma):
+
+    cur = db.cursor()
 
     errors = {
         "nombre": "",
-        "dni": "",
+        "documento": "",
         "celular": "",
         "placas": "",
-        "acepta_terminos": "",
-        "acepta_privacidad": "",
+        "acepta_legales": "",
         "password1": "",
         "password2": "",
     }
@@ -68,23 +143,28 @@ def validar_todo(db, forma):
     # --------------------------------------------------------------
     # nombre
     # --------------------------------------------------------------
-    if len(forma["nombre"]) < 6:
-        errors["nombre"] = "Nombre debe tener un mínimo de 6 caracteres."
+    if len(forma["nombre"]) < 4:
+        errors["nombre"] = "Nombre debe tener un mínimo de 4 caracteres."
     elif len(forma["nombre"]) > 50:
         errors["nombre"] = "Nombre debe tener un máximo de 50 caracteres."
 
     # --------------------------------------------------------------
-    # dni
+    # documentos (validacion depende de tipo de documento)
     # --------------------------------------------------------------
-    if not re.match(r"^[0-9]{8}$", forma["dni"]):
-        errors["dni"] = "DNI debe tener 8 dígitos."
-    else:
-        cur = db.cursor()
-        cur.execute(
-            "SELECT 1 FROM InfoMiembros WHERE DocNum = ? LIMIT 1", (forma["dni"],)
-        )
-        if cur.fetchone():
-            errors["dni"] = "DNI ya está asociado a otro usuario."
+    if len(forma["numero_documento"]) < 5:
+        errors["documento"] = "Número de documento inválido."
+
+    if forma["tipo_documento"] == "DNI" and not re.match(
+        r"^[0-9]{8}$", forma["numero_documento"]
+    ):
+        errors["documento"] = "DNI debe tener 8 dígitos."
+
+    cur.execute(
+        "SELECT 1 FROM InfoMiembros WHERE DocTipo = ? AND DocNum = ? LIMIT 1",
+        (forma["tipo_documento"], forma["numero_documento"]),
+    )
+    if cur.fetchone():
+        errors["documento"] = "Documento ya está asociado a otro usuario."
 
     # --------------------------------------------------------------
     # celular
@@ -92,7 +172,6 @@ def validar_todo(db, forma):
     if not re.match(r"^[0-9]{9}$", forma.get("celular", "")):
         errors["celular"] = "Celular debe tener 9 dígitos."
     else:
-        cur = db.cursor()
         cur.execute(
             "SELECT 1 FROM InfoMiembros WHERE Celular = ? LIMIT 1", (forma["celular"],)
         )
@@ -102,18 +181,24 @@ def validar_todo(db, forma):
     # --------------------------------------------------------------
     # placas
     # --------------------------------------------------------------
-    placas_raw = forma.get("placas")
-    if placas_raw:
+    if forma.get("placas"):
 
-        placas_raw = re.sub(r"\s{1,}", ",", placas_raw)
-        placas_raw = placas_raw.replace(";", ",")
-        placas_list = [p.strip() for p in placas_raw.split(",") if p.strip()]
+        _placas = forma["placas"].split(", ")
 
-        if any(len(p) != 6 for p in placas_list):
+        if any(len(i) != 6 for i in _placas):
             errors["placas"] = "Todas las placas deben tener 6 caracteres."
 
-        if len(placas_list) > 3:
+        elif len(_placas) > 3:
             errors["placas"] = "Se pueden inscribir un máximo de 3 placas."
+
+        # placa inscrita por otro usuario
+        cur.execute(
+            f"SELECT 1 FROM InfoPlacas WHERE Placa IN ({", ".join(["?"] * len(_placas))}) AND IdMember_FK != 0 LIMIT 1",
+            tuple(_placas),
+        )
+
+        if cur.fetchone():
+            errors["placas"] = "Al menos una placa ya está inscrita por otro usuario."
 
     # --------------------------------------------------------------
     # password
@@ -126,21 +211,14 @@ def validar_todo(db, forma):
             "incluir una mayúscula y un carácter especial."
         )
 
-    if forma.get("password1") != forma.get("password2"):
+    elif forma.get("password1") != forma.get("password2"):
         errors["password2"] = "Las contraseñas no coinciden."
 
     # --------------------------------------------------------------
-    # términos y privacidad
+    # términos y condiciones + privacidad
     # --------------------------------------------------------------
-    if forma.get("acepta_terminos") != "on":
-        errors["acepta_terminos"] = (
-            "Es necesario aceptar los términos y condiciones para continuar."
-        )
-
-    if forma.get("acepta_privacidad") != "on":
-        errors["acepta_privacidad"] = (
-            "Debes aceptar la política de privacidad para continuar."
-        )
+    if forma.get("acepta_terminos") != "on" or forma.get("acepta_privacidad") != "on":
+        errors["acepta_legales"] = "Es necesario aceptar ambos para poder continuar."
 
     # Remove empty error fields
     final_errors = {k: v for k, v in errors.items() if v}

@@ -98,22 +98,22 @@ Bienvenido a No Pasa Nada PE
             {% endif %}
 
             {% if show_password_field %}
-            <!-- Password -->
-            <label class="form-label text-secondary d-flex justify-content-center mt-4 mb-1" style="font-size: 1rem;">
-                <img src="/static/images/password-icon.png" style="height: 26px; margin-right: 8px;">
-                Contraseña
-            </label>
+                <!-- Password -->
+                <label class="form-label text-secondary d-flex justify-content-center mt-4 mb-1" style="font-size: 1rem;">
+                    <img src="/static/images/password-icon.png" style="height: 26px; margin-right: 8px;">
+                    Contraseña
+                </label>
 
-            <input id="password-input" name="password_ingresado"
-                   type="password" autocomplete="current-password"
-                   class="form-control mt-2 p-3"
-                   style="height: 56px; font-size: 1.1rem; border-radius: 10px;"
-                   placeholder="Ingresa tu contraseña"
-                   required>
+                <input id="password-input" name="password_ingresado"
+                    type="password" autocomplete="current-password"
+                    class="form-control mt-2 p-3"
+                    style="height: 56px; font-size: 1.1rem; border-radius: 10px;"
+                    placeholder="Ingresa tu contraseña"
+                    required>
 
-            {% if errors.password %}
-            <div class="invalid-feedback text-center mb-2 d-block">{{ errors.password }}</div>
-            {% endif %}
+                {% if errors.password %}
+                    <div class="invalid-feedback text-center mb-2 d-block">{{ errors.password }}</div>
+                {% endif %}
             {% endif %}
 
             <!-- Button -->
@@ -136,8 +136,8 @@ Bienvenido a No Pasa Nada PE
     <p class="text-center small mt-4" style="font-size: 0.95rem; color:#555;">
     Si necesitas ayuda, escríbenos a 
     <a href="mailto:info@nopasanadape.com" style="color: #555; text-decoration: none;">
-        info@nopasanadape.com
-    </a>.
+        info@nopasanadape.com.
+    </a>
 </p>
 
 </div>
