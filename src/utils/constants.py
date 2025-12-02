@@ -10,7 +10,7 @@ if platform.system() == "Linux":
     elif platform.node() == "nopasanada-server":
         NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
     else:
-        NETWORK_PATH = os.path.join("/var", "www", "NoPasaNadaPE-Server")
+        NETWORK_PATH = os.path.join("/var", "www", "app")
 elif platform.system() == "Windows":
     NETWORK_PATH = os.path.join(
         r"\\192.168.68.110",
