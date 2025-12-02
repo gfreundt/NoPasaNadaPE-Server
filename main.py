@@ -25,6 +25,7 @@ def create_app():
 
 
 # Gunicorn entry point
+print("*******", NETWORK_PATH)
 app = create_app()
 
 
