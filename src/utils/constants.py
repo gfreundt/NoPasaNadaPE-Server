@@ -10,7 +10,7 @@ if platform.system() == "Linux":
     elif platform.node() == "nopasanada-server":
         NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
     else:
-        NETWORK_PATH = os.path.join("/var", "www", "app")
+        NETWORK_PATH = os.path.join("/var", "www", "nopasanadape", "app")
 elif platform.system() == "Windows":
     NETWORK_PATH = os.path.join(
         r"\\192.168.68.110",
@@ -18,6 +18,8 @@ elif platform.system() == "Windows":
         "pythonCode",
         "nopasanada",
     )
+else:
+    NETWORK_PATH = os.path.join("/var", "www", "app")
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
 
