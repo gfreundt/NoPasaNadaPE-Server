@@ -12,10 +12,11 @@ if platform.system() == "Linux":
     elif platform.node() == "nopasanada-server":
         NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
     else:
-        if "/var/www/app" in BASE_DIR:
-            NETWORK_PATH = "/var/www/nopasanadape/app"
-        elif "/var/www/app-dev" in BASE_DIR:
+        if "-dev" in BASE_DIR:
             NETWORK_PATH = "/var/www/nopasanadape-dev/app"
+        else:
+            NETWORK_PATH = "/var/www/nopasanadape/app"
+
         # NETWORK_PATH = os.path.join("/var", "www", "nopasanadape", "app")
 elif platform.system() == "Windows":
     NETWORK_PATH = os.path.join(
