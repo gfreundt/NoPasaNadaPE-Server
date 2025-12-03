@@ -1,9 +1,116 @@
 {% extends "ui-pagina-base-maquinarias.html" %}
 
 {% block title %}
-Bienvenido a No Pasa Nada PE
+Mi Cuenta | No Pasa Nada PE
 {% endblock %}
 
 {% block content %}
-<h1>MiCuenta</h1>
+<div class="d-flex flex-column align-items-center" style="font-family: 'Inter', sans-serif; font-weight: 700;">
+
+    <div class="d-flex justify-content-center pt-5 pb-3 align-items-center">
+        <img src="/static/images/nopasanadape-icon-azul.png" alt="No Pasa Nada PE Logo" style="width: 50px; height: 50px;" class="me-2">
+        <div style="height: 40px; width: 1px; background-color: black; margin-inline: 10px;"></div>
+        <img src="/static/images/maquinarias-icon.png" alt="Maquinarias Logo" style="height: 50px;" class="ms-2">
+    </div>
+
+    <div class="text-center mb-4" style="max-width: 700px;">
+        <h1 class="fw-bold mb-0" style="font-size: 2rem;">Estado de Servicios</h1>
+        <h2 class="fs-5 fw-normal text-secondary mb-1">Bienvenido, {{ usuario.nombre | default('Miembro') }}</h2>
+    </div>
+
+    <div class="w-100 mb-5" style="max-width: 700px;">
+        <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Servicio</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Vigencia</th>
+                    <th scope="col">Última Revisión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in servicios_principales %}
+                <tr>
+                    <td class="fw-medium">{{ item.servicio }}</td>
+                    <td>
+                        {% set color_class = '' %}
+                        {% if item.estado == 'Vencido' %}
+                            {% set color_class = 'text-danger fw-bold' %}
+                        {% elif item.estado == 'Vigente' %}
+                            {% set color_class = 'text-success fw-bold' %}
+                        {% elif item.estado == 'Desconocido' %}
+                            {% set color_class = 'text-warning fw-bold' %}
+                        {% endif %}
+                        <span class="{{ color_class }}">{{ item.estado }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column justify-content-center">
+                            <span>{{ item.vigencia_line1 }}</span>
+                            <span class="small text-secondary">{{ item.vigencia_line2 }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column justify-content-center">
+                            <span>{{ item.revision_line1 }}</span>
+                            <span class="small text-secondary">{{ item.revision_line2 }}</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tr>
+                    <td colspan="4" class="p-0 border-0" style="height: 10px;"></td>
+                </tr>
+
+                {% for item in servicios_secundarios %}
+                <tr>
+                    <td class="fw-medium">{{ item.servicio }}</td>
+                    <td>
+                        {% set color_class = '' %}
+                        {% if item.estado == 'Vencido' %}
+                            {% set color_class = 'text-danger fw-bold' %}
+                        {% elif item.estado == 'Vigente' %}
+                            {% set color_class = 'text-success fw-bold' %}
+                        {% elif item.estado == 'Desconocido' %}
+                            {% set color_class = 'text-warning fw-bold' %}
+                        {% endif %}
+                        <span class="{{ color_class }}">{{ item.estado }}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column justify-content-center">
+                            <span>{{ item.vigencia_line1 }}</span>
+                            <span class="small text-secondary">{{ item.vigencia_line2 }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column justify-content-center">
+                            <span>{{ item.revision_line1 }}</span>
+                            <span class="small text-secondary">{{ item.revision_line2 }}</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-center w-100" style="max-width: 650px;">
+        
+        <a href="{{ documentos.ficha_sunarp_url }}" download 
+           class="btn btn-outline-primary d-flex flex-column align-items-center me-4 p-3" 
+           style="width: 200px; border-radius: 10px; border-width: 2px;">
+            <i class="bi bi-file-earmark-arrow-down" style="font-size: 2rem;"></i> <span class="mt-2 fw-bold">Ficha SUNARP</span>
+            <span class="small text-muted">{{ documentos.ficha_sunarp_info }}</span>
+        </a>
+
+        <a href="{{ documentos.record_vehicular_url }}" download 
+           class="btn btn-outline-primary d-flex flex-column align-items-center p-3" 
+           style="width: 200px; border-radius: 10px; border-width: 2px;">
+            <i class="bi bi-file-earmark-medical" style="font-size: 2rem;"></i> <span class="mt-2 fw-bold">Récord Vehicular</span>
+            <span class="small text-muted">{{ documentos.record_vehicular_info }}</span>
+        </a>
+    </div>
+
+</div>
+
 {% endblock %}

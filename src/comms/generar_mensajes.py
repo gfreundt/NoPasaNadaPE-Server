@@ -3,7 +3,7 @@ import uuid
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime as dt
 
-from src.comms import create_within_expiration, redactar_boletines
+from src.comms import redactar_boletines
 from src.utils.constants import NETWORK_PATH
 from src.utils.utils import date_to_mail_format
 

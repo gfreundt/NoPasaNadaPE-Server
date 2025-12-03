@@ -25,19 +25,18 @@ def clear_outbound_folder(tipo=None):
 
 
 def post_maint(db_cursor):
-
+    '''
     # review: duplicate placas
-    cmd = """ DELETE FROM '$review';
-                INSERT INTO '$review' 
-                    SELECT NULL, Placa, "Placa Duplicada", NULL FROM InfoPlacas GROUP BY Placa HAVING COUNT(*) > 1;
+    cmd = """ SELECT * FROM InfoPlacas GROUP BY Placa HAVING COUNT(*) > 1;
             """
     db_cursor.executescript(cmd)
 
     # review: placas with no associated member
-    cmd = """ INSERT INTO '$review' SELECT NULL, Placa, "Placa sin Usuario", NULL FROM InfoPlacas
+    cmd = """ SELECT * FROM InfoPlacas
                     WHERE IdMember_FK NOT IN (SELECT IdMember FROM InfoMiembros)
             """
     db_cursor.executescript(cmd)
+    '''
 
     # manage the backups
     from_path = os.path.join(NETWORK_PATH, "data")

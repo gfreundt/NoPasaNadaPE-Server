@@ -17,48 +17,69 @@ def set_routes(self):
         view_func=self.root,
         methods=["GET", "POST", "HEAD"],
     )
+
+    # rutas maquinarias
     self.app.add_url_rule(
-        rule="/login",
-        endpoint="ui-login",
-        view_func=self.login,
-        methods=["GET", "POST", "HEAD"],
-    )
-    self.app.add_url_rule(
-        rule="/recuperar",
-        endpoint="ui-recuperar",
-        view_func=self.recuperar,
+        rule="/maquinarias",
+        endpoint="maquinarias",
+        view_func=self.maquinarias,
         methods=["GET", "POST"],
     )
     self.app.add_url_rule(
-        rule="/registro",
-        endpoint="ui-registro",
-        view_func=self.registro,
+        rule="/maquinarias/registro",
+        endpoint="maquinarias-registro",
+        view_func=self.maquinarias_registro,
         methods=["GET", "POST"],
     )
     self.app.add_url_rule(
-        rule="/mis-datos",
-        endpoint="cuenta-mis-datos",
-        view_func=self.mis_datos,
+        rule="/maquinarias/mi-cuenta",
+        endpoint="maquinarias-mi-cuenta",
+        view_func=self.maquinarias_mi_cuenta,
         methods=["GET", "POST"],
     )
-    self.app.add_url_rule(
-        rule="/mis-vencimientos",
-        endpoint="cuenta-mis-vencimientos",
-        view_func=self.mis_vencimientos,
-        methods=["GET", "POST"],
-    )
-    self.app.add_url_rule(
-        rule="/acerca-de",
-        endpoint="ui-acerca-de",
-        view_func=self.acerca_de,
-        methods=["GET"],
-    )
-    self.app.add_url_rule(
-        rule="/logout",
-        endpoint="logout",
-        view_func=self.logout,
-        methods=["GET"],
-    )
+
+    # self.app.add_url_rule(
+    #     rule="/login",
+    #     endpoint="ui-login",
+    #     view_func=self.login,
+    #     methods=["GET", "POST", "HEAD"],
+    # )
+    # self.app.add_url_rule(
+    #     rule="/recuperar",
+    #     endpoint="ui-recuperar",
+    #     view_func=self.recuperar,
+    #     methods=["GET", "POST"],
+    # )
+    # self.app.add_url_rule(
+    #     rule="/registro",
+    #     endpoint="ui-registro",
+    #     view_func=self.registro,
+    #     methods=["GET", "POST"],
+    # )
+    # self.app.add_url_rule(
+    #     rule="/mis-datos",
+    #     endpoint="cuenta-mis-datos",
+    #     view_func=self.mis_datos,
+    #     methods=["GET", "POST"],
+    # )
+    # self.app.add_url_rule(
+    #     rule="/mis-vencimientos",
+    #     endpoint="cuenta-mis-vencimientos",
+    #     view_func=self.mis_vencimientos,
+    #     methods=["GET", "POST"],
+    # )
+    # self.app.add_url_rule(
+    #     rule="/acerca-de",
+    #     endpoint="ui-acerca-de",
+    #     view_func=self.acerca_de,
+    #     methods=["GET"],
+    # )
+    # self.app.add_url_rule(
+    #     rule="/logout",
+    #     endpoint="logout",
+    #     view_func=self.logout,
+    #     methods=["GET"],
+    # )
 
     # direct link
     self.app.add_url_rule(
@@ -163,26 +184,6 @@ def set_routes(self):
         rule="/apple_callback",
         endpoint="apple_authorize",
         view_func=self.apple_authorize,
-        methods=["GET", "POST"],
-    )
-
-    # client-routes
-    self.app.add_url_rule(
-        rule="/maquinarias",
-        endpoint="maquinarias",
-        view_func=self.maquinarias,
-        methods=["GET", "POST"],
-    )
-    self.app.add_url_rule(
-        rule="/maquinarias/registro",
-        endpoint="maq-registro",
-        view_func=self.maquinarias_registro,
-        methods=["GET", "POST"],
-    )
-    self.app.add_url_rule(
-        rule="/maquinarias/mi-cuenta",
-        endpoint="maq-mi-cuenta",
-        view_func=self.maquinarias_mi_cuenta,
         methods=["GET", "POST"],
     )
 

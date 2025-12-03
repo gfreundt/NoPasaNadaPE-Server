@@ -143,10 +143,9 @@ class Server:
     # ======================================================
 
     def root(self):
-        return redirect(url_for("ui-login"))
+        return redirect(url_for("maquinarias"))
 
     def login(self):
-        print(NETWORK_PATH)
         return login.main(self)
 
     def registro(self):
