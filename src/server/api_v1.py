@@ -368,7 +368,7 @@ def finalizar(
             "RespuestaStatus": _codigo,
             "RespuestaMensaje": respuesta_json,
             "RespuestaTamanoKb": tamano_kilobytes,
-            "RespuestaTiempo": time.perf_counter() - timer_inicio,
+            "RespuestaTiempoSeg": time.perf_counter() - timer_inicio,
             "DireccionIP": _ip,
             "Metodo": request.method,
             "Timestamp": str(dt.now()),
@@ -378,20 +378,23 @@ def finalizar(
     # Actualizar la entrada de log existente
     cursor = self.db.cursor()
 
-    cmd = """UPDATE StatusApiLogs SET 
-             Autenticado=?, RespuestaStatus=?, RespuestaMensaje=?, RespuestaTamanoKb=?, RespuestaTiempo=?, DireccionIP=?, Metodo=? 
+    cmd = """UPDATE StatusApiLogs SET TipoSolicitud=?, Timestamp=?, DireccionIP=?, Metodo=?, Endpoint=?, Autenticado=?, UsuarioSolicitando=?, RespuestaStatus=?, RespuestaTiempoSeg=?, RespuestaTamanoKb=?, RespuestaMensaje=?
              WHERE IdSolicitud=?"""
 
     cursor.execute(
         cmd,
         (
-            entry["Autenticado"],
-            entry["RespuestaStatus"],
-            entry["RespuestaMensaje"],
-            entry["RespuestaTamanoKb"],
-            entry["RespuestaTiempo"],
+            entry["TipoSolicitud"],
+            entry["Timestamp"],
             entry["DireccionIP"],
             entry["Metodo"],
+            entry["Endpoint"],
+            entry["Autenticado"],
+            entry["UsuarioSolicitando"],
+            entry["RespuestaStatus"],
+            entry["RespuestaTiempoSeg"],
+            entry["RespuestaTamanoKb"],
+            entry["RespuestaMensaje"],
             entry["IdSolicitud"],
         ),
     )

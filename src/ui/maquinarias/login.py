@@ -3,7 +3,7 @@ from datetime import datetime as dt, timedelta as td
 from flask import redirect, request, render_template, url_for, session
 
 from src.utils.utils import compare_text_to_hash, date_to_mail_format
-from src.utils.constants import SQL_TABLES
+from src.ui.maquinarias import data_servicios
 
 
 # login endpoint
@@ -100,11 +100,14 @@ def main(self):
 
         # Correct password → reset attempts
         resetear_logins_fallidos(self.db, correo=form["correo_ingresado"])
-        servicios, documentos = generar_data_servicios(
-            self.db, correo=form["correo_ingresado"]
-        )
+        servicios = data_servicios.generar(self.db, correo=form["correo_ingresado"])
+        from pprint import pprint
+
+        pprint(servicios)
         return render_template(
-            "ui-maquinarias-mi-cuenta.html", servicios=servicios, documentos=documentos
+            "ui-maquinarias-mi-cuenta.html",
+            servicios=servicios,
+            usuario={"nombre": "Kukuy"},
         )
 
 
@@ -220,129 +223,3 @@ def resetear_logins_fallidos(db, correo):
     cur = db.cursor()
     cur.execute(cmd, (correo,))
     db.commit()
-
-
-def generar_data_servicios(db, correo):
-
-    cursor = db.cursor()
-
-    _txtal = []
-    _attachments = []
-    _attach_txt = []
-    _info = {}
-
-    # obtener informacion de miembro y placa, almacenar en variables
-    cursor.execute(
-        "SELECT IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores, LastUpdateSatImpuestosCodigos FROM InfoMiembros WHERE Correo = ? LIMIT 1",
-        (correo,),
-    )
-    data_miembro = cursor.fetchone()
-    id_member = data_miembro["IdMember"]
-
-    cursor.execute(
-        "SELECT * FROM InfoPlacas WHERE IdMember_FK = ?",
-        (data_miembro["IdMember"],),
-    )
-    data_placas = cursor.fetchall()
-    placas = [i["Placa"] for i in data_placas]
-
-    desconocido = {
-        "Estado": "Desconocido",
-        "FechaHasta": "",
-        "FechaHastaDias": "",
-        "LastUpdate": "",
-        "LastUpdateDias": "",
-    }
-    vencimientos = {}
-    multas = {}
-    descargas = {}
-
-    # brevete
-    cmd = f""" SELECT
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataMtcBrevetes
-                WHERE
-                IdMember_FK = {id_member}
-            """
-    cursor.execute(cmd)
-    i = dict(cursor.fetchone())
-    vencimientos.update({"brevete": i if i else desconocido})
-
-    # soat
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa,
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataApesegSoats
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    vencimientos.update({"soats": [dict(i) for i in cursor.fetchall()]})
-
-    # revision tecnica
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa,
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataMtcRevisionesTecnicas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})"""
-
-    cursor.execute(cmd)
-    vencimientos.update({"revtecs": [dict(i) for i in cursor.fetchall()]})
-
-    # impuestos SAT
-    cmd = f"""  SELECT
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataSatImpuestosDeudas
-                WHERE
-                Codigo = (SELECT Codigo FROM DataSatImpuestosCodigos WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    vencimientos.update({"satimps": [dict(i) for i in cursor.fetchall()]})
-
-    # multas SAT
-    cmd = f"""  SELECT
-                Falta, FechaEmision, Deuda, Estado, LastUpdate
-                FROM
-                DataSatMultas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    multas.update({"satmuls": [dict(i) for i in cursor.fetchall()]})
-
-    # multas SUTRAN
-    cmd = f"""  SELECT
-                CodigoInfrac, FechaDoc, Clasificacion, LastUpdate
-                FROM
-                DataSutranMultas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    multas.update({"sutrans": [dict(i) for i in cursor.fetchall()]})
-
-    from pprint import pprint
-
-    pprint(vencimientos)
-    pprint(multas)

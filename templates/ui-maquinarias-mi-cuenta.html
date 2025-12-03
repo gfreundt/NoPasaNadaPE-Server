@@ -19,6 +19,8 @@ Mi Cuenta | No Pasa Nada PE
     </div>
 
     <div class="w-100 mb-5" style="max-width: 700px;">
+        
+        <h3 class="fw-bold fs-4 mb-3 text-center">Vencimientos</h3>
         <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
             <thead class="table-dark">
                 <tr>
@@ -29,88 +31,192 @@ Mi Cuenta | No Pasa Nada PE
                 </tr>
             </thead>
             <tbody>
-                {% for item in servicios_principales %}
-                <tr>
-                    <td class="fw-medium">{{ item.servicio }}</td>
-                    <td>
-                        {% set color_class = '' %}
-                        {% if item.estado == 'Vencido' %}
-                            {% set color_class = 'text-danger fw-bold' %}
-                        {% elif item.estado == 'Vigente' %}
-                            {% set color_class = 'text-success fw-bold' %}
-                        {% elif item.estado == 'Desconocido' %}
-                            {% set color_class = 'text-warning fw-bold' %}
-                        {% endif %}
-                        <span class="{{ color_class }}">{{ item.estado }}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column justify-content-center">
-                            <span>{{ item.vigencia_line1 }}</span>
-                            <span class="small text-secondary">{{ item.vigencia_line2 }}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column justify-content-center">
-                            <span>{{ item.revision_line1 }}</span>
-                            <span class="small text-secondary">{{ item.revision_line2 }}</span>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-
-                <tr>
-                    <td colspan="4" class="p-0 border-0" style="height: 10px;"></td>
-                </tr>
-
-                {% for item in servicios_secundarios %}
-                <tr>
-                    <td class="fw-medium">{{ item.servicio }}</td>
-                    <td>
-                        {% set color_class = '' %}
-                        {% if item.estado == 'Vencido' %}
-                            {% set color_class = 'text-danger fw-bold' %}
-                        {% elif item.estado == 'Vigente' %}
-                            {% set color_class = 'text-success fw-bold' %}
-                        {% elif item.estado == 'Desconocido' %}
-                            {% set color_class = 'text-warning fw-bold' %}
-                        {% endif %}
-                        <span class="{{ color_class }}">{{ item.estado }}</span>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column justify-content-center">
-                            <span>{{ item.vigencia_line1 }}</span>
-                            <span class="small text-secondary">{{ item.vigencia_line2 }}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex flex-column justify-content-center">
-                            <span>{{ item.revision_line1 }}</span>
-                            <span class="small text-secondary">{{ item.revision_line2 }}</span>
-                        </div>
-                    </td>
-                </tr>
+                {% for service_key, items in servicios.vencimientos.items() %}
+                    {% for item in items %}
+                    {% set service_name = service_key %}
+                    {% if service_key == 'BREVETES' %}{% set service_name = 'Licencia de Conducir' %}
+                    {% elif service_key == 'SOATS' %}{% set service_name = 'Certificado SOAT' %}
+                    {% elif service_key == 'SATIMPS' %}{% set service_name = 'Impuesto SAT' %}
+                    {% elif service_key == 'REVTECS' %}{% set service_name = 'Revisión Técnica' %}
+                    {% endif %}
+                    <tr>
+                        <td class="fw-medium">
+                            {{ service_name }}
+                            {% if item.Placa %}<br><span class="small text-muted">Placa: {{ item.Placa }}</span>{% endif %}
+                            {% if item.Codigo and service_key == 'SATIMPS' %}<br><span class="small text-muted">Código: {{ item.Codigo }}</span>{% endif %}
+                        </td>
+                        <td>
+                            {% set status = item.Estado | default('Desconocido') %}
+                            {% set color_class = '' %}
+                            {% if status == 'Vencido' %}
+                                {% set color_class = 'text-danger fw-bold' %}
+                            {% elif status == 'Vigente' %}
+                                {% set color_class = 'text-success fw-bold' %}
+                            {% elif status == 'Desconocido' %}
+                                {% set color_class = 'text-warning fw-bold' %}
+                            {% endif %}
+                            <span class="{{ color_class }}">{{ status }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column justify-content-center">
+                                <span>{{ item.FechaHasta | default('N/A') }}</span>
+                                {% if item.FechaHastaDias is not none %}
+                                    {% set days_label = 'días' %}
+                                    {% set days_info_color = 'text-secondary' %}
+                                    {% if item.FechaHastaDias == 0 %}
+                                        {% set days_info = 'Hoy' %}
+                                    {% elif item.FechaHastaDias > 0 %}
+                                        {# Text adjustment: 'quedan' #}
+                                        {% set days_info = 'quedan ' + item.FechaHastaDias | string + ' ' + days_label %}
+                                        {% set days_info_color = 'text-success' %} {# Vigente = Green #}
+                                    {% else %}
+                                        {# Text adjustment: 'hace' (all lower case) #}
+                                        {% set days_info = 'hace ' + (item.FechaHastaDias * -1) | string + ' ' + days_label %}
+                                        {% set days_info_color = 'text-danger' %} {# Vencido = Red #}
+                                    {% endif %}
+                                    <span class="small {{ days_info_color }} fw-bold">{{ days_info }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column justify-content-center">
+                                <span>{{ item.LastUpdate | default('N/A') }}</span>
+                                {% if item.LastUpdateDias is not none %}
+                                <span class="small text-secondary">hace {{ item.LastUpdateDias }} días</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-
-    <div class="d-flex justify-content-center w-100" style="max-width: 650px;">
         
-        <a href="{{ documentos.ficha_sunarp_url }}" download 
-           class="btn btn-outline-primary d-flex flex-column align-items-center me-4 p-3" 
-           style="width: 200px; border-radius: 10px; border-width: 2px;">
-            <i class="bi bi-file-earmark-arrow-down" style="font-size: 2rem;"></i> <span class="mt-2 fw-bold">Ficha SUNARP</span>
-            <span class="small text-muted">{{ documentos.ficha_sunarp_info }}</span>
-        </a>
+        <div class="py-3"></div> <h3 class="fw-bold fs-4 mb-3 text-center">Multas</h3>
+        <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Servicio</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Falta / Infracción</th>
+                    <th scope="col">Detalle</th>
+                    <th scope="col">Última Revisión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service_key, items in servicios.multas.items() %}
+                    {% for item in items %}
+                    {% set service_name = service_key %}
+                    {% if service_key == 'SATMULS' %}{% set service_name = 'Multas SAT' %}
+                    {% elif service_key == 'SUTRANS' %}{% set service_name = 'Multas SUTRAN' %}
+                    {% endif %}
+                    <tr>
+                        <td class="fw-medium">
+                            {{ service_name }}
+                            {% if item.Placa %}<br><span class="small text-muted">Placa: {{ item.Placa }}</span>{% endif %}
+                        </td>
+                        <td>
+                            {# Date: Use FechaEmision for SATMULS, FechaDoc for SUTRANS #}
+                            {{ item.FechaEmision | default(item.FechaDoc) | default('N/A') }}
+                        </td>
+                        <td>
+                            {# Falta / Infracción: Use Falta for SATMULS, CodigoInfrac for SUTRANS #}
+                            {% if item.Falta %}
+                                <span class="fw-bold">{{ item.Falta }}</span>
+                            {% elif item.CodigoInfrac %}
+                                <span class="fw-bold">{{ item.CodigoInfrac }}</span>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# Detalle: Estado + Deuda for SATMULS, Clasificacion for SUTRANS #}
+                            {% set detalle_color = 'text-danger fw-bold' %}
+                            {% if service_key == 'SATMULS' %}
+                                <span class="{{ detalle_color }}">{{ item.Estado | default('N/A') }}</span>
+                                {% if item.Deuda %}
+                                <br><span class="small text-secondary">Deuda: S/ {{ "%.2f"|format(item.Deuda) }}</span>
+                                {% endif %}
+                            {% elif service_key == 'SUTRANS' %}
+                                <span class="{{ detalle_color }}">{{ item.Clasificacion | default('N/A') }}</span>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column justify-content-center">
+                                <span>{{ item.LastUpdate | default('N/A') }}</span>
+                                {% if item.LastUpdateDias is not none %}
+                                <span class="small text-secondary">hace {{ item.LastUpdateDias }} días</span>
+                                {% else %}
+                                <span class="small text-secondary">Última Actualización</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
 
-        <a href="{{ documentos.record_vehicular_url }}" download 
-           class="btn btn-outline-primary d-flex flex-column align-items-center p-3" 
-           style="width: 200px; border-radius: 10px; border-width: 2px;">
-            <i class="bi bi-file-earmark-medical" style="font-size: 2rem;"></i> <span class="mt-2 fw-bold">Récord Vehicular</span>
-            <span class="small text-muted">{{ documentos.record_vehicular_info }}</span>
-        </a>
+        <div class="py-3"></div> <h3 class="fw-bold fs-4 mb-3 text-center">Descargas</h3>
+
+        <div class="p-3 border rounded-3 mb-4 text-center" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div class="row">
+                
+                {# Custom styles to mimic table-dark header look #}
+                {% set header_style = "background-color: #212529; color: white; padding: 5px 0; margin-bottom: 10px; font-weight: 700; font-size: 1rem; border-radius: 4px;" %}
+                
+                {# --- Area 1: Certificado SOAT (1/3 width) --- #}
+                <div class="col-lg-4 col-md-4 col-sm-12 border-end pe-3 mb-3 mb-md-0">
+                    <div style="{{ header_style }}">Certificados SOAT</div>
+                    <div class="d-flex flex-row justify-content-center align-items-end">
+                        {% for placa in servicios.descargas.soat_certificados %}
+                            <div class="d-flex flex-column align-items-center me-2 flex-shrink-0" style="margin-right: 15px !important;">
+                                <i class="bi bi-file-earmark-arrow-down-fill text-success" style="font-size: 1.8rem;"></i>
+                                <span class="small fw-medium" style="font-size: 0.7rem;">{{ placa }}</span>
+                            </div>
+                        {% else %}
+                            <p class="small text-secondary mb-0 text-center w-100">No hay SOAT disponibles.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# --- Area 2: Certificado SUNARP (1/3 width) --- #}
+                <div class="col-lg-4 col-md-4 col-sm-12 border-end px-3 mb-3 mb-md-0">
+                    <div style="{{ header_style }}">Fichas SUNARP</div>
+                    <div class="d-flex flex-row justify-content-center align-items-end">
+                        {% for placa in servicios.descargas.sunarp_fichas %}
+                            <div class="d-flex flex-column align-items-center me-2 flex-shrink-0" style="margin-right: 15px !important;">
+                                <i class="bi bi-file-earmark-arrow-down-fill text-primary" style="font-size: 1.8rem;"></i>
+                                <span class="small fw-medium" style="font-size: 0.7rem;">{{ placa }}</span>
+                            </div>
+                        {% else %}
+                            <p class="small text-secondary mb-0 text-center w-100">No hay SUNARP disponibles.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# --- Area 3: Record de Conductor (1/3 width) --- #}
+                <div class="col-lg-4 col-md-4 col-sm-12 ps-3">
+                    <div style="{{ header_style }}">Record de Conductor</div>
+                    <div class="d-flex flex-row justify-content-center align-items-end">
+                        {% for item in servicios.descargas.record_conductor %}
+                            <div class="d-flex flex-column align-items-center me-2 flex-shrink-0" style="margin-right: 15px !important;">
+                                <i class="bi bi-person-fill-lock text-info" style="font-size: 1.8rem;"></i>
+                                
+                            </div>
+                        {% else %}
+                            <p class="small text-secondary mb-0 text-center w-100">No hay Record de Conductor disponible.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
     </div>
-
 </div>
 
 {% endblock %}
