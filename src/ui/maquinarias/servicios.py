@@ -1,4 +1,17 @@
-def generar(cursor, correo):
+from flask import render_template
+
+
+def main(cursor, correo):
+
+    servicios = generar_data_servicios(cursor, correo=correo)
+
+    return render_template(
+        "ui-maquinarias-mi-cuenta.html",
+        servicios=servicios,
+    )
+
+
+def generar_data_servicios(cursor, correo):
 
     # obtener informacion de miembro y placa, almacenar en variables
     cursor.execute(

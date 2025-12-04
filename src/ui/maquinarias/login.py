@@ -3,12 +3,14 @@ from datetime import datetime as dt, timedelta as td
 from flask import redirect, request, render_template, url_for, session
 
 from src.utils.utils import compare_text_to_hash, date_to_mail_format
-from src.ui.maquinarias import data_servicios
+from src.ui.maquinarias import data_servicios, servicios
 
 
 # login endpoint
 def main(self):
 
+    cursor = self.db.cursor()
+    conn = self.db.conn
     self.session.permanent = True
 
     if request.method == "HEAD":
@@ -27,48 +29,48 @@ def main(self):
         )
 
     # POST -> form submitted
-    form = dict(request.form)
+    forma = dict(request.form)
 
     # FIRST STEP: validating email only
     if request.form["show_password_field"] == "false":
 
         # Validate email format
-        error_formato = validar_formato(form["correo_ingresado"])
+        error_formato = validar_formato(forma["correo_ingresado"])
         if error_formato:
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=False,
                 errors=error_formato,
-                user_data=form,
+                user_data=forma,
             )
 
         # Validate email is authorized
-        error_autorizacion = validar_autorizacion(self.db, form["correo_ingresado"])
+        error_autorizacion = validar_autorizacion(cursor, forma["correo_ingresado"])
         if error_autorizacion:
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=False,
                 errors=error_autorizacion,
-                user_data=form,
+                user_data=forma,
             )
 
         # Validate subscription
-        suscrito = validar_suscripcion(self.db, form["correo_ingresado"])
+        suscrito = validar_suscripcion(cursor, forma["correo_ingresado"])
         if not suscrito:
-            session["usuario"] = {"correo": form["correo_ingresado"]}
+            session["usuario"] = {"correo": forma["correo_ingresado"]}
             session["password_only"] = False
             session["third_party_login"] = False
 
             return redirect("/maquinarias/registro")
 
         # Check if account is blocked
-        cuenta_bloqueada = validar_bloqueo_cuenta(self.db, form["correo_ingresado"])
+        cuenta_bloqueada = validar_bloqueo_cuenta(cursor, forma["correo_ingresado"])
         if cuenta_bloqueada:
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=False,
                 errors=cuenta_bloqueada,
-                user_data=form,
+                user_data=forma,
             )
 
         # All good → show password field
@@ -76,39 +78,64 @@ def main(self):
             "ui-maquinarias-login.html",
             show_password_field=True,
             errors={},
-            user_data=form,
+            user_data=forma,
         )
 
     # SECOND STEP: validating password
-    elif form["show_password_field"] == "true":
+    elif forma["show_password_field"] == "true":
 
         error_acceso, mostrar_campo_password = validar_password(
-            self.db,
-            form["correo_ingresado"],
-            form["password_ingresado"],
+            cursor,
+            conn,
+            forma["correo_ingresado"],
+            forma["password_ingresado"],
         )
 
         if error_acceso:
             # Remove bad password
-            form.update({"password_ingresado": ""})
+            forma.update({"password_ingresado": ""})
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=mostrar_campo_password,
                 errors=error_acceso,
-                user_data=form,
+                user_data=forma,
             )
 
         # Correct password → reset attempts
-        resetear_logins_fallidos(self.db, correo=form["correo_ingresado"])
-        servicios = data_servicios.generar(self.db, correo=form["correo_ingresado"])
-        from pprint import pprint
+        resetear_logins_fallidos(cursor, conn, correo=forma["correo_ingresado"])
 
-        pprint(servicios)
-        return render_template(
-            "ui-maquinarias-mi-cuenta.html",
-            servicios=servicios,
-            usuario={"nombre": "Kukuy"},
-        )
+        # extraer informacion de base de datos (usuario y mi-cuenta)
+        extraer_data_usuario(cursor, correo=forma["correo_ingresado"])
+
+        return servicios.main(cursor, correo=forma["correo_ingresado"])
+
+
+def extraer_data_usuario(cursor, correo):
+
+    # datos de usuario
+    cursor.execute(
+        "SELECT IdMember, NombreCompleto, DocTipo, DocNum, Celular, Password FROM InfoMiembros WHERE Correo = ? LIMIT 1",
+        (correo,),
+    )
+    a = cursor.fetchone()
+
+    # datos de placas
+    cursor.execute(
+        "SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?",
+        (a["IdMember"],),
+    )
+    placas = ", ".join(i["Placa"] for i in cursor.fetchall())
+
+    session["usuario"] = {
+        "id_member": a["IdMember"],
+        "correo": correo,
+        "nombre": a["NombreCompleto"],
+        "tipo_documento": a["DocTipo"],
+        "numero_documento": a["DocNum"],
+        "celular": a["Celular"],
+        "placas": placas,
+        "password": a["Password"],
+    }
 
 
 # =====================================================================
@@ -122,27 +149,24 @@ def validar_formato(correo):
     return {}
 
 
-def validar_autorizacion(db, correo):
+def validar_autorizacion(cursor, correo):
     cmd = "SELECT Correo FROM InfoClientesAutorizados WHERE Correo = ?"
-    cur = db.cursor()
-    cur.execute(cmd, (correo,))
-    if not cur.fetchone():
+    cursor.execute(cmd, (correo,))
+    if not cursor.fetchone():
         return {"correo": "Correo no autorizado para este servicio."}
     return {}
 
 
-def validar_suscripcion(db, correo):
+def validar_suscripcion(cursor, correo):
     cmd = "SELECT Correo FROM InfoMiembros WHERE Correo = ?"
-    cur = db.cursor()
-    cur.execute(cmd, (correo,))
-    return bool(cur.fetchone())
+    cursor.execute(cmd, (correo,))
+    return bool(cursor.fetchone())
 
 
-def validar_bloqueo_cuenta(db, correo):
+def validar_bloqueo_cuenta(cursor, correo):
     cmd = "SELECT NextLoginAllowed FROM InfoMiembros WHERE Correo = ?"
-    cur = db.cursor()
-    cur.execute(cmd, (correo,))
-    row = cur.fetchone()
+    cursor.execute(cmd, (correo,))
+    row = cursor.fetchone()
 
     if not row:
         return None
@@ -160,12 +184,11 @@ def validar_bloqueo_cuenta(db, correo):
     return None
 
 
-def validar_password(db, correo, password):
+def validar_password(cursor, conn, correo, password):
     # Get hashed password
     cmd = "SELECT Password FROM InfoMiembros WHERE Correo = ?"
-    cur = db.cursor()
-    cur.execute(cmd, (correo,))
-    row = cur.fetchone()
+    cursor.execute(cmd, (correo,))
+    row = cursor.fetchone()
 
     if not row:
         return {"correo": "Cuenta no encontrada."}, True
@@ -181,9 +204,8 @@ def validar_password(db, correo, password):
                  WHERE Correo = ?
                  RETURNING CountFailedLogins;"""
 
-        cur = db.cursor()
-        cur.execute(cmd, (correo,))
-        logins_fallidos = cur.fetchone()[0]
+        cursor.execute(cmd, (correo,))
+        logins_fallidos = cursor.fetchone()[0]
 
         error = {"password": "Contraseña equivocada"}
         bloqueo_hasta = None
@@ -207,10 +229,11 @@ def validar_password(db, correo, password):
         # Update lock expiration if needed
         if bloqueo_hasta:
             cmd = "UPDATE InfoMiembros SET NextLoginAllowed = ? WHERE Correo = ?"
-            cur = db.cursor()
-            cur.execute(cmd, (dt.strftime(bloqueo_hasta, "%Y-%m-%d %H:%M:%S"), correo))
+            cursor.execute(
+                cmd, (dt.strftime(bloqueo_hasta, "%Y-%m-%d %H:%M:%S"), correo)
+            )
 
-        db.commit()
+        conn.commit()
 
         return error, mostrar_campo_password
 
@@ -218,8 +241,7 @@ def validar_password(db, correo, password):
     return {}, ""
 
 
-def resetear_logins_fallidos(db, correo):
+def resetear_logins_fallidos(cursor, conn, correo):
     cmd = "UPDATE InfoMiembros SET NextLoginAllowed = NULL, CountFailedLogins = 0 WHERE Correo = ?"
-    cur = db.cursor()
-    cur.execute(cmd, (correo,))
-    db.commit()
+    cursor.execute(cmd, (correo,))
+    conn.commit()

@@ -2,8 +2,9 @@ import os
 import sqlite3
 import threading
 import time
+import base64
 from datetime import datetime as dt
-from flask import session, redirect, render_template, url_for
+from flask import session, redirect, render_template, url_for, Response
 from authlib.integrations.flask_client import OAuth
 from authlib.common.security import generate_token
 
@@ -21,6 +22,8 @@ from src.ui import (
 from src.ui.maquinarias import (
     login as maq_login,
     registro as maq_registro,
+    perfil as maq_mi_perfil,
+    servicios as maq_mis_servicios,
 )
 from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
 
@@ -161,10 +164,46 @@ class Server:
     def mis_vencimientos(self):
         return mis_vencimientos.main(self)
 
+    def descargar_archivo(self, tipo, id):
+        # 1. Retrieve the base64/byte string from the database
+        cursor = self.db.cursor()
+        cmd = f"SELECT ImageBytes FROM {tipo} WHERE {'IdMember_FK' if "Records" in tipo else 'PlacaValidate'} = ?"
+        cursor.execute(cmd, (id,))
+        base64_string = cursor.fetchone()
+
+        if not base64_string:
+            return "File not found.", 404
+
+        try:
+            # 2. Decode the base64 string back into raw JPEG bytes
+            image_bytes = base64.b64decode(base64_string["ImageBytes"])
+
+            # 3. Create a descriptive file name
+            if tipo == "DataApesegSoats":
+                filename = f"Certificado SOAT {id}.jpg"
+            elif tipo == "DataSunarpFichas":
+                filename = f"Ficha SUNARP {id}.jpg"
+            elif tipo == "DataMtcRecordsConductores":
+                filename = f"Record Conductor {id}.pdf"
+            else:
+                filename = f"download_{tipo}_{id}.jpg"
+
+            # --- Alternative using Flask Response ---
+            response = Response(image_bytes, mimetype="image/jpeg")
+            response.headers["Content-Disposition"] = (
+                f'attachment; filename="{filename}"'
+            )
+            return response
+
+        except KeyboardInterrupt:  # Exception as e:
+            print(f"Error during file download for {tipo}/{id}")
+            return "Error processing file.", 500
+
     def acerca_de(self):
         return acerca_de.main(self)
 
     def logout(self):
+        session.clear()
         return logout.main(self)
 
     # Direct UI Pages
@@ -184,8 +223,23 @@ class Server:
     def maquinarias_registro(self):
         return maq_registro.main(self)
 
-    def maquinarias_mi_cuenta(self):
-        return maq_mi_cuenta.main(self)
+    def maquinarias_mis_servicios(self):
+        cursor = self.db.cursor()
+        return maq_mis_servicios.main(
+            cursor=cursor, correo=session["usuario"]["correo"]
+        )
+
+    def maquinarias_eliminar_cuenta(self):
+        return "eliminar cuenta"
+
+    def maquinarias_mi_perfil(self):
+        return maq_mi_perfil.main(self)
+
+    def maquinarias_logout(self):
+        return redirect(url_for("maquinarias"))
+
+    def nuevo_password(self):
+        return "Nuievo PAss"
 
     # ======================================================
     #                      BACKEND APIs

@@ -23,6 +23,8 @@ def main(self):
         nuevo_password_hash = hash_text(nuevo_password)
 
         # update database
+        cursor = self.db.cursor()
+        conn = self.db.conn
         cmd = """
             UPDATE InfoMiembros
             SET NextLoginAllowed = NULL,
@@ -30,8 +32,8 @@ def main(self):
                 Password = ?
             WHERE Correo = ?
         """
-        self.db.cursor.execute(cmd, (nuevo_password_hash, correo))
-        self.db.conn.commit()
+        cursor.execute(cmd, (nuevo_password_hash, correo))
+        conn.commit()
 
         return jsonify(f"Nuevo Password: {nuevo_password}"), 200
 

@@ -8,7 +8,6 @@ Bienvenido a No Pasa Nada PE
 <div class="d-flex flex-column align-items-center w-100 px-4 py-4"
      style="font-family: 'Inter', sans-serif; font-weight: 700; max-width: 520px; margin: auto;">
 
-    <!-- Logos -->
     <div class="d-flex justify-content-center pt-4 pb-4 align-items-center w-100">
         <img src="/static/images/logo-nopasanadape-transparente-negro.png"
              style="width: 60px; height: auto;" class="me-3">
@@ -19,24 +18,20 @@ Bienvenido a No Pasa Nada PE
              style="height: 60px; width: auto;" class="ms-3">
     </div>
 
-    <!-- Title -->
     <div class="text-center mb-4 w-100">
         <h1 class="fw-bold mb-1" style="font-size: 2.3rem;">No Pasa Nada PE</h1>
         <h2 class="fs-5 fw-normal text-secondary mb-2">un servicio exclusivo para</h2>
         <img src="/static/images/maquinarias-logo.png" style="height: 30px;">
     </div>
 
-    <!-- Login Block -->
     <div class="w-100" style="max-width: 500px; font-weight: 400;">
 
-        <!-- Divider -->
         <div class="d-flex align-items-center my-4">
             <div class="flex-grow-1 border-top opacity-50"></div>
             <div class="text-secondary small mx-3" style="font-size: 1rem;">Inicia sesión con</div>
             <div class="flex-grow-1 border-top opacity-50"></div>
         </div>
 
-        <!-- Social Buttons -->
         <div class="d-flex flex-wrap justify-content-center gap-3">
 
             {% set providers = [
@@ -65,20 +60,17 @@ Bienvenido a No Pasa Nada PE
             {% endfor %}
         </div>
 
-        <!-- Divider -->
         <div class="d-flex align-items-center my-4">
             <div class="flex-grow-1 border-top opacity-50"></div>
             <div class="text-secondary small mx-3" style="font-size: 1rem;">o continúa con</div>
             <div class="flex-grow-1 border-top opacity-50"></div>
         </div>
 
-        <!-- Form -->
         <form method="POST" class="w-100">
 
             <input type="hidden" name="show_password_field"
                    value="{{ 'true' if show_password_field else 'false' }}">
 
-            <!-- Email -->
             <label class="form-label text-secondary d-flex justify-content-center mb-1" style="font-size: 1rem;">
                 <img src="/static/images/email-icon.png" style="height: 26px; margin-right: 8px;">
                 Correo electrónico
@@ -98,7 +90,6 @@ Bienvenido a No Pasa Nada PE
             {% endif %}
 
             {% if show_password_field %}
-                <!-- Password -->
                 <label class="form-label text-secondary d-flex justify-content-center mt-4 mb-1" style="font-size: 1rem;">
                     <img src="/static/images/password-icon.png" style="height: 26px; margin-right: 8px;">
                     Contraseña
@@ -114,9 +105,17 @@ Bienvenido a No Pasa Nada PE
                 {% if errors.password %}
                     <div class="invalid-feedback text-center mb-2 d-block">{{ errors.password }}</div>
                 {% endif %}
+                
+                <p class="text-center mt-2 mb-0">
+                    <a href="#" class="small fw-medium" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#forgotPasswordModal"
+                       style="color: rgb(35, 131, 226); text-decoration: underline; cursor: pointer;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </p>
             {% endif %}
 
-            <!-- Button -->
             <button type="submit"
                 class="btn btn-primary w-100 fw-bold mt-4"
                 style="
@@ -132,7 +131,6 @@ Bienvenido a No Pasa Nada PE
         </form>
     </div>
 
-    <!-- Footer -->
     <p class="text-center small mt-4" style="font-size: 0.95rem; color:#555;">
     Si necesitas ayuda, escríbenos a 
     <a href="mailto:info@nopasanadape.com" style="color: #555; text-decoration: none;">
@@ -141,4 +139,26 @@ Bienvenido a No Pasa Nada PE
 </p>
 
 </div>
+
+{# --- MODAL FOR PASSWORD RECOVERY --- #}
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="forgotPasswordModalLabel">Recuperar Contraseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Enviaremos una contraseña temporal a su dirección de correo ({{ user_data.correo_ingresado if user_data.correo_ingresado else 'ingresado' }}).</p>
+                <p>Use esa nueva contraseña para ingresar.</p>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                {# The button links to the password reset route #}
+                <a href="{{ url_for('nuevo_password') }}" class="btn btn-primary fw-bold">Enviar Correo</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

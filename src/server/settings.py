@@ -33,9 +33,37 @@ def set_routes(self):
     )
     self.app.add_url_rule(
         rule="/maquinarias/mi-cuenta",
-        endpoint="maquinarias-mi-cuenta",
-        view_func=self.maquinarias_mi_cuenta,
+        endpoint="maquinarias-mis-servicios",
+        view_func=self.maquinarias_mis_servicios,
         methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/maquinarias/eliminar-cuenta",
+        endpoint="maquinarias-eliminar-cuenta",
+        view_func=self.maquinarias_eliminar_cuenta,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/maquinarias/mi-perfil",
+        endpoint="maquinarias-mi-perfil",
+        view_func=self.maquinarias_mi_perfil,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/maquinarias/logout",
+        endpoint="maquinarias-logout",
+        view_func=self.maquinarias_logout,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/descargar_archivo/<tipo>/<id>",
+        view_func=self.descargar_archivo,
+        methods=["GET"],
+    )
+    self.app.add_url_rule(
+        rule="/nuevo_password",
+        view_func=self.nuevo_password,
+        methods=["GET"],
     )
 
     # self.app.add_url_rule(
