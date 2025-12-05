@@ -24,6 +24,7 @@ from src.ui.maquinarias import (
     registro as maq_registro,
     perfil as maq_mi_perfil,
     servicios as maq_mis_servicios,
+    eliminar as maq_eliminar_registro,
 )
 from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
 
@@ -230,7 +231,7 @@ class Server:
         )
 
     def maquinarias_eliminar_cuenta(self):
-        return "eliminar cuenta"
+        return maq_eliminar_registro.main(self)
 
     def maquinarias_mi_perfil(self):
         return maq_mi_perfil.main(self)

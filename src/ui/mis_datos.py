@@ -2,7 +2,6 @@ import re
 from datetime import datetime as dt, timedelta as td
 from flask import render_template, redirect, request, flash, url_for
 
-from src.comms import send_instant_email
 from src.utils.utils import hash_text, compare_text_to_hash
 
 
@@ -124,7 +123,7 @@ def _delete_user(self, user):
     self.db.commit()
 
     # enviar correo
-    send_instant_email.send_cancel(
+    enviar_correo_inmediato.send_cancel(
         correo=user["Correo"],
         nombre=user["NombreCompleto"],
     )

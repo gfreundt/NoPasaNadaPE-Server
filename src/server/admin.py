@@ -11,11 +11,12 @@ def main(self):
     solicitud = (request.args.get("solicitud") or "").lower()
     correo = request.args.get("correo")
 
-    # 1) Validate security token
     if token != INTERNAL_AUTH_TOKEN:
         return jsonify("Error en Token de Autorizacion."), 401
 
-    # 2) Request for new password
+    cursor = self.db.cursor()
+    conn = self.db.conn
+
     if solicitud == "nuevo_password":
 
         # generate 6-char alphanumeric password
@@ -23,8 +24,7 @@ def main(self):
         nuevo_password_hash = hash_text(nuevo_password)
 
         # update database
-        cursor = self.db.cursor()
-        conn = self.db.conn
+
         cmd = """
             UPDATE InfoMiembros
             SET NextLoginAllowed = NULL,
@@ -36,6 +36,17 @@ def main(self):
         conn.commit()
 
         return jsonify(f"Nuevo Password: {nuevo_password}"), 200
+
+    if solicitud == "kill":
+
+        cmd = "DELETE FROM InfoMiembros WHERE Correo = ?"
+        cursor.execute(cmd, (correo,))
+        cmd = "DELETE FROM InfoClientesAutorizados WHERE Correo = ?"
+        cursor.execute(cmd, (correo,))
+
+        conn.commit()
+
+        return jsonify(f"Kill: {correo}"), 200
 
     # 3) fallback for unsupported actions
     return jsonify("Error en solicitud."), 400

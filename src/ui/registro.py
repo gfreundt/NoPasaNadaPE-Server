@@ -5,7 +5,6 @@ from random import randrange
 from string import ascii_uppercase
 from flask import render_template, request, flash, redirect
 
-from src.comms import send_instant_email
 from src.utils.utils import hash_text
 
 
@@ -33,7 +32,7 @@ def main(self):
                 [ascii_uppercase[randrange(0, len(ascii_uppercase))] for _ in range(4)]
             )
             print("-------- REG ---------->", self.session["codigo_generado"])
-            send_instant_email.send_code(
+            enviar_correo_inmediato.send_code(
                 codigo=self.session["codigo_generado"],
                 correo=self.session["registration_attempt"]["correo"],
                 nombre=self.session["registration_attempt"]["nombre"],
@@ -102,7 +101,7 @@ def main(self):
             self.log(message=f"Nuevo Registro Completo: {str(_nr)}")
 
             # send welcome email to successfully registered new user
-            send_instant_email.send_welcome(
+            enviar_correo_inmediato.send_welcome(
                 correo=self.session["registration_attempt"]["correo"],
                 nombre=self.session["registration_attempt"]["nombre"],
             )

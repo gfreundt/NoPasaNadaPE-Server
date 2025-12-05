@@ -4,6 +4,7 @@ import time
 import re
 import json
 from src.utils.constants import EXTERNAL_AUTH_TOKEN
+from src.comms import enviar_correo_inmediato
 
 
 # --- FUNCION AUXILIAR PARA LIMPIAR DATOS ---
@@ -38,6 +39,7 @@ def api(self, timer_inicio):
 
         # 2. Conexión a Base de Datos
         cursor = self.db.cursor()
+        conn = self.db.conn
 
         # --- CORRECCION: GENERACION DE ID SEGURA PARA HILOS ---
         # Insertar la entrada de log PRIMERO para generar un ID autoincremental único.
@@ -46,7 +48,7 @@ def api(self, timer_inicio):
             "INSERT INTO StatusApiLogs (Timestamp, Endpoint, UsuarioSolicitando) VALUES (?, ?, ?)",
             (str(dt.now()), "/api/v1", usuario or ""),
         )
-        self.db.conn.commit()
+        conn.commit()
         id_solicitud = cursor.lastrowid  # Obtener el ID generado por la BD
         data_log["IdSolicitud"] = id_solicitud
 
@@ -206,13 +208,15 @@ def api(self, timer_inicio):
             ):
                 errores_cliente.append("Nombre invalido.")
 
-            if tipo_documento and tipo_documento not in ("0", "1"):
-                errores_cliente.append("Tipo de Documento Invalido (0, 1).")
+            if tipo_documento and tipo_documento not in ("DNI", "CE", "PASAPORTE"):
+                errores_cliente.append(
+                    "Tipo de Documento Invalido (valido: 'DNI', 'CE', 'PASAPORTE')"
+                )
 
             if (
-                tipo_documento == "0" and not re.match(r"^\d{8}$", numero_documento)
+                tipo_documento == "DNI" and not re.match(r"^\d{8}$", numero_documento)
             ) or (
-                tipo_documento == "1" and not re.match(r"^\d{12}$", numero_documento)
+                tipo_documento == "CE" and not re.match(r"^\d{12}$", numero_documento)
             ):
                 errores_cliente.append("Numero de Documento Invalido.")
 
@@ -299,7 +303,7 @@ def api(self, timer_inicio):
 
         # --- COMMIT FINAL ---
         # Guardar todos los cambios a la vez. Rápido.
-        self.db.conn.commit()
+        conn.commit()
 
         return finalizar(
             self,
@@ -336,7 +340,7 @@ def finalizar(
     # Determinar Código de Estado basado en resultados
     if codigo:
         _codigo = codigo
-        _resultados = mensaje
+        resultados = mensaje
     else:
         if not exitos:
             _codigo = 400
@@ -345,7 +349,7 @@ def finalizar(
         else:
             _codigo = 207  # Multi-Estado
 
-        _resultados = {
+        resultados = {
             "cuenta_exitos": len(exitos or []),
             "cuenta_fallos": len(fallos or []),
             "exitos": exitos or [],
@@ -357,7 +361,7 @@ def finalizar(
     _ip = request.headers.get("X-Forwarded-For") or request.remote_addr
 
     # 1. Serializar a JSON
-    respuesta_json = json.dumps(_resultados)
+    respuesta_json = json.dumps(resultados)
 
     # 2. Calcular tamaño en KB reales (utf-8)
     tamano_kilobytes = round(len(respuesta_json.encode("utf-8")) / 1024, 4)
@@ -377,6 +381,7 @@ def finalizar(
 
     # Actualizar la entrada de log existente
     cursor = self.db.cursor()
+    conn = self.db.conn
 
     cmd = """UPDATE StatusApiLogs SET TipoSolicitud=?, Timestamp=?, DireccionIP=?, Metodo=?, Endpoint=?, Autenticado=?, UsuarioSolicitando=?, RespuestaStatus=?, RespuestaTiempoSeg=?, RespuestaTamanoKb=?, RespuestaMensaje=?
              WHERE IdSolicitud=?"""
@@ -398,14 +403,19 @@ def finalizar(
             entry["IdSolicitud"],
         ),
     )
-    self.db.conn.commit()
+    conn.commit()
+
+    # enviar correos de activacion a usuario
+    if exitos:
+        for item in exitos:
+            enviar_correo_inmediato.activacion(item["correo"])
 
     return (
         jsonify(
             {
                 "id_solicitud": entry["IdSolicitud"],
                 "timestamp": entry["Timestamp"],
-                "resultados": _resultados,
+                "resultados": resultados,
             }
         ),
         _codigo,

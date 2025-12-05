@@ -3,8 +3,6 @@ from random import randrange
 from string import ascii_uppercase
 from flask import render_template, request, flash
 
-from src.comms import send_instant_email
-
 
 def main(self):
 
@@ -32,7 +30,7 @@ def main(self):
                 "SELECT NombreCompleto FROM InfoMiembros WHERE Correo = ?",
                 (self.session["recovery_attempt"]["correo"],),
             )
-            send_instant_email.send_code(
+            enviar_correo_inmediato.send_code(
                 codigo=self.session["codigo_generado"],
                 correo=self.session["recovery_attempt"]["correo"],
                 nombre=self.db.cursor.fetchone()["NombreCompleto"],

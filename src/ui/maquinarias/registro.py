@@ -4,6 +4,8 @@ from datetime import datetime as dt
 from flask import request, render_template, session
 
 from src.utils.utils import hash_text
+from src.comms import enviar_correo_inmediato
+from src.ui.maquinarias import data_servicios, servicios
 
 
 def main(self):
@@ -11,12 +13,18 @@ def main(self):
     # Initial page load
     if request.method == "GET":
 
+        # extraer data de lo enviado al momento de la activacion y pre-llenar campos
+        cursor = self.db.cursor()
+        cmd = "SELECT Correo, NombreCompleto, TipoDocumento, NumeroDocumento, Celular FROM InfoClientesAutorizados WHERE Correo = ?"
+        cursor.execute(cmd, (session["usuario"].get("correo"),))
+        dato = cursor.fetchone()
+
         usuario = {
-            "correo": session["usuario"].get("correo"),
-            "nombre": session["usuario"].get("nombre"),
-            "tipo_documento": session["usuario"].get("tipo_documento"),
-            "numero_documento": session["usuario"].get("numero_documento"),
-            "celular": session["usuario"].get("celular"),
+            "correo": dato["Correo"],
+            "nombre": dato["NombreCompleto"],
+            "tipo_documento": dato["TipoDocumento"],
+            "numero_documento": dato["NumeroDocumento"],
+            "celular": dato["Celular"],
             "placas": "",
         }
 
@@ -57,8 +65,15 @@ def main(self):
             )
 
         # No errors → proceed
-        inscribir(self.db, forma)
-        return render_template("ui-maquinarias-mi-cuenta.html")
+        cursor = self.db.cursor()
+        conn = self.db.conn
+        inscribir(cursor, conn, forma)
+        enviar_correo_inmediato.inscripcion(
+            correo=forma.get("correo"),
+            nombre=forma.get("nombre"),
+            placas=forma.get("placas").split(" ,"),
+        )
+        return servicios.main(cursor, correo=forma.get("correo"))
 
 
 # ==================================================================
@@ -66,9 +81,7 @@ def main(self):
 # ==================================================================
 
 
-def inscribir(db, forma):
-
-    cursor = db.cursor()
+def inscribir(cursor, conn, forma):
 
     # extraer CodigoMiembroExterno de la informacion enviada por cliente externo
     cursor.execute(
@@ -118,7 +131,7 @@ def inscribir(db, forma):
             (id, placa, fecha_base, fecha_base, fecha_base, fecha_base, fecha_base),
         )
 
-    db.conn.commit()
+    conn.commit()
 
 
 # ==================================================================

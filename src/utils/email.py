@@ -85,8 +85,4 @@ class Email:
         for i in payload["attachments"]:
             pprint.pprint(i["name"])
 
-        response = requests.request("POST", url, json=payload, headers=headers)
-
-        print(response.content)
-
-        return response
+        return requests.request("POST", url, json=payload, headers=headers)
