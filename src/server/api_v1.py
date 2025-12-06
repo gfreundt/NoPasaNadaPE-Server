@@ -57,6 +57,7 @@ def api(self, timer_inicio):
             return finalizar(
                 self,
                 timer_inicio,
+                solicitud,
                 data_log,
                 codigo=401,
                 autenticado=False,
@@ -67,6 +68,7 @@ def api(self, timer_inicio):
             return finalizar(
                 self,
                 timer_inicio,
+                solicitud,
                 data_log,
                 codigo=404,
                 autenticado=True,
@@ -77,6 +79,7 @@ def api(self, timer_inicio):
             return finalizar(
                 self,
                 timer_inicio,
+                solicitud,
                 data_log,
                 codigo=400,
                 autenticado=True,
@@ -87,6 +90,7 @@ def api(self, timer_inicio):
             return finalizar(
                 self,
                 timer_inicio,
+                solicitud,
                 data_log,
                 codigo=200,
                 autenticado=True,
@@ -102,6 +106,7 @@ def api(self, timer_inicio):
             return finalizar(
                 self,
                 timer_inicio,
+                solicitud,
                 data_log,
                 codigo=200,
                 autenticado=True,
@@ -113,6 +118,7 @@ def api(self, timer_inicio):
             return finalizar(
                 self,
                 timer_inicio,
+                solicitud,
                 data_log,
                 codigo=400,
                 autenticado=True,
@@ -308,6 +314,7 @@ def api(self, timer_inicio):
         return finalizar(
             self,
             timer_inicio,
+            solicitud,
             data_log,
             autenticado=True,
             exitos=respuesta_exitos,
@@ -320,6 +327,7 @@ def api(self, timer_inicio):
         return finalizar(
             self,
             timer_inicio,
+            solicitud,
             data_log,
             autenticado=True,
             mensaje={"error": "Error interno."},
@@ -330,6 +338,7 @@ def api(self, timer_inicio):
 def finalizar(
     self,
     timer_inicio,
+    solicitud,
     data_log,
     autenticado,
     mensaje=None,
@@ -406,9 +415,12 @@ def finalizar(
     conn.commit()
 
     # enviar correos de activacion a usuario
-    if exitos:
+    if exitos and solicitud == "alta":
         for item in exitos:
             enviar_correo_inmediato.activacion(item["correo"])
+    elif exitos and solicitud == "baja":
+        for item in exitos:
+            enviar_correo_inmediato.desactivacion(item["correo"], nombre=None)
 
     return (
         jsonify(

@@ -5,19 +5,18 @@ from src.comms import enviar_correo_inmediato
 def main(self):
 
     cursor = self.db.cursor()
-    id_member = session["usuario"]["id_member"]
-    correo = session["usuario"]["correo"]
-    nombre = session["usuario"]["nombre"]
 
     # copiar registro de miembro a tabla de antiguos, eliminar registro de tabla activa y desasociar placas al id
-    cmd = """ INSERT INTO InfoMiembrosInactivos SELECT * FROM InfoMiembros WHERE IdMember = ?;
-              DELETE FROM InfoMiembros WHERE WHERE IdMember = ?;
-              UPDATE InfoPlacas SET IdMember_FK = 0 WHERE IdMember_FK = ?"
-            """
-    cursor.executescript(cmd, (id_member, id_member, id_member))
+    cmd = f""" INSERT INTO InfoMiembrosInactivos SELECT * FROM InfoMiembros WHERE IdMember = {session["usuario"]["id_member"]};
+               DELETE FROM InfoMiembros WHERE IdMember = {session["usuario"]["id_member"]};
+               UPDATE InfoPlacas SET IdMember_FK = 0 WHERE IdMember_FK = {session["usuario"]["id_member"]}
+           """
+    cursor.executescript(cmd)
 
     # mandar correo de confirmacion de eliminacion
-    enviar_correo_inmediato.eliminacion(correo=correo, nombre=nombre)
+    enviar_correo_inmediato.eliminacion(
+        correo=session["usuario"]["correo"], nombre=session["usuario"]["nombre"]
+    )
 
     # borrar sesion y reenviar a landing
     session.clear()

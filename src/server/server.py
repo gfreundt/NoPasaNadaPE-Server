@@ -7,6 +7,7 @@ from datetime import datetime as dt
 from flask import session, redirect, render_template, url_for, Response
 from authlib.integrations.flask_client import OAuth
 from authlib.common.security import generate_token
+from jinja2 import Environment, ext
 
 # Local imports
 from src.server import settings, updater, api, admin
@@ -90,6 +91,8 @@ class Server:
         self.app = app
         self.data_lock = threading.Lock()
 
+        self.app.jinja_env.add_extension("jinja2.ext.do")
+
         # Flask config + routes + OAuth
         settings.set_flask_config(self)
         settings.set_routes(self)
@@ -129,7 +132,7 @@ class Server:
         # Save base user data
         self.session["loaded_user"] = dict(user_row)
 
-        # Load placas
+        # Load plates (placas)
         cur = self.db.cursor()
         cur.execute(
             "SELECT * FROM InfoPlacas WHERE IdMember_FK = ?",
@@ -219,6 +222,7 @@ class Server:
 
     # Maquinarias
     def maquinarias(self):
+        # self.session.clear()
         return maq_login.main(self)
 
     def maquinarias_registro(self):
@@ -261,21 +265,36 @@ class Server:
     # ======================================================
 
     def google_login(self):
+
         redirect_uri = url_for("google_authorize", _external=True)
         return self.oauth.google.authorize_redirect(redirect_uri)
 
     def google_authorize(self):
         token = self.oauth.google.authorize_access_token()
-        user_info = token.get("userinfo")
+        user_info = token.get("userinfo")  # Get user info once
+        cursor = self.db.cursor()
+        correo = user_info["email"]
 
-        if not self.load_user_data_into_session(user_info["email"]):
-            return render_template(
-                "ui-registro-1.html",
-                errors={},
-                user={"correo": user_info["email"], "nombre": user_info["name"]},
+        activo = maq_login.validar_activacion(cursor, correo)
+        if not activo:
+            self.session["auth_error"] = {
+                "email": correo,
+                "provider": "Google",
+                "name": token.get("name", "Usuario"),  # <-- ADDED 'name' HERE
+            }
+            return redirect(url_for("maquinarias"))
+
+        suscrito = maq_login.validar_suscripcion(cursor, token.get("userinfo")["email"])
+        if not suscrito:
+            session["usuario"] = {"correo": token.get("userinfo")["email"]}
+            session["password_only"] = False
+            session["third_party_login"] = True
+            return redirect("/maquinarias/registro")
+        else:
+            maq_login.extraer_data_usuario(
+                cursor, correo=token.get("userinfo")["email"]
             )
-
-        return redirect("/mis-datos")
+            return maq_mis_servicios.main(cursor, correo=correo)
 
     def facebook_login(self):
         redirect_uri = url_for("facebook_authorize", _external=True)
@@ -323,7 +342,7 @@ class Server:
             return redirect(url_for("ui-login"))
 
     # ======================================================
-    #                OAUTH PLACEHOLDERS (RESTORED)
+    #                OAUTH — APPLE, MICROSOFT, INSTAGRAM
     # ======================================================
 
     def apple_login(self):
@@ -335,12 +354,43 @@ class Server:
         pass
 
     def microsoft_login(self):
-        """Placeholder for future Microsoft OAuth."""
-        pass
+        """Initiates the Microsoft OAuth login flow."""
+        redirect_uri = url_for("microsoft_authorize", _external=True)
+        return self.oauth.microsoft.authorize_redirect(redirect_uri)
 
     def microsoft_authorize(self):
-        """Placeholder for future Microsoft OAuth callback."""
-        pass
+        """Handles the callback after Microsoft OAuth authorization."""
+        try:
+            # 1. Authorize access token
+            token = self.oauth.microsoft.authorize_access_token()
+
+            # 2. Fetch user information (using the common 'me' endpoint for OpenID Connect)
+            # Microsoft's user info can be retrieved from the id_token if configured,
+            # or a specific endpoint. Using 'id_token' parsing is safer if properly set up.
+            user_info = self.oauth.microsoft.parse_id_token(token)
+
+            # Assuming user_info contains 'email' and 'name'
+            user_email = user_info.get("email")
+            user_name = user_info.get("name")
+
+            # 3. Load user data or redirect to registration
+            if user_email and self.load_user_data_into_session(user_email):
+                # Login successful, user data loaded into session
+                return redirect("/mis-datos")
+            elif user_email:
+                # User not found in database, redirect to registration
+                return render_template(
+                    "ui-registro-1.html",
+                    errors={},
+                    user={"correo": user_email, "nombre": user_name},
+                )
+            else:
+                # Failed to get email from user_info
+                return redirect(url_for("login"))
+
+        except Exception as e:
+            print("Microsoft Authorization Error:", e)
+            return redirect(url_for("login"))
 
     def instagram_login(self):
         """Placeholder for future Instagram OAuth."""

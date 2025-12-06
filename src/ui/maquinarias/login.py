@@ -20,7 +20,7 @@ def main(self):
     #     return redirect(url_for("maquinarias-mi-cuenta"))
 
     # GET -> load initial page
-    if request.method == "GET":
+    if request.method == "GET" and not session.get("correo_login_externo"):
         return render_template(
             "ui-maquinarias-login.html",
             show_password_field=False,
@@ -44,23 +44,22 @@ def main(self):
                 user_data=forma,
             )
 
-        # Validate email is authorized
-        error_autorizacion = validar_autorizacion(cursor, forma["correo_ingresado"])
-        if error_autorizacion:
+        # validar que el correo haya sido activado
+        activacion = validar_activacion(cursor, forma["correo_ingresado"])
+        if not activacion:
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=False,
-                errors=error_autorizacion,
+                errors={"correo": "Correo no autorizado para este servicio."},
                 user_data=forma,
             )
 
-        # Validate subscription
+        # validar que ya este inscrito, de lo contrario procede a inscripcion
         suscrito = validar_suscripcion(cursor, forma["correo_ingresado"])
         if not suscrito:
             session["usuario"] = {"correo": forma["correo_ingresado"]}
             session["password_only"] = False
             session["third_party_login"] = False
-
             return redirect("/maquinarias/registro")
 
         # Check if account is blocked
@@ -149,12 +148,10 @@ def validar_formato(correo):
     return {}
 
 
-def validar_autorizacion(cursor, correo):
+def validar_activacion(cursor, correo):
     cmd = "SELECT Correo FROM InfoClientesAutorizados WHERE Correo = ?"
     cursor.execute(cmd, (correo,))
-    if not cursor.fetchone():
-        return {"correo": "Correo no autorizado para este servicio."}
-    return {}
+    return bool(cursor.fetchone())
 
 
 def validar_suscripcion(cursor, correo):

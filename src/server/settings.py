@@ -5,6 +5,8 @@ from src.utils.constants import (
     GOOGLE_CLIENT_SECRET,
     FACEBOOK_CLIENT_ID,
     FACEBOOK_CLIENT_SECRET,
+    MICROSOFT_CLIENT_ID,
+    MICROSOFT_CLIENT_SECRET,
 )
 
 
@@ -245,6 +247,18 @@ def set_oauth_config(self):
         authorize_url="https://www.facebook.com/v20.0/dialog/oauth",
         client_kwargs={"scope": "email,public_profile"},
     )
+
+    # === MICROSOFT OPENID CONFIGURATION ADDED HERE ===
+    self.oauth.register(
+        name="microsoft",
+        # Common endpoint for Microsoft/Azure AD V2.0 OpenID Connect
+        server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+        client_id=MICROSOFT_CLIENT_ID,
+        client_secret=MICROSOFT_CLIENT_SECRET,
+        client_kwargs={"scope": "openid email profile User.Read"},
+        # Authlib defaults to use 'id_token' for user info when using server_metadata_url
+    )
+    # =================================================
 
     """
     self.oauth.register(

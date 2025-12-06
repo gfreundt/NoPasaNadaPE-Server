@@ -35,12 +35,14 @@ Bienvenido a No Pasa Nada PE
         <div class="d-flex flex-wrap justify-content-center gap-3">
 
             {% set providers = [
-                ('google_login', 'google-icon.png', 'Google'),
-                ('apple_login', 'apple-icon.png', 'Apple'),
-                ('microsoft_login', 'microsoft-icon.png', 'Microsoft'),
-                ('facebook_login', 'facebook-icon.png', 'Facebook'),
-                ('instagram_login', 'instagram-icon.png', 'Instagram')
+                ('google_login', 'google-icon.png', 'Google')
             ] %}
+                
+            <!-- ('apple_login', 'apple-icon.png', 'Apple'),
+            ('microsoft_login', 'microsoft-icon.png', 'Microsoft'),
+            ('facebook_login', 'facebook-icon.png', 'Facebook'),
+            ('instagram_login', 'instagram-icon.png', 'Instagram') -->
+            
 
             {% for route, icon, label in providers %}
             <a href="{{ url_for(route) }}"
@@ -160,5 +162,48 @@ Bienvenido a No Pasa Nada PE
         </div>
     </div>
 </div>
+
+
+
+
+{# --- MODAL FOR UNAUTHORIZED OAUTH ERROR --- #}
+{% if session.auth_error %}
+<div class="modal fade" id="authErrorModal" tabindex="-1" aria-labelledby="authErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold" id="authErrorModalLabel">Sin Acceso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="fw-bold fs-5">
+                    El correo <span class="text-primary">{{ session.auth_error.email }}</span> 
+                    no ha sido activado para este servicio.
+                </p>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Automatically show the modal if the error data is present
+        // This requires Bootstrap 5 JS to be loaded on ui-pagina-base-maquinarias.html
+        var authErrorModal = new bootstrap.Modal(document.getElementById('authErrorModal'));
+        authErrorModal.show();
+    });
+</script>
+
+{# 
+   Cleans up the session variable immediately after the modal and script are defined/executed.
+   This requires the 'do' extension to be enabled in your Flask app setup.
+#}
+{% do session.pop('auth_error', None) %}
+{% endif %}
 
 {% endblock %}

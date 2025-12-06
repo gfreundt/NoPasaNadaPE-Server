@@ -68,6 +68,7 @@ def main(self):
         cursor = self.db.cursor()
         conn = self.db.conn
         inscribir(cursor, conn, forma)
+        session["usuario"].update(usuario)
         enviar_correo_inmediato.inscripcion(
             correo=forma.get("correo"),
             nombre=forma.get("nombre"),
@@ -116,7 +117,7 @@ def inscribir(cursor, conn, forma):
         f"INSERT INTO InfoMiembros ({", ".join(_nr.keys())}) VALUES ({", ".join(["?"] * len(_nr))})",
         tuple(_nr.values()),
     )
-    id = cursor.lastrowid
+    id_member = cursor.lastrowid
 
     # crear placas para nuevo miembro si no existe, si placa ya existe, asignar a este usuario
     for placa in forma.get("placas").split(", "):
@@ -128,10 +129,20 @@ def inscribir(cursor, conn, forma):
             ON CONFLICT(Placa) DO UPDATE SET 
             IdMember_FK = excluded.IdMember_FK
             """,
-            (id, placa, fecha_base, fecha_base, fecha_base, fecha_base, fecha_base),
+            (
+                id_member,
+                placa,
+                fecha_base,
+                fecha_base,
+                fecha_base,
+                fecha_base,
+                fecha_base,
+            ),
         )
 
     conn.commit()
+
+    session["usuario"]["id_member"] = id_member
 
 
 # ==================================================================
