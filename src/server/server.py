@@ -4,9 +4,11 @@ import threading
 import time
 import base64
 from datetime import datetime as dt
-from flask import session, redirect, render_template, url_for, Response
+from flask import session, redirect, render_template, url_for, Response, flash
 from authlib.integrations.flask_client import OAuth
 from authlib.common.security import generate_token
+from authlib.common.errors import AuthlibBaseError
+import requests.exceptions
 from jinja2 import Environment, ext
 
 # Local imports
@@ -27,7 +29,7 @@ from src.ui.maquinarias import (
     servicios as maq_mis_servicios,
     eliminar as maq_eliminar_registro,
 )
-from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
+from src.utils.constants import DB_NETWORK_PATH
 
 # from ui.maquinarias import data_servicios as maq_mi_cuenta
 
@@ -119,32 +121,32 @@ class Server:
         )
         self.db.commit()
 
-    def load_user_data_into_session(self, correo):
-        """Load user account + associated plates into session."""
+    # def load_user_data_into_session(self, correo):
+    #     """Load user account + associated plates into session."""
 
-        cur = self.db.cursor()
-        cur.execute("SELECT * FROM InfoMiembros WHERE Correo = ?", (correo,))
-        user_row = cur.fetchone()
+    #     cur = self.db.cursor()
+    #     cur.execute("SELECT * FROM InfoMiembros WHERE Correo = ?", (correo,))
+    #     user_row = cur.fetchone()
 
-        if not user_row:
-            return False
+    #     if not user_row:
+    #         return False
 
-        # Save base user data
-        self.session["loaded_user"] = dict(user_row)
+    #     # Save base user data
+    #     self.session["loaded_user"] = dict(user_row)
 
-        # Load plates (placas)
-        cur = self.db.cursor()
-        cur.execute(
-            "SELECT * FROM InfoPlacas WHERE IdMember_FK = ?",
-            (self.session["loaded_user"]["IdMember"],),
-        )
-        placas = cur.fetchall()
+    #     # Load plates (placas)
+    #     cur = self.db.cursor()
+    #     cur.execute(
+    #         "SELECT * FROM InfoPlacas WHERE IdMember_FK = ?",
+    #         (self.session["loaded_user"]["IdMember"],),
+    #     )
+    #     placas = cur.fetchall()
 
-        self.session["loaded_user"]["Placas"] = {
-            f"placa{j}": i["Placa"] for j, i in enumerate(placas, start=1)
-        }
+    #     self.session["loaded_user"]["Placas"] = {
+    #         f"placa{j}": i["Placa"] for j, i in enumerate(placas, start=1)
+    #     }
 
-        return True
+    #     return True
 
     # ======================================================
     #                        UI ROUTES
@@ -176,7 +178,7 @@ class Server:
         base64_string = cursor.fetchone()
 
         if not base64_string:
-            return "File not found.", 404
+            return "No se encontro archivo.", 404
 
         try:
             # 2. Decode the base64 string back into raw JPEG bytes
@@ -192,16 +194,14 @@ class Server:
             else:
                 filename = f"download_{tipo}_{id}.jpg"
 
-            # --- Alternative using Flask Response ---
             response = Response(image_bytes, mimetype="image/jpeg")
             response.headers["Content-Disposition"] = (
                 f'attachment; filename="{filename}"'
             )
             return response
 
-        except KeyboardInterrupt:  # Exception as e:
-            print(f"Error during file download for {tipo}/{id}")
-            return "Error processing file.", 500
+        except Exception as e:
+            return f"Error procesando archivo: {e}.", 500
 
     def acerca_de(self):
         return acerca_de.main(self)
@@ -222,7 +222,6 @@ class Server:
 
     # Maquinarias
     def maquinarias(self):
-        # self.session.clear()
         return maq_login.main(self)
 
     def maquinarias_registro(self):
@@ -243,8 +242,8 @@ class Server:
     def maquinarias_logout(self):
         return redirect(url_for("maquinarias"))
 
-    def nuevo_password(self):
-        return "Nuievo PAss"
+    # def nuevo_password(self):
+    #     return "Nuievo PAss"
 
     # ======================================================
     #                      BACKEND APIs
@@ -261,148 +260,90 @@ class Server:
         return admin.main(self)
 
     # ======================================================
-    #                 OAUTH — GOOGLE, FB, LINKEDIN
+    #           OAUTH (Activos) — Google, Facebook
     # ======================================================
 
     def google_login(self):
-
         redirect_uri = url_for("google_authorize", _external=True)
         return self.oauth.google.authorize_redirect(redirect_uri)
 
     def google_authorize(self):
-        token = self.oauth.google.authorize_access_token()
-        user_info = token.get("userinfo")  # Get user info once
-        cursor = self.db.cursor()
-        correo = user_info["email"]
-
-        activo = maq_login.validar_activacion(cursor, correo)
-        if not activo:
-            self.session["auth_error"] = {
-                "email": correo,
-                "provider": "Google",
-                "name": token.get("name", "Usuario"),
-            }
+        try:
+            token = self.oauth.google.authorize_access_token()
+            correo = token.get("userinfo")["email"]
+            nombre = token.get("name", "Usuario")
+            return self.terminar_login_terceros(correo, nombre, proveedor="Google")
+        except (AuthlibBaseError, requests.exceptions.RequestException):
+            flash("Error de credenciales.")
             return redirect(url_for("maquinarias"))
-
-        suscrito = maq_login.validar_suscripcion(cursor, correo)
-        if not suscrito:
-            session["usuario"] = {"correo": token.get("userinfo")["email"]}
-            session["password_only"] = False
-            session["third_party_login"] = True
-            return redirect("/maquinarias/registro")
-        else:
-            maq_login.extraer_data_usuario(cursor, correo=correo)
-            return maq_mis_servicios.main(cursor, correo=correo)
+        except Exception as e:
+            flash(f"Error general: {e}. Intente otra vez.")
+            return redirect(url_for("maquinarias"))
 
     def facebook_login(self):
         redirect_uri = url_for("facebook_authorize", _external=True)
         return self.oauth.facebook.authorize_redirect(redirect_uri)
 
     def facebook_authorize(self):
-        self.oauth.facebook.authorize_access_token()
-        user_resp = self.oauth.facebook.get("me?fields=id,name,email")
-        profile = user_resp.json()
-        correo = profile.get("email")
-        cursor = self.db.cursor()
-
-        activo = maq_login.validar_activacion(cursor, correo)
-        if not activo:
-            self.session["auth_error"] = {
-                "email": correo,
-                "provider": "Google",
-                "name": profile.get("email"),
-            }
+        try:
+            self.oauth.facebook.authorize_access_token()
+            profile = self.oauth.facebook.get("me?fields=id,name,email").json()
+            correo = profile.get("email")
+            nombre = profile.get("name")
+            return self.terminar_login_terceros(correo, nombre, proveedor="Facebook")
+        except (AuthlibBaseError, requests.exceptions.RequestException):
+            flash("Error de credenciales.")
+            return redirect(url_for("maquinarias"))
+        except Exception as e:
+            flash(f"Error general: {e}. Intente otra vez.")
             return redirect(url_for("maquinarias"))
 
-        suscrito = maq_login.validar_suscripcion(cursor, correo)
-        if not suscrito:
-            session["usuario"] = {"correo": correo}
-            session["password_only"] = False
-            session["third_party_login"] = True
-            return redirect("/maquinarias/registro")
-        else:
-            maq_login.extraer_data_usuario(cursor, correo=correo)
-            return maq_mis_servicios.main(cursor, correo=correo)
+    def terminar_login_terceros(self, correo, nombre, proveedor):
 
-    def linkedin_login(self):
-        redirect_uri = url_for("linkedin_authorize", _external=True)
-        nonce_value = generate_token()
-        session["oauth_nonce"] = nonce_value
+        with self.db.cursor() as cursor:
 
-        return self.oauth.linkedin.authorize_redirect(redirect_uri, nonce=nonce_value)
-
-    def linkedin_authorize(self):
-        try:
-            token = self.oauth.linkedin.authorize_access_token()
-            user_info = self.oauth.linkedin.parse_id_token(token)
-
-            user_email = user_info.get("email")
-            user_name = user_info.get("name")
-
-            if user_email:
-                session.permanent = True
-                session["user"] = {
-                    "email": user_email,
-                    "name": user_name,
-                    "provider": "LinkedIn",
+            # revisar si miembro activo -- si no, popup advirtiendo y regresa
+            activo = maq_login.validar_activacion(cursor, correo)
+            if not activo:
+                self.session["auth_error"] = {
+                    "email": correo,
+                    "provider": proveedor,
+                    "name": nombre,
                 }
+                return redirect(url_for("maquinarias"))
 
-            return redirect(url_for("ui-root"))
-
-        except Exception as e:
-            print("LinkedIn Authorization Error:", e)
-            return redirect(url_for("ui-login"))
+            # revisar si miembro suscrito -- si no, flujo de registro antes
+            suscrito = maq_login.validar_suscripcion(cursor, correo)
+            if not suscrito:
+                session["usuario"] = {"correo": correo}
+                session["password_only"] = False
+                session["third_party_login"] = True
+                return redirect("/maquinarias/registro")
+            else:
+                maq_login.extraer_data_usuario(cursor, correo=correo)
+                return maq_mis_servicios.main(cursor, correo=correo)
 
     # ======================================================
-    #                OAUTH — APPLE, MICROSOFT, INSTAGRAM
+    #     OAUTH (Pendientes) — APPLE, MICROSOFT, INSTAGRAM
     # ======================================================
-
-    def apple_login(self):
-        """Placeholder for future Apple OAuth."""
-        pass
-
-    def apple_authorize(self):
-        """Placeholder for future Apple OAuth callback."""
-        pass
 
     def microsoft_login(self):
-        """Initiates the Microsoft OAuth login flow."""
         redirect_uri = url_for("microsoft_authorize", _external=True)
         return self.oauth.microsoft.authorize_redirect(redirect_uri)
 
     def microsoft_authorize(self):
-        """Handles the callback after Microsoft OAuth authorization."""
         try:
-            # 1. Authorize access token
             token = self.oauth.microsoft.authorize_access_token()
-
-            # 2. Fetch user information (using the common 'me' endpoint for OpenID Connect)
-            # Microsoft's user info can be retrieved from the id_token if configured,
-            # or a specific endpoint. Using 'id_token' parsing is safer if properly set up.
             user_info = self.oauth.microsoft.parse_id_token(token)
-
-            # Assuming user_info contains 'email' and 'name'
-            user_email = user_info.get("email")
-            user_name = user_info.get("name")
-
-            # 3. Load user data or redirect to registration
-            if user_email and self.load_user_data_into_session(user_email):
-                # Login successful, user data loaded into session
-                return redirect("/mis-datos")
-            elif user_email:
-                # User not found in database, redirect to registration
-                return render_template(
-                    "ui-registro-1.html",
-                    errors={},
-                    user={"correo": user_email, "nombre": user_name},
-                )
-            else:
-                # Failed to get email from user_info
-                return redirect(url_for("login"))
-
+            correo = user_info.get("email")
+            nombre = user_info.get("name")
+            return self.terminar_login_terceros(correo, nombre, proveedor="Facebook")
+        except (AuthlibBaseError, requests.exceptions.RequestException):
+            flash("Error de credenciales.")
+            return redirect(url_for("maquinarias"))
         except Exception as e:
-            print("Microsoft Authorization Error:", e)
-            return redirect(url_for("login"))
+            flash(f"Error general: {e}. Intente otra vez.")
+            return redirect(url_for("maquinarias"))
 
     def instagram_login(self):
         """Placeholder for future Instagram OAuth."""
@@ -412,23 +353,10 @@ class Server:
         """Placeholder for future Instagram OAuth callback."""
         pass
 
-    # ======================================================
-    #                MAQUINARIAS GOOGLE OAUTH
-    # ======================================================
+    def apple_login(self):
+        """Placeholder for future Apple OAuth."""
+        pass
 
-    def maq_google_login(self):
-        redirect_uri = url_for("maq_google_authorize", _external=True)
-        return self.oauth.google.authorize_redirect(redirect_uri)
-
-    def maq_google_authorize(self):
-        token = self.oauth.google.authorize_access_token()
-        user_info = token.get("userinfo")
-
-        if not self.load_user_data_into_session(user_info["email"]):
-            return render_template(
-                "ui-registro-1.html",
-                errors={},
-                user={"correo": user_info["email"], "nombre": user_info["name"]},
-            )
-
-        return redirect("/mis-datos")
+    def apple_authorize(self):
+        """Placeholder for future Apple OAuth callback."""
+        pass

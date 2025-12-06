@@ -62,11 +62,11 @@ def set_routes(self):
         view_func=self.descargar_archivo,
         methods=["GET"],
     )
-    self.app.add_url_rule(
-        rule="/nuevo_password",
-        view_func=self.nuevo_password,
-        methods=["GET"],
-    )
+    # self.app.add_url_rule(
+    #     rule="/nuevo_password",
+    #     view_func=self.nuevo_password,
+    #     methods=["GET"],
+    # )
 
     # self.app.add_url_rule(
     #     rule="/login",
@@ -159,17 +159,6 @@ def set_routes(self):
         rule="/google_callback",
         endpoint="google_authorize",
         view_func=self.google_authorize,
-        methods=["GET", "POST"],
-    )
-    self.app.add_url_rule(
-        rule="/maq_google_login",
-        endpoint="maq_google_login",
-        view_func=self.maq_google_login,
-    )
-    self.app.add_url_rule(
-        rule="/maq_google_callback",
-        endpoint="maq_google_authorize",
-        view_func=self.maq_google_authorize,
         methods=["GET", "POST"],
     )
     self.app.add_url_rule(
