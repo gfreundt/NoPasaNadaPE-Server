@@ -62,11 +62,11 @@ def set_routes(self):
         view_func=self.descargar_archivo,
         methods=["GET"],
     )
-    # self.app.add_url_rule(
-    #     rule="/nuevo_password",
-    #     view_func=self.nuevo_password,
-    #     methods=["GET"],
-    # )
+    self.app.add_url_rule(
+        rule="/nuevo_password",
+        view_func=self.nuevo_password,
+        methods=["GET"],
+    )
 
     # self.app.add_url_rule(
     #     rule="/login",

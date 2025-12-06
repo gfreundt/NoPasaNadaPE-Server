@@ -242,8 +242,8 @@ class Server:
     def maquinarias_logout(self):
         return redirect(url_for("maquinarias"))
 
-    # def nuevo_password(self):
-    #     return "Nuievo PAss"
+    def nuevo_password(self):
+        return "Nuievo PAss"
 
     # ======================================================
     #                      BACKEND APIs
