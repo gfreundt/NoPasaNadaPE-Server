@@ -280,20 +280,18 @@ class Server:
             self.session["auth_error"] = {
                 "email": correo,
                 "provider": "Google",
-                "name": token.get("name", "Usuario"),  # <-- ADDED 'name' HERE
+                "name": token.get("name", "Usuario"),
             }
             return redirect(url_for("maquinarias"))
 
-        suscrito = maq_login.validar_suscripcion(cursor, token.get("userinfo")["email"])
+        suscrito = maq_login.validar_suscripcion(cursor, correo)
         if not suscrito:
             session["usuario"] = {"correo": token.get("userinfo")["email"]}
             session["password_only"] = False
             session["third_party_login"] = True
             return redirect("/maquinarias/registro")
         else:
-            maq_login.extraer_data_usuario(
-                cursor, correo=token.get("userinfo")["email"]
-            )
+            maq_login.extraer_data_usuario(cursor, correo=correo)
             return maq_mis_servicios.main(cursor, correo=correo)
 
     def facebook_login(self):
@@ -301,16 +299,30 @@ class Server:
         return self.oauth.facebook.authorize_redirect(redirect_uri)
 
     def facebook_authorize(self):
-        try:
-            token = self.oauth.facebook.authorize_access_token()
-        except Exception:
-            return redirect(url_for("ui-login"))
-
+        self.oauth.facebook.authorize_access_token()
         user_resp = self.oauth.facebook.get("me?fields=id,name,email")
-        user_info = user_resp.json()
+        profile = user_resp.json()
+        correo = profile.get("email")
+        cursor = self.db.cursor()
 
-        print("Facebook login:", user_info.get("email"))
-        return redirect(url_for("dashboard"))
+        activo = maq_login.validar_activacion(cursor, correo)
+        if not activo:
+            self.session["auth_error"] = {
+                "email": correo,
+                "provider": "Google",
+                "name": profile.get("email"),
+            }
+            return redirect(url_for("maquinarias"))
+
+        suscrito = maq_login.validar_suscripcion(cursor, correo)
+        if not suscrito:
+            session["usuario"] = {"correo": correo}
+            session["password_only"] = False
+            session["third_party_login"] = True
+            return redirect("/maquinarias/registro")
+        else:
+            maq_login.extraer_data_usuario(cursor, correo=correo)
+            return maq_mis_servicios.main(cursor, correo=correo)
 
     def linkedin_login(self):
         redirect_uri = url_for("linkedin_authorize", _external=True)

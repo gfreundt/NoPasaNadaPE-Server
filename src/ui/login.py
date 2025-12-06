@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from flask import redirect, request, render_template, url_for
-from src.utils.constants import GOOGLE_CLIENT_ID, GOOGLE_CALLBACK_URI
+from src.utils.constants import GOOGLE_CLIENT_ID
 from src.utils.utils import compare_text_to_hash
 
 
@@ -24,7 +24,6 @@ def main(self):
             user={},
             errors={},
             google_client_id=GOOGLE_CLIENT_ID,
-            google_callback_uri=GOOGLE_CALLBACK_URI,
         )
 
     # POST → user submitted login form
@@ -73,7 +72,6 @@ def main(self):
             user=form,
             errors=errors,
             google_client_id=GOOGLE_CLIENT_ID,
-            google_callback_uri=GOOGLE_CALLBACK_URI,
         )
 
 
