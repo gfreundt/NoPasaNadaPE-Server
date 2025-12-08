@@ -4,6 +4,10 @@ from src.comms import enviar_correo_inmediato
 
 def main(self):
 
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "validado":
+        return redirect(url_for("maquinarias"))
+
     cursor = self.db.cursor()
 
     # copiar registro de miembro a tabla de antiguos, eliminar registro de tabla activa y desasociar placas al id

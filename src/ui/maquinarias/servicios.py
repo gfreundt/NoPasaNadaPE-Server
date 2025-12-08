@@ -1,9 +1,19 @@
-from flask import render_template
+from flask import render_template, session, redirect, url_for, request
 
 
-def main(cursor, correo):
+def main(self):
 
-    servicios = generar_data_servicios(cursor, correo=correo)
+    # respuesta a pings para medir uptime
+    if request.method == "HEAD":
+        return ("", 200)
+
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "validado":
+        return redirect(url_for("maquinarias"))
+
+    # extraer toda la data relevante de la base de datos
+    cursor = self.db.cursor()
+    servicios = generar_data_servicios(cursor, correo=session["usuario"]["correo"])
 
     return render_template(
         "ui-maquinarias-mi-cuenta.html",

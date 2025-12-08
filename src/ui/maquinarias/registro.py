@@ -1,7 +1,7 @@
 import re
 import uuid
 from datetime import datetime as dt
-from flask import request, render_template, session
+from flask import request, render_template, session, redirect, url_for
 
 from src.utils.utils import hash_text
 from src.comms import enviar_correo_inmediato
@@ -10,8 +10,16 @@ from src.ui.maquinarias import data_servicios, servicios
 
 def main(self):
 
+    # respuesta a pings para medir uptime
+    if request.method == "HEAD":
+        return ("", 200)
+
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "registro":
+        return redirect(url_for("maquinarias"))
+
     # Initial page load
-    if request.method == "GET":
+    if request.method == "GET" or not session["usuario"].get("correo"):
 
         # extraer data de lo enviado al momento de la activacion y pre-llenar campos
         cursor = self.db.cursor()
@@ -74,7 +82,8 @@ def main(self):
             nombre=forma.get("nombre"),
             placas=forma.get("placas").split(" ,"),
         )
-        return servicios.main(cursor, correo=forma.get("correo"))
+        session["etapa"] = "validado"
+        return servicios.main(self)
 
 
 # ==================================================================

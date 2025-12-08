@@ -110,3 +110,61 @@ def eliminacion(correo, nombre):
 
     # enviar
     return email.send_zeptomail(msg)
+
+
+def recuperacion_contrasena(correo, token):
+
+    # crear URL unico para recuperacion de contraseña
+    url = f"http://localhost:5000/recuperar-contrasena/{token}"
+    url = f"https://nopasanadape.com/recuperar-contrasena/{token}"
+
+    # load HTML templates
+    environment = Environment(loader=FileSystemLoader("templates/"))
+    template = environment.get_template(
+        "comms-maquinarias-recuperacion-contrasena.html"
+    )
+
+    # crea objeto para enviar correo desde info@
+    email = Email(
+        from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
+        token=ZEPTOMAIL_INFO_TOKEN,
+    )
+
+    # crear contenido del correo
+    msg = {
+        "to_address": correo,
+        "bcc": "gabfre@gmail.com",
+        "subject": "Tu nueva contraseña de No Pasa Nada PE",
+        "html_content": template.render(
+            {"url": url, "ano": dt.strftime(dt.now(), "%Y")}
+        ),
+    }
+
+    # enviar
+    return email.send_zeptomail(msg)
+
+
+def confirmacion_cambio_contrasena(correo):
+
+    # load HTML templates
+    environment = Environment(loader=FileSystemLoader("templates/"))
+    template = environment.get_template(
+        "comms-maquinarias-confirmacion-cambio-contrasena.html"
+    )
+
+    # crea objeto para enviar correo desde info@
+    email = Email(
+        from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
+        token=ZEPTOMAIL_INFO_TOKEN,
+    )
+
+    # crear contenido del correo
+    msg = {
+        "to_address": correo,
+        "bcc": "gabfre@gmail.com",
+        "subject": "Tu nueva contraseña de No Pasa Nada PE",
+        "html_content": template.render({"ano": dt.strftime(dt.now(), "%Y")}),
+    }
+
+    # enviar
+    return email.send_zeptomail(msg)

@@ -3,13 +3,14 @@ import sqlite3
 import threading
 import time
 import base64
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 from flask import session, redirect, render_template, url_for, Response, flash
 from authlib.integrations.flask_client import OAuth
 from authlib.common.security import generate_token
 from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
 from jinja2 import Environment, ext
+import uuid
 
 # Local imports
 from src.server import settings, updater, api, admin
@@ -28,10 +29,10 @@ from src.ui.maquinarias import (
     perfil as maq_mi_perfil,
     servicios as maq_mis_servicios,
     eliminar as maq_eliminar_registro,
+    recuperar as maq_recuperar,
 )
 from src.utils.constants import DB_NETWORK_PATH
-
-# from ui.maquinarias import data_servicios as maq_mi_cuenta
+from src.comms import enviar_correo_inmediato
 
 
 # ============================================================
@@ -121,33 +122,6 @@ class Server:
         )
         self.db.commit()
 
-    # def load_user_data_into_session(self, correo):
-    #     """Load user account + associated plates into session."""
-
-    #     cur = self.db.cursor()
-    #     cur.execute("SELECT * FROM InfoMiembros WHERE Correo = ?", (correo,))
-    #     user_row = cur.fetchone()
-
-    #     if not user_row:
-    #         return False
-
-    #     # Save base user data
-    #     self.session["loaded_user"] = dict(user_row)
-
-    #     # Load plates (placas)
-    #     cur = self.db.cursor()
-    #     cur.execute(
-    #         "SELECT * FROM InfoPlacas WHERE IdMember_FK = ?",
-    #         (self.session["loaded_user"]["IdMember"],),
-    #     )
-    #     placas = cur.fetchall()
-
-    #     self.session["loaded_user"]["Placas"] = {
-    #         f"placa{j}": i["Placa"] for j, i in enumerate(placas, start=1)
-    #     }
-
-    #     return True
-
     # ======================================================
     #                        UI ROUTES
     # ======================================================
@@ -171,6 +145,11 @@ class Server:
         return mis_vencimientos.main(self)
 
     def descargar_archivo(self, tipo, id):
+
+        # seguridad: evitar navegacion directa a url
+        if session.get("etapa") != "validado":
+            return redirect(url_for("maquinarias"))
+
         # 1. Retrieve the base64/byte string from the database
         cursor = self.db.cursor()
         cmd = f"SELECT ImageBytes FROM {tipo} WHERE {'IdMember_FK' if "Records" in tipo else 'PlacaValidate'} = ?"
@@ -208,6 +187,7 @@ class Server:
 
     def logout(self):
         session.clear()
+        return redirect(url_for("maquinarias"))
         return logout.main(self)
 
     # Direct UI Pages
@@ -228,10 +208,7 @@ class Server:
         return maq_registro.main(self)
 
     def maquinarias_mis_servicios(self):
-        cursor = self.db.cursor()
-        return maq_mis_servicios.main(
-            cursor=cursor, correo=session["usuario"]["correo"]
-        )
+        return maq_mis_servicios.main(self)
 
     def maquinarias_eliminar_cuenta(self):
         return maq_eliminar_registro.main(self)
@@ -240,10 +217,39 @@ class Server:
         return maq_mi_perfil.main(self)
 
     def maquinarias_logout(self):
+        session.clear()
         return redirect(url_for("maquinarias"))
 
     def nuevo_password(self):
-        return "Nuievo PAss"
+        # generar password alfanumerico al azar
+        token = uuid.uuid4().hex
+        cursor = self.db.cursor()
+        correo = session["usuario"]["correo"]
+        id_member = session["usuario"]["id_member"]
+
+        # actualizar base de datos
+        cmd = """
+                    INSERT INTO StatusTokens 
+                    (IdMember, TokenHash, TokenTipo, Correo, FechaHasta, TokenUsado)
+                    VALUES 
+                    (?, ?, ?, ?, ?, ?)
+                """
+        cursor.execute(
+            cmd, (id_member, token, "Password", correo, dt.now() + td(minutes=10), 0)
+        )
+        self.db.conn.commit()
+
+        # mandar correo
+        enviar_correo_inmediato.recuperacion_contrasena(
+            correo=correo,
+            token=token,
+        )
+        flash(f"Hemos enviado un correo a {correo}.")
+
+        return redirect(url_for("maquinarias"))
+
+    def recuperar_contrasena(self, token):
+        return maq_recuperar.main(self, token)
 
     # ======================================================
     #                      BACKEND APIs
@@ -279,6 +285,8 @@ class Server:
         except Exception as e:
             flash(f"Error general: {e}. Intente otra vez.")
             return redirect(url_for("maquinarias"))
+        # except KeyboardInterrupt:
+        #     pass
 
     def facebook_login(self):
         redirect_uri = url_for("facebook_authorize", _external=True)
@@ -300,28 +308,30 @@ class Server:
 
     def terminar_login_terceros(self, correo, nombre, proveedor):
 
-        with self.db.cursor() as cursor:
+        cursor = self.db.cursor()
 
-            # revisar si miembro activo -- si no, popup advirtiendo y regresa
-            activo = maq_login.validar_activacion(cursor, correo)
-            if not activo:
-                self.session["auth_error"] = {
-                    "email": correo,
-                    "provider": proveedor,
-                    "name": nombre,
-                }
-                return redirect(url_for("maquinarias"))
+        # revisar si miembro activo -- si no, popup advirtiendo y regresa
+        activo = maq_login.validar_activacion(cursor, correo)
+        if not activo:
+            self.session["auth_error"] = {
+                "email": correo,
+                "provider": proveedor,
+                "name": nombre,
+            }
+            return redirect(url_for("maquinarias"))
 
-            # revisar si miembro suscrito -- si no, flujo de registro antes
-            suscrito = maq_login.validar_suscripcion(cursor, correo)
-            if not suscrito:
-                session["usuario"] = {"correo": correo}
-                session["password_only"] = False
-                session["third_party_login"] = True
-                return redirect("/maquinarias/registro")
-            else:
-                maq_login.extraer_data_usuario(cursor, correo=correo)
-                return maq_mis_servicios.main(cursor, correo=correo)
+        # revisar si miembro suscrito -- si no, flujo de registro antes
+        suscrito = maq_login.validar_suscripcion(cursor, correo)
+        if not suscrito:
+            session["usuario"] = {"correo": correo}
+            session["password_only"] = False
+            session["third_party_login"] = True
+            session["etapa"] = "registro"
+            return redirect("/maquinarias/registro")
+        else:
+            maq_login.extraer_data_usuario(cursor, correo=correo)
+            session["etapa"] = "validado"
+            return maq_mis_servicios.main(self)
 
     # ======================================================
     #     OAUTH (Pendientes) — APPLE, MICROSOFT, INSTAGRAM

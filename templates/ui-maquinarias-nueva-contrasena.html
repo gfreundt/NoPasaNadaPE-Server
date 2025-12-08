@@ -1,0 +1,108 @@
+{% extends "ui-pagina-base-maquinarias.html" %}
+
+{% block title %}
+Restablecer Contraseña | No Pasa Nada PE 
+{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center" style="font-family: 'Inter', sans-serif; font-weight: 700;">
+
+    {% if invalido %}
+    <div class="text-center pt-5 pb-5 w-100" style="max-width: 450px;">
+        
+        <h1 class="fw-bold mb-4 text-danger" style="font-size: 2.5rem;">
+            {{ invalido }}
+        </h1>
+        
+        <a href="{{ url_for('maquinarias') }}" 
+           class="btn btn-primary w-100 fw-medium" 
+           style="height: 48px; background-color: rgb(35, 131, 226); border-color: rgb(35, 131, 226); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">
+            Regresar a la Página Principal
+        </a>
+        
+        <p class="mt-4 text-muted small">
+            Si el problema persiste, intenta solicitar un nuevo enlace de recuperación.
+        </p>
+    </div>
+    
+    {% else %}
+    
+    <div class="d-flex justify-content-center pt-5 pb-3 align-items-center">
+        <img src="/static/images/nopasanadape-icon-azul.png" alt="No Pasa Nada PE Logo" style="width: 50px; height: 50px;" class="me-2">
+        <div style="height: 40px; width: 1px; background-color: black; margin-inline: 10px;"></div>
+        <img src="/static/images/maquinarias-icon.png" alt="Maquinarias Logo" style="height: 50px;" class="ms-2">
+    </div>
+
+    <div class="text-center mb-4" style="max-width: 380px;">
+        <h1 class="fw-bold mb-0" style="font-size: 2rem;">Restablecer Contraseña</h1>
+        <h2 class="fs-4 fw-normal text-secondary mb-1">Crea una nueva contraseña para tu cuenta</h2>
+    </div>
+    
+    <div class="notion-login w-100" style="max-width: 360px; font-weight: 400;">
+        <div class="d-flex flex-column">
+
+            <form action="" method="POST">
+                
+                {% if usuario.correo %}
+                <div class="form-group mb-3"> 
+                    <label class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
+                        <img src="/static/images/email-icon.png" alt="Email Icon" style="height: 22px; width: 22px; margin-right: 5px;">
+                        Cuenta:
+                    </label>
+                    <div class="form-control" 
+                          style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background-color: #f0f0f0; display: flex; align-items: center;">
+                        {{ usuario.correo }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <input type="hidden" name="token" value="{{ token }}">
+                
+                <div class="form-group mb-3"> 
+                    <label for="password1-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
+                        <img src="/static/images/password-icon.png" alt="Password Icon" style="height: 22px; width: 22px; margin-right: 5px;">
+                        Nueva contraseña
+                    </label>
+                    <input id="password1-input" 
+                            name="password1" 
+                            type="password" class="form-control" 
+                            placeholder="Mínimo 8 caracteres"
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" required>
+
+                    {% if errors.password1 %}
+                        <div class="invalid-feedback text-center mb-1" style="display: block;">
+                            {{ errors.password1 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-4"> 
+                    <label for="password2-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
+                        <img src="/static/images/password-icon.png" alt="Password Icon" style="height: 22px; width: 22px; margin-right: 5px;">
+                        Confirmar contraseña
+                    </label>
+                    <input id="password2-input" 
+                            name="password2" 
+                            type="password" class="form-control" 
+                            placeholder="Repite la nueva contraseña"
+                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" required>
+
+                    {% if errors.password2 %}
+                        <div class="invalid-feedback text-center mb-1" style="display: block;">
+                            {{ errors.password2 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-medium mt-2 mb-4" style="height: 40px; background-color: rgb(35, 131, 226); border-color: rgb(35, 131, 226); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">
+                    Restablecer Contraseña
+                </button>
+                
+            </form>
+        </div>
+    </div>
+    
+    {% endif %}
+
+</div>
+{% endblock %}

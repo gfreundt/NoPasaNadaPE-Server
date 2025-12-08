@@ -9,19 +9,19 @@ from src.ui.maquinarias import data_servicios, servicios
 # login endpoint
 def main(self):
 
-    self.session.permanent = True
-    cursor = self.db.cursor()
-    conn = self.db.conn
-
+    # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
 
-        # if self.session.get("loaded_user"):
-        #     return redirect(url_for("maquinarias-mi-cuenta"))
-
-        # GET -> load initial page
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "validado":
+        return redirect(url_for("maquinarias"))
 
     session["perfil_muestra_password"] = False
+
+    self.session.permanent = True
+    cursor = self.db.cursor()
+    conn = self.db.conn
 
     if request.method == "GET":
 

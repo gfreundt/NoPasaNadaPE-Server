@@ -151,6 +151,12 @@ def set_routes(self):
         methods=["POST"],
     )
     self.app.add_url_rule(
+        rule="/recuperar-contrasena/<token>",
+        endpoint="recuperar_contrasena",
+        view_func=self.recuperar_contrasena,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
         rule="/google_login",
         endpoint="google_login",
         view_func=self.google_login,

@@ -16,9 +16,6 @@ def main(self):
     if request.method == "HEAD":
         return ("", 200)
 
-    # if self.session.get("loaded_user"):
-    #     return redirect(url_for("maquinarias-mi-cuenta"))
-
     # GET -> load initial page
     if request.method == "GET" and not session.get("correo_login_externo"):
         return render_template(
@@ -60,6 +57,7 @@ def main(self):
             session["usuario"] = {"correo": forma["correo_ingresado"]}
             session["password_only"] = False
             session["third_party_login"] = False
+            session["etapa"] = "registro"
             return redirect("/maquinarias/registro")
 
         # Check if account is blocked
@@ -72,7 +70,8 @@ def main(self):
                 user_data=forma,
             )
 
-        # All good → show password field
+        # todo en orden -- carga la informacion en session
+        extraer_data_usuario(cursor, correo=forma["correo_ingresado"])
         return render_template(
             "ui-maquinarias-login.html",
             show_password_field=True,
@@ -102,11 +101,9 @@ def main(self):
 
         # Correct password → reset attempts
         resetear_logins_fallidos(cursor, conn, correo=forma["correo_ingresado"])
+        session["etapa"] = "validado"
 
-        # extraer informacion de base de datos (usuario y mi-cuenta)
-        extraer_data_usuario(cursor, correo=forma["correo_ingresado"])
-
-        return servicios.main(cursor, correo=forma["correo_ingresado"])
+        return servicios.main(self)
 
 
 def extraer_data_usuario(cursor, correo):
