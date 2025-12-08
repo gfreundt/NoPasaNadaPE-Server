@@ -2,7 +2,8 @@ import os
 from datetime import datetime as dt, timedelta as td
 from bs4 import BeautifulSoup
 from src.utils.email import Email
-from src.utils.constants import NETWORK_PATH, ZEPTOMAIL_INFO_TOKEN
+from src.utils.constants import NETWORK_PATH
+from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 
 def send(db_cursor, db_conn, max=12):
@@ -17,7 +18,7 @@ def send(db_cursor, db_conn, max=12):
 
     # activate send account
     email = Email(
-        from_account={"name":"No Pasa Nada PE", "address":"info@nopasanadape.com"},
+        from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )
 
@@ -51,12 +52,7 @@ def send(db_cursor, db_conn, max=12):
         c = [i["content"] for i in meta if i["name"] == "attachment-type"]
 
         attachments = [
-            {
-                "name": i,
-                "content": j,
-                "mime_type": k
-            }
-            for i, j, k in zip(a, b, c)
+            {"name": i, "content": j, "mime_type": k} for i, j, k in zip(a, b, c)
         ]
 
         msg.update({"attachments": attachments})

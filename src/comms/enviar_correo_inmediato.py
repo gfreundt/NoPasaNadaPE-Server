@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime as dt
 from src.utils.email import Email
-from src.utils.constants import ZEPTOMAIL_INFO_TOKEN
+from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 
 def activacion(correo, nombre=None):

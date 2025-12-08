@@ -14,15 +14,16 @@ import uuid
 
 # Local imports
 from src.server import settings, updater, api, admin
-from src.ui import (
-    login,
-    mis_vencimientos,
-    registro,
-    recuperar,
-    logout,
-    mis_datos,
-    acerca_de,
-)
+
+# from src.ui import (
+#     login,
+#     mis_vencimientos,
+#     registro,
+#     recuperar,
+#     logout,
+#     mis_datos,
+#     acerca_de,
+# )
 from src.ui.maquinarias import (
     login as maq_login,
     registro as maq_registro,
