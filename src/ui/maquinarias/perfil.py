@@ -67,7 +67,7 @@ def main(self):
         # No errors → proceed
         actualizar(cursor=cursor, conn=conn, forma=forma)
         session["usuario"].update(usuario)
-        return servicios.main(cursor, correo=forma.get("correo"))
+        return servicios.main(self)
 
 
 def actualizar(cursor, conn, forma):
