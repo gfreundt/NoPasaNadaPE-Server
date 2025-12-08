@@ -3,7 +3,7 @@ from flask import request, jsonify
 import time
 import re
 import json
-from src.utils.constants import EXTERNAL_AUTH_TOKEN
+from security.keys import EXTERNAL_AUTH_TOKEN
 from src.comms import enviar_correo_inmediato
 
 

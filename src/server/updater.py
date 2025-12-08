@@ -1,8 +1,8 @@
-import os
 from datetime import datetime as dt
 from flask import request, jsonify
 
-from src.utils.constants import SQL_TABLES, NETWORK_PATH, UPDATER_TOKEN
+from src.utils.constants import SQL_TABLES
+from security.keys import UPDATER_TOKEN
 from src.comms import send_messages_and_alerts, generar_mensajes
 from src.maintenance import maintenance
 from src.updates import datos_actualizar, necesitan_mensajes

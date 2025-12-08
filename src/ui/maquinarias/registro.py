@@ -5,7 +5,7 @@ from flask import request, render_template, session, redirect, url_for
 
 from src.utils.utils import hash_text
 from src.comms import enviar_correo_inmediato
-from src.ui.maquinarias import data_servicios, servicios
+from src.ui.maquinarias import servicios
 
 
 def main(self):

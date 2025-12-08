@@ -1,5 +1,5 @@
 from datetime import timedelta as td
-from src.utils.constants import (
+from security.keys import (
     FLASK_SECRET_KEY,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,

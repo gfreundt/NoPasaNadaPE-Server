@@ -1,9 +1,9 @@
 import re
 from datetime import datetime as dt, timedelta as td
-from flask import redirect, request, render_template, url_for, session
+from flask import redirect, request, render_template, session
 
-from src.utils.utils import compare_text_to_hash, date_to_mail_format
-from src.ui.maquinarias import data_servicios, servicios
+from src.utils.utils import compare_text_to_hash
+from src.ui.maquinarias import servicios
 
 
 # login endpoint

@@ -1,9 +1,8 @@
 import re
-from datetime import datetime as dt, timedelta as td
 from flask import redirect, request, render_template, url_for, session
 
-from src.utils.utils import compare_text_to_hash, date_to_mail_format, hash_text
-from src.ui.maquinarias import data_servicios, servicios
+from src.utils.utils import compare_text_to_hash, hash_text
+from src.ui.maquinarias import servicios
 
 
 # login endpoint
@@ -76,7 +75,6 @@ def actualizar(cursor, conn, forma):
 
     # grabar datos de miembro
     cmd = "UPDATE InfoMiembros SET NombreCompleto = ?, Celular = ? WHERE IdMember = ?"
-    print(cmd)
     cursor.execute(cmd, (forma.get("nombre"), forma.get("celular"), id_member))
 
     # grabar nuevo password si hubo cambio

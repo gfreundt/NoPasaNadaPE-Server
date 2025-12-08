@@ -1,7 +1,7 @@
 from flask import request, jsonify
 import uuid
 
-from src.utils.constants import INTERNAL_AUTH_TOKEN
+from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text
 
 

@@ -4,7 +4,7 @@ import requests
 import base64
 import socket
 import bcrypt
-from src.utils.constants import MONTHS_3_LETTERS, TRUECAPTCHA_KEY
+from src.utils.constants import MONTHS_3_LETTERS
 
 
 def date_to_db_format(data):
@@ -72,23 +72,6 @@ def date_to_user_format(fecha):
     _year = fecha[:4]
 
     return f"{_day}-{_month}-{_year}"
-
-
-def use_truecaptcha(image):
-
-    # legacy: transform received path to object
-    if type(image) is str:
-        print("fdfdf")
-        image = open(image, "rb")
-
-    _url = "https://api.apitruecaptcha.org/one/gettext"
-    _data = {
-        "userid": "gabfre@gmail.com",
-        "apikey": TRUECAPTCHA_KEY,
-        "data": base64.b64encode(image.read()).decode("ascii"),
-    }
-    response = requests.post(url=_url, json=_data)
-    return response.json()
 
 
 def base64_to_image(base64_string, output_path):
