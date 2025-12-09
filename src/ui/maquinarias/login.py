@@ -216,7 +216,7 @@ def validar_password(cursor, conn, correo, password):
             mostrar_campo_password = False
 
         elif logins_fallidos >= 5:
-            bloqueo_hasta = dt.now() + td(Dias=1)
+            bloqueo_hasta = dt.now() + td(days=1)
             error = {"correo": "Cuenta bloqueada por 1 día."}
             mostrar_campo_password = False
 

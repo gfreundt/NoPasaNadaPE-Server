@@ -92,13 +92,19 @@
                                                 {% if item.FechaHastaDias is not none %}
                                                     {% set days_label = 'días' %}
                                                     {% set days_info_color = 'color: #6c757d;' %}
+
+                                                    {# FIX: Use Python's str.format method with the thousands comma specifier #}
+                                                    {% set formatted_days = "{:,}".format(item.FechaHastaDias | abs) %}
+
                                                     {% if item.FechaHastaDias == 0 %}
                                                         {% set days_info = 'Hoy' %}
                                                     {% elif item.FechaHastaDias > 0 %}
-                                                        {% set days_info = 'quedan ' + item.FechaHastaDias | string + ' ' + days_label %}
+                                                        {# Use formatted_days #}
+                                                        {% set days_info = 'quedan ' + formatted_days + ' ' + days_label %}
                                                         {% set days_info_color = 'color: #28a745;' %}
                                                     {% else %}
-                                                        {% set days_info = 'hace ' + (item.FechaHastaDias * -1) | string + ' ' + days_label %}
+                                                        {# Use formatted_days #}
+                                                        {% set days_info = 'hace ' + formatted_days + ' ' + days_label %}
                                                         {% set days_info_color = 'color: #dc3545;' %}
                                                     {% endif %}
                                                     <br><span style="font-size: 12px; {{ days_info_color }} font-weight: bold;">{{ days_info }}</span>
@@ -118,6 +124,7 @@
                             {% else %}
                             <div style="text-align: center; padding: 20px; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 30px;">
                                 <p style="margin: 0 0 5px; font-weight: bold; font-size: 16px;">No Hay Informacion Disponible</p>
+                                <p style="margin: 0; font-size: 12px; color: #6c757d;">si recien se registra, su información estara disponible dentro de las proximas 24 horas</p>
                             </div>
                             {% endif %}
                             

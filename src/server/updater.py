@@ -30,16 +30,14 @@ def update(self):
         do_update(post.get("data", {}), db_cursor, db_conn)
         return jsonify({"status": "Update OK"})
 
-    if "generar" in instruction:
+    if instruction == "generar_alertas":
+        print("Client Request --> GENERAR ALERTAS")
+        payload = generar_mensajes.alertas(db_cursor)
+        return jsonify(payload)
 
-        if instruction == "generar_alertas":
-            print("Client Request --> GENERAR ALERTAS")
-            payload = generar_mensajes.alertas(db_cursor)
-
-        elif instruction == "generar_boletines":
-            print("Client Request --> GENERAR BOLETINES")
-            payload = generar_mensajes.boletines(db_cursor)
-
+    if instruction == "generar_boletines":
+        print("Client Request --> GENERAR BOLETINES")
+        payload = generar_mensajes.boletines(db_cursor)
         return jsonify(payload)
 
     if instruction == "send_messages":
@@ -56,7 +54,7 @@ def update(self):
     if instruction == "get_info_data":
         return jsonify(do_get_info_data(db_cursor))
 
-    return jsonify({"error": "Unknown instruction"}), 400
+    return jsonify({"error": "Instruccion desconocida"}), 400
 
 
 # -------------------------------------------------------------------------
