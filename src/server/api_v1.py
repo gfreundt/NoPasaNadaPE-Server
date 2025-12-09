@@ -348,7 +348,7 @@ def api(self, timer_inicio):
             fallos=respuesta_fallos,
         )
 
-    except Exception as e:
+    except KeyboardInterrupt:  # Exception as e:
         print(f"Error de API: {e}")
 
         return finalizar(
