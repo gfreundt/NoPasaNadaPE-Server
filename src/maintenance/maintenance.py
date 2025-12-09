@@ -20,7 +20,7 @@ def clear_outbound_folder(tipo=None):
 
     for file in os.listdir(os.path.join(NETWORK_PATH, "outbound")):
         for t in tipo:
-            if t in file:
+            if t in file and "html" in file:
                 os.remove(os.path.join(NETWORK_PATH, "outbound", file))
 
 

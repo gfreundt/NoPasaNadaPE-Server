@@ -6,8 +6,7 @@ from src.utils.constants import NETWORK_PATH
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 
-def send(db_cursor, db_conn, max=12):
-    """send messages in outbound folder, limit to avoid zoho mail considering it spam"""
+def send(db_cursor, db_conn):
 
     result = {"ok": 0, "error": 0}
 

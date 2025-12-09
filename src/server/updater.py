@@ -3,7 +3,7 @@ from flask import request, jsonify
 
 from src.utils.constants import SQL_TABLES
 from security.keys import UPDATER_TOKEN
-from src.comms import send_messages_and_alerts, generar_mensajes
+from src.comms import send_messages_and_alerts, generar_mensajes, enviar_correo_diferido
 from src.maintenance import maintenance
 from src.updates import datos_actualizar, necesitan_mensajes
 
@@ -17,42 +17,42 @@ def update(self):
         print("Authentication Error")
         return jsonify({"error": "Auth Error"}), 401
 
-    db_cursor, db_conn = self.db.cursor(), self.db.conn
+    cursor, conn = self.db.cursor(), self.db.conn
     instruction = post.get("instruction")
 
     if instruction == "datos_alerta":
-        return jsonify(datos_actualizar.alertas(db_cursor))
+        return jsonify(datos_actualizar.alertas(cursor))
 
     if instruction == "datos_boletin":
-        return jsonify(datos_actualizar.boletines(db_cursor))
+        return jsonify(datos_actualizar.boletines(cursor))
 
     if instruction == "do_updates":
-        do_update(post.get("data", {}), db_cursor, db_conn)
+        do_update(post.get("data", {}), cursor, conn)
         return jsonify({"status": "Update OK"})
 
     if instruction == "generar_alertas":
         print("Client Request --> GENERAR ALERTAS")
-        payload = generar_mensajes.alertas(db_cursor)
+        payload = generar_mensajes.alertas(cursor)
         return jsonify(payload)
 
     if instruction == "generar_boletines":
         print("Client Request --> GENERAR BOLETINES")
-        payload = generar_mensajes.boletines(db_cursor)
+        payload = generar_mensajes.boletines(cursor)
         return jsonify(payload)
 
     if instruction == "send_messages":
         print("Client Request --> SEND MESSAGES")
-        result = send_messages_and_alerts.send(db_cursor, db_conn)
+        result = enviar_correo_diferido.send(cursor, conn)
         return jsonify(result)
 
     if instruction == "get_kpis":
-        return jsonify(do_get_kpis(db_cursor))
+        return jsonify(do_get_kpis(cursor))
 
     if instruction == "get_logs":
         return jsonify(do_get_logs(self.db.cursor, max=post.get("max", 50)))
 
     if instruction == "get_info_data":
-        return jsonify(do_get_info_data(db_cursor))
+        return jsonify(do_get_info_data(cursor))
 
     return jsonify({"error": "Instruccion desconocida"}), 400
 

@@ -2,14 +2,17 @@ import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr
 import requests
+from datetime import datetime as dt
 import pprint
 
 
 class Email:
 
-    def __init__(self, from_account, token):
+    def __init__(self, cursor, conn, from_account, token):
         self.from_account = from_account
         self.token = token
+        self.cursor = cursor
+        self.conn = conn
 
     def send_email(self, emails):
 
@@ -54,7 +57,7 @@ class Email:
             except Exception:
                 return False
 
-    def send_zeptomail(self, email):
+    def send_zeptomail(self, email, simulation=False):
 
         url = "https://api.zeptomail.com/v1.1/email"
 
@@ -82,7 +85,42 @@ class Email:
             "authorization": self.token,
         }
 
-        for i in payload["attachments"]:
-            pprint.pprint(i["name"])
+        if not simulation:
 
-        return requests.request("POST", url, json=payload, headers=headers)
+            respuesta = requests.request(
+                "POST", url, json=payload, headers=headers
+            ).json()
+            if respuesta.get("error"):
+                response_request_id = respuesta["error"].get("request_id")
+                response_message = "ERROR"
+            else:
+                response_request_id = respuesta.get("request_id")
+                response_message = "OK"
+            self.registrar_envio_bd(email, response_request_id, response_message)
+
+        # responder True si ok con la progrmacion de envio del mensaje
+        return response_message == "OK"
+
+    def registrar_envio_bd(self, mensaje, response_request_id, response_message):
+
+        cmd = """
+                    INSERT INTO StatusMensajesEnviados
+                    (IdMember, TipoMensaje, "To", Bcc, Subject, FechaCreacion, FechaEnvio, HashCode, RespuestaId, RespuestaMensaje)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  """
+
+        self.cursor.execute(
+            cmd,
+            (
+                mensaje["id_member"],
+                mensaje["tipo_mensaje"],
+                mensaje["to_address"],
+                mensaje["bcc"],
+                mensaje["subject"],
+                mensaje["fecha_creacion"],
+                dt.now(),
+                mensaje["hashcode"],
+                response_request_id,
+                response_message,
+            ),
+        )
