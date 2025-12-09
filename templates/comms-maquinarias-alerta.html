@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Alerta de Vencimiento! | No Pasa Nada PE</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+
+                    <tr>
+                        <td align="center" style="padding: 30px 20px 20px; border-bottom: 3px solid #dc3545;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="font-size: 0; text-align: center;">
+
+                                        <div style="display: inline-block; vertical-align: middle; width: 48%;">
+                                            <img src="https://nopasanadape.com/static/images/logo-nopasanadape-transparente-negro.png" alt="No Pasa Nada PE Logo" width="50" style="display: block; margin: 0 auto 10px;">
+                                            <p style="margin: 0; font-size: 10px; color: #555555; font-weight: bold;">Presentado por</p>
+                                        </div>
+
+                                        <div style="display: inline-block; vertical-align: middle; width: 2%;">
+                                            <div style="height: 40px; width: 1px; background-color: #cccccc; margin: 0 auto;"></div>
+                                        </div>
+
+                                        <div style="display: inline-block; vertical-align: middle; width: 48%;">
+                                            <img src="https://nopasanadape.com/static/images/maquinarias-icon.png" alt="Maquinarias Logo" width="60" style="display: block; margin: 0 auto 10px auto;">
+                                            <p style="margin: 0; font-size: 10px; color: #555555; font-weight: bold;">Exclusivo para</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 40px 40px 20px; color: #333333;">
+
+                            <h1 style="margin: 0 0 10px; font-size: 26px; font-weight: bold; color: #dc3545; text-align: center;">
+                                ALERTA DE VENCIMIENTO
+                            </h1>
+                            <p style="margin: 0 0 20px; font-size: 18px; line-height: 26px; text-align: center;">
+                                Atencion {{ nombre_usuario }}:
+                                
+                            </p>
+
+                            {% set is_expired = vencido %}
+                            {% set danger_color = '#dc3545' %}     {# Red #}
+                            {% set danger_bg = '#f8d7da' %}        {# Light Red #}
+                            {% set warning_color = '#ffc107' %}    {# Yellow/Orange #}
+                            {% set warning_bg = '#fff3cd' %}       {# Light Yellow #}
+
+                            <div style="
+                                margin: 30px 0;
+                                padding: 20px;
+                                border: 1px solid {{ danger_color if is_expired else warning_color }};
+                                background-color: {{ danger_bg if is_expired else warning_bg}}; 
+                                border-radius: 8px;
+                                text-align: center;
+                                color: #000000;
+                            ">
+                                <p style="margin: 0 0 5px; font-size: 16px; font-weight: bold;">
+                                {{ servicio }}
+                                {% if is_expired %}
+                                    <span>VENCID{{genero}}</span>
+                                {% else %}
+                                    <span>POR VENCER</span>
+                                
+                                {% endif %}
+                                </p>
+                                {% if placa %}
+                                <p style="margin: 0 0 5px; font-size: 16px; font-weight: bold;">
+                                    PLACA: <span style="font-size: 20px;">{{ placa }}</span>
+                                </p>
+                                {% endif %}
+                                <p style="margin: 0; font-size: 14px;">
+                                    Ultimo dia de vigencia: {{ fecha_hasta }}
+                                </p>
+                            </div>
+
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 24px;">
+                                Si tienes blah dudas blah
+                            </p>
+
+                            <div style="margin: 30px 0; text-align: center;">
+                                <a href="nopasanadape.com/maquinarias" target="_blank" style="
+                                    background-color: #0056b3;
+                                    border-radius: 8px;
+                                    color: #ffffff;
+                                    display: inline-block;
+                                    font-size: 18px;
+                                    font-weight: bold;
+                                    line-height: 50px;
+                                    text-align: center;
+                                    text-decoration: none;
+                                    width: 100%;
+                                    max-width: 300px;
+                                    mso-padding-alt: 0;
+                                ">
+                                    <span style="mso-text-raise: 15px;">Ir a Mi Cuenta</span>
+                                </a>
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding: 10px 40px 0; font-size: 1px; color: #f4f4ff; line-height: 1px;">
+                            <span style="font-size: 1px; color: #f4f4f4; line-height: 1px;">
+                                id_correo:{{ hashcode }}
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding: 20px 40px; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee;">
+                            <p style="margin: 0 0 5px; font-weight: bold;">No Pasa Nada PE - Un servicio exclusivo para Maquinarias S.A.</p>
+                            <p style="margin: 0;">&copy; {{ ano | default('2025') }}. Todos los derechos reservados.</p>
+                            <p style="margin: 10px 0 0;">Soporte: <a href="mailto:info@nopasanadape.com" style="color: #0056b3; text-decoration: none;">info@nopasanadape.com</a></p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

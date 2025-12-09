@@ -111,7 +111,7 @@ def boletines(db_cursor):
     """
 
     cmd = """
-    SELECT IdMember, DocTipo, DocNum
+    SELECT IdMember, DocTipo, DocNum, Correo
         FROM InfoMiembros 
         WHERE NextMessageSend <= datetime('now','localtime')
     """

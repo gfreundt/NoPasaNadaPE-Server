@@ -65,13 +65,16 @@ def main(self, token):
         # No errors → proceed
         cursor = self.db.cursor()
         conn = self.db.conn
-
-        # grabar nuevo password si hubo cambio
         if forma.get("password1"):
+            # grabar cambios
             cmd = "UPDATE InfoMiembros SET Password = ? WHERE Correo = ?"
             cursor.execute(
                 cmd, (hash_text(forma.get("password1")), session["usuario"]["correo"])
             )
+            # desautorizar token
+            cmd = "UPDATE StatusTokens SET TokenUsado = 1 WHERE Correo = ?"
+            cursor.execute(cmd, (session["usuario"]["correo"],))
+
             conn.commit()
             # correo de confirmarcion de cambio de contrasena
             enviar_correo_inmediato.confirmacion_cambio_contrasena(

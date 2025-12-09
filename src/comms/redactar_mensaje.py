@@ -1,8 +1,116 @@
 from datetime import datetime as dt
 from src.utils.utils import date_to_mail_format
+import uuid
+from src.ui.maquinarias.servicios import generar_data_servicios
 
 
-def compose(db_cursor, member, template, email_id, subject, alertas, placas):
+def alerta(
+    db_cursor,
+    idmember,
+    template,
+    subject,
+    tipo_alerta,
+    vencido,
+    fecha_hasta,
+    placa,
+    doc_tipo,
+    doc_num,
+):
+    """Construye el HTML final usando la plantilla Jinja2."""
+
+    # Secure SELECT
+    db_cursor.execute(
+        "SELECT CodMemberInterno FROM InfoMiembros WHERE IdMember = ? LIMIT 1",
+        (idmember,),
+    )
+    member = db_cursor.fetchone()
+
+    if not member:
+        return None
+
+    # Random hash for tracking
+    email_id = f"{member['CodMemberInterno']}|{uuid.uuid4().hex[-12:]}"
+
+    if tipo_alerta == "BREVETE":
+        servicio = "Licencia de Conducir"
+        genero = "O"
+
+    elif tipo_alerta == "REVTEC":
+        servicio = "Revisión Técnica"
+        genero = "A"
+
+    elif tipo_alerta == "SOAT":
+        servicio = "Certificado SOAT"
+        genero = "O"
+
+    elif tipo_alerta == "SATIMP":
+        servicio = "Impuesto Vehicular SAT Lima"
+        genero = "O"
+
+    elif tipo_alerta == "DNI":
+        servicio = "Documento Nacional de Identidad"
+        genero = "O"
+
+    elif tipo_alerta == "PASAPORTE/VISA":
+        servicio = f"Pasaporte/Visa de {doc_tipo}"
+        genero = "O"
+
+    else:
+        servicio = tipo_alerta  # fallback if DB contains an unexpected type
+
+    # Build final data injection dict
+    info = {
+        "nombre_usuario": member["NombreCompleto"],
+        "fecha_hasta": date_to_mail_format(fecha_hasta),
+        "genero": genero,
+        "servicio": servicio,
+        "placa": placa,
+        "vencido": vencido,
+        "ano": dt.strftime(dt.now(), "%Y"),
+    }
+
+    return {
+        "to": member["Correo"],
+        "bcc": "gabfre@gmail.com",
+        "subject": subject,
+        "idMember": int(member["IdMember"]),
+        "timestamp": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "hashcode": email_id,
+        "attachment_paths": [],
+        "reset_next_send": 0,
+        "html": template.render(info),
+    }
+
+
+def boletin(db_cursor, member, template, email_id, subject, alertas, placas, correo):
+
+    x = generar_data_servicios(db_cursor, correo)
+    from pprint import pprint
+
+    pprint(x)
+
+    # # Build final data injection dict
+    # info = {
+    #     "nombre_usuario": member["NombreCompleto"],
+    #     "fecha_hasta": date_to_mail_format(fecha_hasta),
+    #     "genero": genero,
+    #     "servicio": servicio,
+    #     "placa": placa,
+    #     "vencido": vencido,
+    #     "ano": dt.strftime(dt.now(), "%Y"),
+    # }
+
+    return {
+        "to": member["Correo"],
+        "bcc": "gabfre@gmail.com",
+        "subject": subject,
+        "idMember": int(member["IdMember"]),
+        "timestamp": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "hashcode": email_id,
+        "attachment_paths": [],
+        "reset_next_send": 0,
+        "html": template.render(x),
+    }
 
     _txtal = []
     _attachments = []
@@ -60,12 +168,6 @@ def compose(db_cursor, member, template, email_id, subject, alertas, placas):
         "satimp": date_to_mail_format(
             _data["LastUpdateSatImpuestosCodigos"], elapsed=True
         ),
-        "sunat": date_to_mail_format(_data["LastUpdateSunatRucs"], elapsed=True),
-        "jne_multa": date_to_mail_format(_data["LastUpdateJneMultas"], elapsed=True),
-        "osiptel": date_to_mail_format(_data["LastUpdateOsiptelLineas"], elapsed=True),
-        "jne_afiliacion": date_to_mail_format(
-            _data["LastUpdateJneAfiliaciones"], elapsed=True
-        ),
     }
     db_cursor.execute(
         f"SELECT * FROM InfoPlacas WHERE IdMember_FK = {member[0]} LIMIT 1"
@@ -87,16 +189,6 @@ def compose(db_cursor, member, template, email_id, subject, alertas, placas):
             ),
             "sunarp": (
                 date_to_mail_format(_data["LastUpdateSunarpFichas"], elapsed=True)
-                if _data
-                else ""
-            ),
-            "sutran": (
-                date_to_mail_format(_data["LastUpdateSutranMultas"], elapsed=True)
-                if _data
-                else ""
-            ),
-            "satmul": (
-                date_to_mail_format(_data["LastUpdateSatMultas"], elapsed=True)
                 if _data
                 else ""
             ),
@@ -317,84 +409,6 @@ def compose(db_cursor, member, template, email_id, subject, alertas, placas):
                 }
             )
             _attach_txt.append("Récord del Conductor MTC.")
-
-    # add SUNAT information
-    _sunats = []
-    db_cursor.execute(
-        f"SELECT * FROM DataSunatRucs WHERE IdMember_FK = {member[0]} ORDER BY LastUpdate DESC"
-    )
-    _m = db_cursor.fetchone()
-    if _m:
-        _sunats = {
-            "existe": True,
-            "ruc": _m[1],
-            "tipo_contribuyente": _m[2],
-            "fecha_inscripcion": date_to_mail_format(_m[5]),
-            "fecha_inicio_actividades": date_to_mail_format(_m[9]),
-            "estado": _m[6],
-            "condicion": _m[7],
-            "actualizado": actualizado["sunat"],
-        }
-    else:
-        _sunats = []
-
-    _info.update({"sunat": _sunats})
-
-    # add JNE Afiliacion information
-    db_cursor.execute(
-        f"SELECT * FROM DataJneAfiliaciones WHERE IdMember_FK = {member[0]} ORDER BY LastUpdate DESC"
-    )
-    _m = db_cursor.fetchone()
-    if _m and _m[1]:
-        _jneafil = {"existe": True, "actualizado": actualizado["jne_afiliacion"]}
-        # add image to attachment list
-        if _m["ImageBytes"]:
-            _attachments.append(
-                {
-                    "filename": "Afiliación a Partidos.jpg",
-                    "bytes": _m["ImageBytes"],
-                    "type": "image/jpeg",
-                }
-            )
-            _attach_txt.append("Afiliación a Partidos Políticos.")
-    else:
-        _jneafil = {"existe": False, "actualizado": actualizado["jne_afiliacion"]}
-
-    _info.update({"jne_afiliacion": _jneafil})
-
-    # add JNE Multas information
-    db_cursor.execute(
-        f"SELECT * FROM DataJneMultas WHERE IdMember_FK = {member[0]} ORDER BY LastUpdate DESC"
-    )
-    _m = db_cursor.fetchone()
-    if _m and _m[1]:
-        _jnemultas = _jneafil = {
-            "existe": True,
-            "actualizado": actualizado["jne_multa"],
-        }
-    else:
-        _jnemultas = _jneafil = {
-            "existe": False,
-            "actualizado": actualizado["jne_multa"],
-        }
-
-    _info.update({"jne_multas": _jnemultas})
-
-    # add OSIPTEL information
-    db_cursor.execute(
-        f"SELECT * FROM DataOsiptelLineas WHERE IdMember_FK = {member[0]} ORDER BY LastUpdate DESC"
-    )
-    _s = []
-    for _x in db_cursor.fetchall():
-        _s.append(
-            {
-                "tipo_linea": _x[1],
-                "numero_linea": _x[2],
-                "operador": _x[3],
-                "actualizado": actualizado["osiptel"],
-            }
-        )
-    _info.update({"osipteles": _s})
 
     # subject title number of alerts
     _subj = (

@@ -32,27 +32,13 @@ def update(self):
 
     if "generar" in instruction:
 
-        # borrar /outbound
-        maintenance.clear_outbound_folder()
-
         if instruction == "generar_alertas":
             print("Client Request --> GENERAR ALERTAS")
-            maintenance.clear_outbound_folder("alertas")
-            x = necesitan_mensajes.alertas(db_cursor)
-            payload = generar_mensajes.alertas(db_cursor, x)
+            payload = generar_mensajes.alertas(db_cursor)
 
         elif instruction == "generar_boletines":
             print("Client Request --> GENERAR BOLETINES")
-            maintenance.clear_outbound_folder("boletines")
-            y = necesitan_mensajes.boletines(db_cursor)
-            payload = generar_mensajes.boletines(db_cursor, y)
-
-        # extraer copia de los mensajes generados para devolver a cliente
-        # payload = {}
-        # out_dir = os.path.join(NETWORK_PATH, "outbound")
-        # for msg in os.listdir(out_dir):
-        #     with open(os.path.join(out_dir, msg), "r") as f:
-        #         payload[msg] = f.read()
+            payload = generar_mensajes.boletines(db_cursor)
 
         return jsonify(payload)
 
