@@ -64,7 +64,12 @@ def api(self, timer_inicio):
                 mensaje={"error": "Token incorrecto."},
             )
 
-        if solicitud not in ("alta", "baja", "info"):
+        if solicitud not in (
+            "alta",
+            "baja",
+            "clientes_autorizados",
+            "mensajes_enviados",
+        ):
             return finalizar(
                 self,
                 timer_inicio,
@@ -97,9 +102,27 @@ def api(self, timer_inicio):
                 mensaje={"error": "Prueba exitosa."},
             )
 
-        # --- SOLICITUD: INFO ---
-        if solicitud == "info":
+        # --- SOLICITUD: BASE DE DATOS DE CLIENTES AUTORIZADOS ---
+        if solicitud == "clientes_autorizados":
             cursor.execute("SELECT * FROM InfoClientesAutorizados")
+            rows = cursor.fetchall()
+            column_names = [col[0] for col in cursor.description]
+            registros = [dict(zip(column_names, row)) for row in rows]
+            return finalizar(
+                self,
+                timer_inicio,
+                solicitud,
+                data_log,
+                codigo=200,
+                autenticado=True,
+                mensaje={"data": registros, "cuenta": len(registros)},
+            )
+
+        # --- SOLICITUD: BASE DE DATOS DE MENSAJES ENVIADOS ---
+        if solicitud == "mensajes_enviados":
+            cursor.execute(
+                "SELECT TipoMensaje, DireccionCorreo, Subject, FechaEnvio, RespuestaMensaje FROM StatusMensajesEnviados"
+            )
             rows = cursor.fetchall()
             column_names = [col[0] for col in cursor.description]
             registros = [dict(zip(column_names, row)) for row in rows]

@@ -105,7 +105,7 @@ class Email:
 
         cmd = """
                     INSERT INTO StatusMensajesEnviados
-                    (IdMember, TipoMensaje, "To", Bcc, Subject, FechaCreacion, FechaEnvio, HashCode, RespuestaId, RespuestaMensaje)
+                    (IdMember, TipoMensaje, DireccionCorreo, Bcc, Subject, FechaCreacion, FechaEnvio, HashCode, RespuestaId, RespuestaMensaje)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   """
 
@@ -124,3 +124,5 @@ class Email:
                 response_message,
             ),
         )
+
+        self.conn.commit()
