@@ -5,6 +5,7 @@ import re
 import json
 from security.keys import EXTERNAL_AUTH_TOKEN
 from src.comms import enviar_correo_inmediato
+from src.utils.utils import send_pushbullet
 
 
 # --- FUNCION AUXILIAR PARA LIMPIAR DATOS ---
@@ -33,6 +34,8 @@ def api(self, timer_inicio):
         solicitud = clean_str(_data, "solicitud").lower()
         usuario = _data.get("usuario")
         clientes = _data.get("clientes")
+        fecha_desde = _data.get("fecha_desde", dt(year=2000, month=1, day=1))
+        fecha_hasta = _data.get("fecha_hasta", dt(year=2100, month=1, day=1))
 
         data_log["TipoSolicitud"] = solicitud
         data_log["UsuarioSolicitando"] = usuario or ""
@@ -120,9 +123,10 @@ def api(self, timer_inicio):
 
         # --- SOLICITUD: BASE DE DATOS DE MENSAJES ENVIADOS ---
         if solicitud == "mensajes_enviados":
-            cursor.execute(
-                "SELECT TipoMensaje, DireccionCorreo, Subject, FechaEnvio, RespuestaMensaje FROM StatusMensajesEnviados"
-            )
+            cmd = """ SELECT TipoMensaje, DireccionCorreo, Subject, FechaEnvio, RespuestaMensaje FROM StatusMensajesEnviados
+                        WHERE FechaEnvio BETWEEN ? AND ?
+                    """
+            cursor.execute(cmd, (fecha_desde, fecha_hasta))
             rows = cursor.fetchall()
             column_names = [col[0] for col in cursor.description]
             registros = [dict(zip(column_names, row)) for row in rows]
@@ -441,9 +445,16 @@ def finalizar(
     if exitos and solicitud == "alta":
         for item in exitos:
             enviar_correo_inmediato.activacion(item["correo"])
+        send_pushbullet(
+            title=f"NoPasaNadaPE - Correos de Activacion Enviados ({len(exitos)})"
+        )
+
     elif exitos and solicitud == "baja":
         for item in exitos:
             enviar_correo_inmediato.desactivacion(item["correo"], nombre=None)
+        send_pushbullet(
+            title=f"NoPasaNadaPE - Correos de DESActivacion Enviados ({len(exitos)})"
+        )
 
     return (
         jsonify(

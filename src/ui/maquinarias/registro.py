@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime as dt
 from flask import request, render_template, session, redirect, url_for
 
-from src.utils.utils import hash_text
+from src.utils.utils import hash_text, send_pushbullet
 from src.comms import enviar_correo_inmediato
 from src.ui.maquinarias import servicios
 
@@ -83,6 +83,9 @@ def main(self):
             placas=forma.get("placas").split(" ,"),
         )
         session["etapa"] = "validado"
+        send_pushbullet(
+            title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get("correo")})"
+        )
         return servicios.main(self)
 
 

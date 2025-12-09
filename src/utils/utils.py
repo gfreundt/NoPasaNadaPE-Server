@@ -1,10 +1,13 @@
 from datetime import datetime as dt
 import re
-import requests
 import base64
 import socket
 import bcrypt
+import json
+import requests
+from requests.exceptions import Timeout, ConnectionError, RequestException
 from src.utils.constants import MONTHS_3_LETTERS
+from security.keys import PUSHBULLET_API_TOKEN
 
 
 def date_to_db_format(data):
@@ -110,3 +113,29 @@ def compare_text_to_hash(text_string, hash_string):
 
     # return boolean on match
     return bcrypt.checkpw(text_bytes, hash_bytes)
+
+
+def send_pushbullet(title, message=""):
+
+    # do not accept blank title
+    if not title:
+        return False
+
+    API_URL = "https://api.pushbullet.com/v2/pushes"
+    payload = {"type": "note", "title": title, "body": message}
+
+    try:
+        response = requests.post(
+            API_URL,
+            data=json.dumps(payload),
+            headers={"Content-Type": "application/json"},
+            auth=(PUSHBULLET_API_TOKEN, ""),
+        )
+
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+
+    except (Timeout, ConnectionError, RequestException):
+        return False
