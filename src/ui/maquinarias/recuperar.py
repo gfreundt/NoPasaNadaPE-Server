@@ -78,7 +78,7 @@ def main(self, token):
             conn.commit()
             # correo de confirmarcion de cambio de contrasena
             enviar_correo_inmediato.confirmacion_cambio_contrasena(
-                correo=session["usuario"]["correo"]
+                self.db, correo=session["usuario"]["correo"]
             )
 
         session.clear()

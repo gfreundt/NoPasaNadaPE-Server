@@ -242,6 +242,7 @@ class Server:
 
         # mandar correo
         enviar_correo_inmediato.recuperacion_contrasena(
+            self.db,
             correo=correo,
             token=token,
         )

@@ -124,6 +124,7 @@ def _delete_user(self, user):
 
     # enviar correo
     enviar_correo_inmediato.send_cancel(
+        self.db,
         correo=user["Correo"],
         nombre=user["NombreCompleto"],
     )

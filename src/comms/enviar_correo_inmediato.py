@@ -4,7 +4,9 @@ from src.utils.email import Email
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 
-def activacion(correo, nombre=None):
+def activacion(db, correo, nombre=None):
+
+    cursor, conn = db.cursor(), db.conn
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -12,6 +14,8 @@ def activacion(correo, nombre=None):
 
     # crea objeto para enviar correo desde info@
     email = Email(
+        cursor=cursor,
+        conn=conn,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )
@@ -30,7 +34,9 @@ def activacion(correo, nombre=None):
     return email.send_zeptomail(msg)
 
 
-def desactivacion(correo, nombre):
+def desactivacion(db, correo, nombre):
+
+    cursor, conn = db.cursor(), db.conn
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -38,6 +44,8 @@ def desactivacion(correo, nombre):
 
     # crea objeto para enviar correo desde info@
     email = Email(
+        cursor=cursor,
+        conn=conn,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )
@@ -56,7 +64,9 @@ def desactivacion(correo, nombre):
     return email.send_zeptomail(msg)
 
 
-def inscripcion(correo, nombre, placas):
+def inscripcion(db, correo, nombre, placas):
+
+    cursor, conn = db.cursor(), db.conn
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -64,6 +74,8 @@ def inscripcion(correo, nombre, placas):
 
     # crea objeto para enviar correo desde info@
     email = Email(
+        cursor=cursor,
+        conn=conn,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )
@@ -86,7 +98,9 @@ def inscripcion(correo, nombre, placas):
     return email.send_zeptomail(msg)
 
 
-def eliminacion(correo, nombre):
+def eliminacion(db, correo, nombre):
+
+    cursor, conn = db.cursor(), db.conn
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -94,6 +108,8 @@ def eliminacion(correo, nombre):
 
     # crea objeto para enviar correo desde info@
     email = Email(
+        cursor=cursor,
+        conn=conn,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )
@@ -112,7 +128,9 @@ def eliminacion(correo, nombre):
     return email.send_zeptomail(msg)
 
 
-def recuperacion_contrasena(correo, token):
+def recuperacion_contrasena(db, correo, token):
+
+    cursor, conn = db.cursor(), db.conn
 
     # crear URL unico para recuperacion de contraseña
     url = f"http://localhost:5000/recuperar-contrasena/{token}"
@@ -126,6 +144,8 @@ def recuperacion_contrasena(correo, token):
 
     # crea objeto para enviar correo desde info@
     email = Email(
+        cursor=cursor,
+        conn=conn,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )
@@ -144,7 +164,9 @@ def recuperacion_contrasena(correo, token):
     return email.send_zeptomail(msg)
 
 
-def confirmacion_cambio_contrasena(correo):
+def confirmacion_cambio_contrasena(db, correo):
+
+    cursor, conn = db.cursor(), db.conn
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -154,6 +176,8 @@ def confirmacion_cambio_contrasena(correo):
 
     # crea objeto para enviar correo desde info@
     email = Email(
+        cursor=cursor,
+        conn=conn,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
         token=ZEPTOMAIL_INFO_TOKEN,
     )

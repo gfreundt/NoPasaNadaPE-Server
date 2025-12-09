@@ -78,6 +78,7 @@ def main(self):
         inscribir(cursor, conn, forma)
         session["usuario"].update(usuario)
         enviar_correo_inmediato.inscripcion(
+            self.db,
             correo=forma.get("correo"),
             nombre=forma.get("nombre"),
             placas=forma.get("placas").split(" ,"),

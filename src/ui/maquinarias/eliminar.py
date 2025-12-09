@@ -19,7 +19,9 @@ def main(self):
 
     # mandar correo de confirmacion de eliminacion
     enviar_correo_inmediato.eliminacion(
-        correo=session["usuario"]["correo"], nombre=session["usuario"]["nombre"]
+        self.db,
+        correo=session["usuario"]["correo"],
+        nombre=session["usuario"]["nombre"],
     )
 
     # borrar sesion y reenviar a landing
