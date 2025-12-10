@@ -130,21 +130,6 @@ class Server:
     def root(self):
         return redirect(url_for("maquinarias"))
 
-    def login(self):
-        return login.main(self)
-
-    def registro(self):
-        return registro.main(self)
-
-    def recuperar(self):
-        return recuperar.main(self)
-
-    def mis_datos(self):
-        return mis_datos.main(self)
-
-    def mis_vencimientos(self):
-        return mis_vencimientos.main(self)
-
     def descargar_archivo(self, tipo, id):
 
         # seguridad: evitar navegacion directa a url
@@ -183,13 +168,9 @@ class Server:
         except Exception as e:
             return f"Error procesando archivo: {e}.", 500
 
-    def acerca_de(self):
-        return acerca_de.main(self)
-
     def logout(self):
         session.clear()
         return redirect(url_for("maquinarias"))
-        return logout.main(self)
 
     # Direct UI Pages
     def rnt(self):

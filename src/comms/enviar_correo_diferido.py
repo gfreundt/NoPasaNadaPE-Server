@@ -59,7 +59,15 @@ def send(cursor, conn):
             resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=False)
             rpta.append(1 if resp_zeptomail else 0)
 
+            # actualiza base de datos indicando que siguiente mensaje es en un mes
+            cmd = "UPDATE InfoMiembros SET NextMessageSend = DATE(NextMessageSend, '+1 month') WHERE IdMember = ?"
+            cursor.execute(
+                cmd,
+                (mensaje["idMember"]),
+            )
+
         respuesta.append(f"{pendiente} - {sum(rpta)} Correctos de {len(data)}")
+        conn.commit()
 
     # erase message from outbound folder
     # os.remove(os.path.join(NETWORK_PATH, "outbound", html_file))
