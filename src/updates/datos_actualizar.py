@@ -20,7 +20,7 @@ def alertas(db_cursor):
         SELECT IdMember_FK 
         FROM StatusMensajesEnviados
         WHERE DATE(FechaEnvio) > DATE('now', 'localtime', '-1 day') 
-        AND Tipo = 'Alerta'
+        AND TipoMensaje = 'Alerta'
     )
     -- 1. SOAT
     SELECT 'SOAT' as Tipo, p.IdMember_FK, NULL as DocTipo, NULL as DocNum, s.PlacaValidate as Placa
