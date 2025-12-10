@@ -54,6 +54,9 @@ def update(self):
     if instruction == "get_info_data":
         return jsonify(do_get_info_data(cursor))
 
+    if instruction == "get_entire_db":
+        return jsonify(do_get_entire_db(cursor))
+
     return jsonify({"error": "Instruccion desconocida"}), 400
 
 
@@ -161,3 +164,29 @@ def do_get_info_data(db_cursor):
     plates = [dict(r) for r in db_cursor.fetchall()]
 
     return {"InfoMiembros": members, "InfoPlacas": plates}
+
+
+def do_get_entire_db(cursor):
+    """
+    Retrieves all data from all non-system tables in an SQLite database
+    and returns it as a single JSON string.
+    """
+
+    data_completa = {}
+
+    # obtener el nombre de todas las tablas excepto las internas de SQLITE
+    cmd = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';"
+    cursor.execute(cmd)
+    nombre_tablas = [row[0] for row in cursor.fetchall()]
+
+    # iterar en cada tabla y extraer todos los datos
+    for tabla in nombre_tablas:
+
+        cmd = f"SELECT * FROM {tabla}"
+        cursor.execute(cmd)
+        rows = cursor.fetchall()
+
+        # agregar resultado a variable recolectora
+        data_completa.update({tabla: [dict(row) for row in rows]})
+
+    return data_completa
