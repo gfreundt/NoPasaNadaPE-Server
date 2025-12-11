@@ -60,10 +60,10 @@ def send(cursor, conn):
             rpta.append(1 if resp_zeptomail else 0)
 
             # actualiza base de datos indicando que siguiente mensaje es en un mes
-            cmd = "UPDATE InfoMiembros SET NextMessageSend = DATE(NextMessageSend, '+1 month') WHERE IdMember = ?"
+            cmd = "UPDATE InfoMiembros SET NextMessageSend = DATE(NextMessageSend, '+1 month') WHERE Correo = ?"
             cursor.execute(
                 cmd,
-                (mensaje["idMember"]),
+                (mensaje["to"]),
             )
 
         respuesta.append(f"{pendiente} - {sum(rpta)} Correctos de {len(data)}")
