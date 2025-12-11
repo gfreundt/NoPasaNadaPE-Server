@@ -69,7 +69,11 @@ def send(cursor, conn):
         respuesta.append(f"{pendiente} - {sum(rpta)} Correctos de {len(data)}")
         conn.commit()
 
-    # erase message from outbound folder
-    # os.remove(os.path.join(NETWORK_PATH, "outbound", html_file))
+        # cambiar nombre de archivo de "pendientes" a "enviados"
+        nuevo_nombre = pendiente.replace("pendientes", "enviados")
+        os.rename(
+            os.path.join(NETWORK_PATH, "outbound", pendiente),
+            os.path.join(NETWORK_PATH, "outbound", nuevo_nombre),
+        )
 
     return respuesta

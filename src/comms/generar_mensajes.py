@@ -52,7 +52,7 @@ def alertas(cursor):
     path = os.path.join(
         NETWORK_PATH,
         "outbound",
-        f"alertas_pendientes-{dt.strftime(dt.now(),"%Y-%m-%d")}.json",
+        f"alertas_pendientes-{str(dt.now())[:19]}.json",
     )
     with open(path, "w", encoding="utf-8") as file:
         json.dump(alertas, file, indent=4)
@@ -95,7 +95,7 @@ def boletines(db_cursor):
     path = os.path.join(
         NETWORK_PATH,
         "outbound",
-        f"boletines_pendientes-{dt.strftime(dt.now(),"%Y-%m-%d")}.json",
+        f"boletines_pendientes-{str(dt.now())[:19]}.json",
     )
     with open(path, "w", encoding="utf-8") as file:
         json.dump(boletines, file, indent=4)
