@@ -58,6 +58,18 @@ def set_routes(self):
         methods=["GET", "POST"],
     )
     self.app.add_url_rule(
+        rule="/maquinarias/terminos-y-condiciones",
+        endpoint="maquinarias-tyc",
+        view_func=self.maquinarias_tyc,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
+        rule="/maquinarias/politica-de-privacidad",
+        endpoint="maquinarias-pdp",
+        view_func=self.maquinarias_pdp,
+        methods=["GET", "POST"],
+    )
+    self.app.add_url_rule(
         rule="/descargar_archivo/<tipo>/<id>",
         view_func=self.descargar_archivo,
         methods=["GET"],

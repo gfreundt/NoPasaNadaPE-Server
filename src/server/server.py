@@ -202,6 +202,12 @@ class Server:
         session.clear()
         return redirect(url_for("maquinarias"))
 
+    def maquinarias_tyc(self):
+        return render_template("ui-maquinarias-terminos-y-condiciones.html")
+
+    def maquinarias_pdp(self):
+        return render_template("ui-maquinarias-politica-de-privacidad.html")
+
     def nuevo_password(self):
         # generar password alfanumerico al azar
         token = uuid.uuid4().hex
