@@ -63,7 +63,7 @@ def send(cursor, conn):
             cmd = "UPDATE InfoMiembros SET NextMessageSend = DATE(NextMessageSend, '+1 month') WHERE Correo = ?"
             cursor.execute(
                 cmd,
-                (mensaje["to"]),
+                (mensaje["to"],),
             )
 
         respuesta.append(f"{pendiente} - {sum(rpta)} Correctos de {len(data)}")
