@@ -89,7 +89,7 @@ def alertas(db_cursor):
           SELECT IdMember_FK
           FROM StatusMensajesEnviados
           WHERE DATE(FechaEnvio) > DATE('now', 'localtime', '-1 day')
-          AND Tipo = 'Alerta'
+          AND TipoMensaje = 'Alerta'
       );
     """
 
