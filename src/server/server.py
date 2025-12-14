@@ -63,7 +63,7 @@ class Database:
                 timeout=5.0,
             )
             self.conn.row_factory = sqlite3.Row
-            self.conn.execute("PRAGMA journal_mode=WAL")
+            # self.conn.execute("PRAGMA journal_mode=WAL")
             self._pid = current_pid
 
     def cursor(self):
