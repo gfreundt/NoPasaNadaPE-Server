@@ -20,7 +20,7 @@ def alerta(
 
     # Secure SELECT
     db_cursor.execute(
-        "SELECT CodMemberInterno FROM InfoMiembros WHERE IdMember = ? LIMIT 1",
+        "SELECT NombreCompleto, Correo, IdMember, CodMemberInterno FROM InfoMiembros WHERE IdMember = ? LIMIT 1",
         (idmember,),
     )
     member = db_cursor.fetchone()

@@ -38,6 +38,8 @@ def alertas(cursor):
             )
         )
 
+    print("***********", alertas)
+
     # Guardar los mensajes en la carpeta outbound
     maintenance.clear_outbound_folder("alerta")
     for secuencial, alerta in enumerate(alertas):
