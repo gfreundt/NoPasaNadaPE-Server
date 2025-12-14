@@ -17,15 +17,13 @@ def create_app():
         static_folder=os.path.join(NETWORK_PATH, "static"),
     )
 
-    db = server.Database()  # <-- Worker-safe DB
+    db = server.Database()
     backend = server.Server(db=db, app=app)
-    app.backend = backend  # <-- Expose backend to app
-
+    app.backend = backend
     return app
 
 
 # Gunicorn entry point
-print("*******", NETWORK_PATH)
 app = create_app()
 
 

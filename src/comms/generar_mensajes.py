@@ -23,21 +23,22 @@ def alertas(cursor):
 
     alertas = []
     for row in necesitan_mensajes.alertas(cursor):
-        print("@@@@@@@")
-        alertas.append(
-            redactar_mensaje.alerta(
-                db_cursor=cursor,
-                idmember=row["IdMember"],
-                template=template_alertas,
-                subject="Alerta de No Pasa Nada PE",
-                tipo_alerta=row["TipoAlerta"],
-                vencido=bool(row["Vencido"]),
-                fecha_hasta=row["FechaHasta"],
-                placa=row["Placa"],
-                doc_tipo=row["DocTipo"],
-                doc_num=row["DocNum"],
-            )
+        mensaje = redactar_mensaje.alerta(
+            db_cursor=cursor,
+            idmember=row["IdMember"],
+            template=template_alertas,
+            subject="Alerta de No Pasa Nada PE",
+            tipo_alerta=row["TipoAlerta"],
+            vencido=bool(row["Vencido"]),
+            fecha_hasta=row["FechaHasta"],
+            placa=row["Placa"],
+            doc_tipo=row["DocTipo"],
+            doc_num=row["DocNum"],
         )
+        if not mensaje:
+            continue
+        else:
+            alertas.append(mensaje)
 
     print("****---****", alertas)
 

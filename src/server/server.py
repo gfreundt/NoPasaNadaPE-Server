@@ -107,9 +107,24 @@ class Server:
         self.session = session
         self.page = 0
 
+        # limpiar registros huerfanos en InfoPlacas con respecto a InfoMiembros
+        self.limpiar_huerfanos()
+
     # ======================================================
     #                   DATABASE OPERATIONS
     # ======================================================
+
+    def limpiar_huerfanos(self):
+        cursor = self.db.cursor()
+        cmd = """
+                UPDATE InfoPlacas
+                SET IdMember_FK = 0
+                WHERE IdMember_FK IS NOT NULL 
+                    AND IdMember_FK != 0 
+                    AND IdMember_FK NOT IN (SELECT IdMember FROM InfoMiembros)
+        """
+        cursor.execute(cmd)
+        self.db.commit()
 
     def log(self, **kwargs):
         """Insert a status log entry into the database."""
