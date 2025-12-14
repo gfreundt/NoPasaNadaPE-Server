@@ -26,6 +26,7 @@ def alerta(
     member = db_cursor.fetchone()
 
     if not member:
+        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         return None
 
     # Random hash for tracking
