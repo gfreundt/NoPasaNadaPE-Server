@@ -13,9 +13,7 @@ def alertas(db_cursor):
     sql_soat = configuracion_plazos.generar_sql_condicion("FechaHasta", "SOAT")
     sql_revtec = configuracion_plazos.generar_sql_condicion("FechaHasta", "REVTEC")
     sql_brevete = configuracion_plazos.generar_sql_condicion("FechaHasta", "BREVETE")
-    sql_satimp = configuracion_plazos.generar_sql_condicion(
-        "a.FechaHasta", "SATIMP"
-    )  # SATIMP sí usa alias 'a' abajo
+    sql_satimp = configuracion_plazos.generar_sql_condicion("a.FechaHasta", "SATIMP")
 
     cmd = f"""
     WITH Alerts AS (
@@ -101,6 +99,8 @@ def alertas(db_cursor):
         results = [dict(zip(columns, row)) for row in rows]
     else:
         results = []
+
+    print("results -------<", results)
 
     return results
 
