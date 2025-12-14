@@ -23,6 +23,7 @@ def alertas(cursor):
 
     alertas = []
     for row in necesitan_mensajes.alertas(cursor):
+        print("@@@@@@@")
         alertas.append(
             redactar_mensaje.alerta(
                 db_cursor=cursor,

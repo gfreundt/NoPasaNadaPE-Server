@@ -70,7 +70,9 @@ def alerta(
         "ano": dt.strftime(dt.now(), "%Y"),
     }
 
-    return {
+    print("+f+f+f+f+f+f+f+f+f")
+
+    x = {
         "to": member["Correo"],
         "bcc": "gabfre@gmail.com",
         "subject": subject,
@@ -81,6 +83,10 @@ def alerta(
         "reset_next_send": 0,
         "html": template.render(info),
     }
+
+    print("|||||||||||||||||||||||||||||", x)
+
+    return x
 
 
 def boletin(db_cursor, member, template, email_id, subject, alertas, placas, correo):
