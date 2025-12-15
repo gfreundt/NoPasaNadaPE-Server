@@ -30,7 +30,15 @@ def api(self, timer_inicio):
     try:
         # 1. Analizar Datos de la Solicitud
         _data = request.get_json() or {}
-        token = _data.get("token")
+
+        # --- Obtener Token de la cabecera Authorization ---
+        auth_header = request.headers.get("Authorization")
+        token = None
+        if auth_header and auth_header.startswith("Bearer "):
+            # Extraer solo la parte del token (después de "Bearer ")
+            token = auth_header.split(" ", 1)[1]
+
+        # --- Obtener PArametros ---
         solicitud = clean_str(_data, "solicitud").lower()
         usuario = _data.get("usuario")
         clientes = _data.get("clientes")

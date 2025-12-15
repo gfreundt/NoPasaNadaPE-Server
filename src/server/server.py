@@ -223,6 +223,9 @@ class Server:
     def maquinarias_pdp(self):
         return render_template("ui-maquinarias-politica-de-privacidad.html")
 
+    def documentacion_api_v1(self):
+        return render_template("ui-documentacion-api-v1.html")
+
     def nuevo_password(self):
         # generar password alfanumerico al azar
         token = uuid.uuid4().hex

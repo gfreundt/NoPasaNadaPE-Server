@@ -70,6 +70,12 @@ def set_routes(self):
         methods=["GET", "POST"],
     )
     self.app.add_url_rule(
+        rule="/maquinarias/documentacion-api-v1",
+        endpoint="documentacion-api-v1",
+        view_func=self.documentacion_api_v1,
+        methods=["GET"],
+    )
+    self.app.add_url_rule(
         rule="/descargar_archivo/<tipo>/<id>",
         view_func=self.descargar_archivo,
         methods=["GET"],

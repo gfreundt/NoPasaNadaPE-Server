@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documento de Integración API NoPasaNadaPE v1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 1px dashed #ecf0f1;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            color: #c0392b;
+        }
+        pre {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        blockquote {
+            background-color: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 10px 15px;
+            margin: 15px 0;
+            color: #2e7d32;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #ccc;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Documento de Integración API NoPasaNadaPE v1</h1>
+
+    <p>Este documento describe cómo realizar solicitudes via API al backend de nopasanadape.com. </p>
+
+    <p>Orientado a terceros autorizados que necesiten realizar operaciones de alta y baja de clientes y consultas de información.</p>
+
+    <hr>
+
+    <h2>1. Información General</h2>
+
+    <ul>
+        <li><strong>Base URL:</strong> <code>nopasanadape.com/api/v1</code></li>
+        <li><strong>Formato:</strong> JSON</li>
+        <li><strong>Autenticación:</strong> todas las solicitudes deben incluir un campo <code>token</code> en el cuerpo del request</li>
+    </ul>
+
+    <h3>1.1. Cabecera de Solicitud</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Obligatorio</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>Authorization</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Token de autenticación. Debe seguir el esquema RFC 6750: <code>Bearer [token]</code>.</td>
+            </tr>
+            <tr>
+                <td><code>Content-Type</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Debe ser <code>application/json</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Ejemplo:</h4>
+    <pre>
+    curl -X POST nopasanadape.com/api/v1
+         -H "Content-Type: application/json" 
+         -H "Authorization: Bearer X5kP7dF8jA2qL9zMX5kP7dF8jA2qL9zM" 
+         -d ...
+    </pre>
+
+    <h3>1.2. Parámetros de Solicitud</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Obligatorio</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>usuario</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Usuario externo que hace la solicitud</td>
+            </tr>
+            <tr>
+                <td><code>solicitud</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Tipo de solicitud que se hace</td>
+            </tr>
+            <tr>
+                <td><code>clientes</code></td>
+                <td>array</td>
+                <td>depende del tipo de solicitud</td>
+                <td>Listado de clientes</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>1.3. Cabecera de Respuesta</h3>
+    <p>ninguna</p>
+
+    <h3>1.4. Parámetros de Respuesta</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>id_solicitud</code></td>
+                <td>int</td>
+                <td>Código único generado para la solcitud.</td>
+            </tr>
+            <tr>
+                <td><code>timestamp</code></td>
+                <td>fecha</td>
+                <td>Hora de procesamiento. <code>YYYY-MM-DD hh:mm:ss.dddddd</code>.</td>
+            </tr>
+            <tr>
+                <td><code>resultados</code></td>
+                <td>array</td>
+                <td>Respuesta a la solicitud. Varía según tipo de solicitud.</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <h3>1.5. Códigos HTTP de Respuesta</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>200</td>
+                <td>Operación exitosa</td>
+            </tr>
+            <tr>
+                <td>207</td>
+                <td>Resultado mixto (éxitos y fallos)</td>
+            </tr>
+            <tr>
+                <td>400</td>
+                <td>Error de validación</td>
+            </tr>
+            <tr>
+                <td>401</td>
+                <td>No autenticado</td>
+            </tr>
+            <tr>
+                <td>404</td>
+                <td>Solicitud inválida</td>
+            </tr>
+            <tr>
+                <td>500</td>
+                <td>Error interno</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2>2. Descripción de Campos</h2>
+
+
+    <h2>2.1. Token</h2>
+
+    <p>Se debe utilizar el token alfanumérico proporcionado por nopasanadape.com.</p>
+
+    <h3>Ejemplo de respuesta si falla validación:</h3>
+    <pre>
+{
+    "id_solicitud": 30,
+    "resultados":  {
+        "error": "Token incorrecto."
+        },
+    "timestamp": "2025-12-15 15:45:33.187130"
+    }
+    </pre>
+
+    <hr>
+    <h2>2.2. Usuario</h2>
+
+    <p>Código establecido de común acuerdo entre el cliente externo y nopasanadape para identificar al colaborador del cliente externo que hace la solicitud.</p>
+
+    <p>El campo <code>usuario</code> no tiene validaciones.</p>
+
+    <h3>Ejemplo de respuesta si no se incluye usuario:</h3>
+    <pre>
+{
+    "id_solicitud": 34,
+    "resultados": {
+        "error": "Usuario requerido."
+        },
+    "timestamp": "2025-12-15 16:16:31.543746"}
+    </pre>
+
+    <hr>
+
+    <h2>2.3. Solicitud</h2>
+
+    <p>Representa la acción solicitada por el usuario para ser ejecutada por la API. Las alternativas son:</p>
+
+    <ul>
+        <li><code>alta</code></li>
+        <li><code>baja</code></li>
+        <li><code>clientes_autorizados</code></li>
+        <li><code>mensajes_enviados</code></li>
+    </ul>
+
+    <h3>Ejemplo de respuesta si no se incluye solicitud o no es reconocida:</h3>
+    <pre>
+{
+    "id_solicitud": 34,
+    "resultados": {
+        "error": "Solicitud incorrecta."
+        },
+    "timestamp": "2025-12-15 16:16:31.543746"}
+    </pre>
+
+
+    <h3>2.3.1. Solicitud de Alta</h3>
+
+    <p>Activa uno o más clientes autorizados en el sistema.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Obligatorio</th>
+                <th>Descripción</th>
+                <th>Restricciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>nombre</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Nombre completo del cliente.</td>
+                <td>Largo: Minimo: 5, Maximo:50. No debe contener caracteres especiales.</td>
+            </tr>
+            <tr>
+                <td><code>tipo_documento</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Tipo de documento de identidad.</td>
+                <td>Debe ser uno de: <code>DNI</code>, <code>CE</code>, <code>PASAPORTE</code>.</td>
+            </tr>
+            <tr>
+                <td><code>numero_documento</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Número de documento de identidad.</td>
+                <td>Cadena alfanumérica. La longitud y formato varían según el <code>tipo_documento</code>.</td>
+            </tr>
+            <tr>
+                <td><code>celular</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Número de teléfono de contacto.</td>
+                <td>Numérico. Debe tener exactamente 9 dígitos.</td>
+            </tr>
+            <tr>
+                <td><code>codigo_externo</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Código único de identificación del cliente en el sistema externo.</td>
+                <td>Cadena alfanumérica. No se valida el formato.</td>
+            </tr>
+            <tr>
+                <td><code>perfil</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Código del perfil del cliente para futuras segmentaciones</td>
+                <td>Cadena alfanumérica. No se valida el formato.</td>
+            </tr>
+            <tr>
+                <td><code>correo</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Dirección de correo electrónico.</td>
+                <td>usuario@dominio.com</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>El array de <code>clientes</code> no puede estar vacío.</p>
+
+    <h3>Ejemplo de Solicitud</h3>
+
+    <pre>
+{   
+    "solicitud": "alta",
+    "usuario": "MAQ-001",
+    "clientes": [
+        { 
+            "nombre": "Juan Pérez",
+            "tipo_documento": "DNI",
+            "numero_documento": "12345678",
+            "celular": "987654321",
+            "codigo_externo": "CLI-001", 
+            "perfil": "VIP3",
+            "correo": "juan.perez@dominio.com"
+            },
+        {
+            "nombre": "",
+            "tipo_documento": "CE",
+            "numero_documento": "0123456780",
+            "celular": "",
+            "codigo_externo": "CLI-001",
+            "perfil": "REGULAR7",
+            "correo": "jose.lopez@dominio.com"
+            }
+        ]
+    }
+    </pre>
+
+    <h3>2.3.2. Respuesta de Alta</h3>
+
+    <p>El campo <code>resultados</code> es un array con elementos:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Subestructura</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>cuenta_exitos</code></td>
+                <td>int</td>
+                <td>Cantidad de registros procesados correctamente.</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>cuenta_fallos</code></td>
+                <td>int</td>
+                <td>Cantidad de registros no procesados</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>exitos</code></td>
+                <td>array</td>
+                <td>Lista de registros procesados correctamente</td>
+                <td>Arrays con campos <code>correo</code> e <code>indice</code>.</td>
+            </tr>
+            <tr>
+                <td><code>fallos</code></td>
+                <td>string</td>
+                <td>Lista de registros no procesados</td>
+                <td>Arrays con lista de <code>errores</code> en proceso e <code>indice</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Ejemplo de Respuesta</h3>
+    <pre>
+{
+    "id_solicitud": 37,
+    "resultados": {
+        "cuenta_exitos": 1,
+        "cuenta_fallos": 1,
+        "exitos": [
+            {"correo": "juan.perez@dominio.com",
+             "indice": 0
+        }
+             ],
+        "fallos": [
+            {"errores":
+                [
+                    "Numero de Documento Invalido."
+            ],
+            "indice": 1
+        }
+            ]
+        },
+ "timestamp": "2025-12-15 16:22:40.255584"
+ }
+    </pre>
+
+    <h3>2.3.3. Solicitud de Baja</h3>
+
+    <p>Elimina clientes autorizados del sistema según su correo electrónico.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Obligatorio</th>
+                <th>Descripción</th>
+                <th>Restricciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>correo</code></td>
+                <td>string</td>
+                <td>Sí</td>
+                <td>Dirección de correo electrónico.</td>
+                <td>Debe cumplir con el formato estándar de email (ej: <code>usuario@dominio.com</code>).</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>El array de <code>clientes</code> no puede estar vacío.</p>
+
+    <h3>Ejemplo de Request</h3>
+    <pre>
+{
+"token": "TOKEN_EXTERNO",
+"solicitud": "baja",
+"usuario": "admin",
+"clientes": [
+                {
+                "correo": "juan.perez@dominio.com"
+                },
+                {
+                "correo": "jose.lopez@dominio.com"
+                }
+    ]
+}
+    </pre>
+
+    <h3>2.3.4. Respuesta de Baja</h3>
+
+    <p>El campo <code>resultados</code> es un array con elementos:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Subestructura</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>cuenta_exitos</code></td>
+                <td>int</td>
+                <td>Cantidad de registros procesados correctamente.</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>cuenta_fallos</code></td>
+                <td>int</td>
+                <td>Cantidad de registros no procesados</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>exitos</code></td>
+                <td>array</td>
+                <td>Lista de registros procesados correctamente</td>
+                <td>Arrays con campos <code>correo</code> e <code>indice</code>.</td>
+            </tr>
+            <tr>
+                <td><code>fallos</code></td>
+                <td>string</td>
+                <td>Lista de registros no procesados</td>
+                <td>Arrays con lista de <code>errores</code> en proceso e <code>indice</code>.</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+    <h3>Ejemplo de Respuesta</h3>
+    <pre>
+{
+    "id_solicitud": 38,
+    "resultados": {
+        "cuenta_exitos": 0,
+        "cuenta_fallos": 1,
+        "exitos": [],
+        "fallos": [
+            {   "errores": [
+                    "Correo no encontrado."
+                    ],
+                "indice": 0
+                }
+            ]
+        }
+    }
+    </pre>
+    <h3>2.3.5. Consulta de Mensajes Enviados</h3>
+
+    <p>Obtiene los mensajes enviados dentro de un rango de fechas.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo de Dato</th>
+                <th>Obligatorio</th>
+                <th>Descripción</th>
+                <th>Formato</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>fecha_desde</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Fecha inicial</td>
+                <td>YYYY-MM-DD</td>
+            </tr>
+            <tr>
+                <td><code>fecha_hasta</code></td>
+                <td>string</td>
+                <td>No</td>
+                <td>Fecha final</td>
+                <td>YYYY-MM-DD</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>El array de <code>clientes</code> puede no existir o estar vacío.</p>
+
+    <h3>Ejemplos de Request</h3>
+
+    <pre>
+{
+"token": "TOKEN_EXTERNO",
+"solicitud": "mensajes_enviados",
+"usuario": "MAQ-003"
+}
+    </pre>
+
+    <pre>
+{
+"token": "TOKEN_EXTERNO",
+"solicitud": "mensajes_enviados",
+"usuario": "MAQ-002",
+"fecha_desde": "2024-01-01",
+"fecha_hasta": "2024-12-31"
+}
+    </pre>
+    <h3>2.3.6. Respuesta de Consulta de Mensajes Enviados</h3>
+
+    <p>El campo <code>resultados</code> es un array con dos elementos:</p>
+    <ul>
+        <li><code>cuenta</code>: un int con el total de registros devueltos</li>
+        <li><code>data</code>:</li>
+    </ul>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Formato</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>direccion_correo</code></td>
+                <td>string</td>
+                <td>Dirección de correo al que se envió el mensaje.</td>
+                <td>usario@dominio.com</td>
+            </tr>
+            <tr>
+                <td><code>timestamp_envio</code></td>
+                <td>fecha</td>
+                <td>Hora en que se envió el mensaje</td>
+                <td><code>YYYY-MM-DD hh:mm:ss.dddddd</code></td>
+            </tr>
+            <tr>
+                <td><code>respuesta_mensaje</code></td>
+                <td>string</td>
+                <td>Respuesta del servidor al enviar mensaje</td>
+                <td><code>ok</code> / <code>error</code></td>
+            </tr>
+            <tr>
+                <td><code>asunto</code></td>
+                <td>string</td>
+                <td>Asunto del correo enviado</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>tipo_mensaje</code></td>
+                <td>string</td>
+                <td>Tipo de mensaje enviado</td>
+                <td><code>boletin</code> / <code>alerta</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Ejemplo de Respuesta</h3>
+    <pre>
+{
+    "id_solicitud": 304,
+    "timestamp": 2025-12-17 09:12:56.137459,
+    "resultados": {
+        "cuenta": 3,
+        "data": [
+            {
+                "direccion_correo": "juna66@kudimi.com",
+                "timestamp_envio": "2025-12-14 19:57:41.077390",
+                "respuesta_mensaje": "ok",
+                "asunto": "Tu Boletín de No Pasa Nada PE - Diciembre 2025",
+                "tipo_mensaje": "boletin"
+                },
+            {
+                "direccion_correo": "pepe093@kudimi.com",
+                "timestamp_envio": "2025-12-14 20:57:27.320659",
+                "respuesta_mensaje": "ok",
+                "asunto": "Tienes una Alerta de No Pasa Nada PE",
+                "tipo_mensaje": "alerta"
+                },
+            {
+                "direccion_correo": "novite7175@kudimi.com",
+                "timestamp_envio": "2025-12-14 21:00:04.890544",
+                "respuesta_mensaje": "error",
+                "asunto": "Tu Boletín de No Pasa Nada PE - Diciembre 2025",
+                "tipo_mensaje": "boletin"
+                }
+            ]
+        }
+    }
+    </pre>
+    <h3>2.3.7. Consulta de Clientes Autorizados</h3>
+
+    <p>Obtiene la información actual de la lista de clientes autorizados y si se han inscrito en el servicio. Es solamente la informacion enviada al momento del alta, no la ingresada por el cliente al momento de suscribirse.</p>
+
+    <p>El array de <code>clientes</code> puede no existir o estar vacío.</p>
+
+    <h3>Ejemplo de Request</h3>
+
+    <pre>
+{
+    "solicitud": "clientes_autorizados",
+    "usuario": "MAQ-003"
+    }
+    </pre>
+    <h3>2.3.8. Respuesta de Consulta de Clientes Autorizados</h3>
+
+    <p>El campo <code>resultados</code> es un array con dos elementos:</p>
+    <ul>
+        <li><code>cuenta</code>: un int con el total de registros devueltos</li>
+        <li><code>data</code>:</li>
+    </ul>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Formato</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>id_solicitud</code></td>
+                <td>int</td>
+                <td>Id de solicitud devuelta al activar cliente.</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>correo</code></td>
+                <td>string</td>
+                <td>Dirección de correo activada.</td>
+                <td>usario@dominio.com</td>
+            </tr>
+            <tr>
+                <td><code>codigo_cliente</code></td>
+                <td>string</td>
+                <td>Código del externo con que se activó al cliente</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>celular</code></td>
+                <td>string</td>
+                <td>Celular activado</td>
+                <td>9 dígitos</td>
+            </tr>
+            <tr>
+                <td><code>tipo_documento</code></td>
+                <td>string</td>
+                <td>Tipo de documento activado</td>
+                <td><code>DNI</code> / <code>CE</code> / <code>PASAPORTE</code></td>
+            </tr>
+            <tr>
+                <td><code>numero_documento</code></td>
+                <td>string</td>
+                <td>Tipo de documento activado</td>
+                <td>Alfanumerico</td>
+            </tr>
+            <tr>
+                <td><code>perfil</code></td>
+                <td>string</td>
+                <td>Perfil con el que se activó al cliente.</td>
+                <td>Alfanumerico</td>
+            </tr>
+            <tr>
+                <td><code>timestamp_creado</code></td>
+                <td>string</td>
+                <td>Hora en que se activó al cliente</td>
+                <td><code>YYYY-MM-DD hh:mm:ss.dddddd</code></td>
+            </tr>
+            <tr>
+                <td><code>nombre</code></td>
+                <td>string</td>
+                <td>Nombre con el que se activó al cliente.</td>
+                <td>Solo caracteres alfabeticos</td>
+            </tr>
+            <tr>
+                <td><code>suscrito</code></td>
+                <td>bool</td>
+                <td>Cliente completó proceso de suscripcion</td>
+                <td><code>true</code> / <code>false</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Ejemplo de Respuesta</h3>
+    <pre>
+{
+    "id_solicitud": 304,
+    "timestamp": 2025-12-17 09:12:56.137459,
+    "resultados": {
+        "cuenta": 5,
+        "data": [
+            {
+                "celular": "",
+                "codigo_cliente": "MAQ-007",
+                "correo": "lucho@gmail.com",
+                "id_solicitud": 5,
+                "nombre": "Luis Caceres",
+                "numero_documento": "10025687",
+                "perfil": "VIP9",
+                "timestamp_creado": "2025-12-10 23:08:23.771669",
+                "tipo_documento": "DNI",
+                "suscrito": true
+                },
+            {
+                "celular": "",
+                "codigo_cliente": "MAQ-2137",
+                "correo": "juan@correo.com.pe",
+                "id_solicitud": 16,
+                "nombre": "",
+                "numero_documento": "",
+                "perfil": "REGULAR3",
+                "timestamp_creado": "2025-12-11 23:08:42.250366",
+                "tipo_documento": "",
+                "suscrito": false
+                }
+            ]  
+        }
+    }
+    </pre>
+
+    <hr>
+    <div class="footer">
+        <p><strong>Código de Documento:</strong> APIv1-001.v01  |  <strong>Fecha de Emisión:</strong> Diciembre 2025</p>
+    </div>
+
+</body>
+</html>
