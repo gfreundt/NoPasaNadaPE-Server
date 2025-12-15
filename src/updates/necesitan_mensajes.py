@@ -100,8 +100,6 @@ def alertas(db_cursor):
     else:
         results = []
 
-    print("results -------<", results)
-
     return results
 
 

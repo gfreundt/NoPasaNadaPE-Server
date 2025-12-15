@@ -194,6 +194,17 @@ def boletines(db_cursor):
           SELECT IdMember FROM InfoMiembros 
           WHERE LastUpdateMtcRecordsConductores >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
       )
+
+    UNION ALL
+
+    -- 9. CAMUL (Usa TargetPlacas)
+    SELECT 'calmul', NULL, NULL, NULL, p.Placa
+    FROM TargetPlacas p
+    WHERE p.Placa NOT IN (
+          SELECT Placa FROM InfoPlacas 
+          WHERE LastUpdateCallaoMultas >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
+      )
+
     """
 
     db_cursor.execute(query)
@@ -209,11 +220,12 @@ def boletines(db_cursor):
         "satmuls": [],
         "sutrans": [],
         "recvehic": [],
+        "calmul": [],
     }
 
     for row in results:
         key = row[0]
-        if key in ["soats", "revtecs", "sunarps", "satmuls", "sutrans"]:
+        if key in ["soats", "revtecs", "sunarps", "satmuls", "sutrans", "calmul"]:
             upd[key].append(row[4])
         else:
             upd[key].append((row[1], row[2], row[3]))

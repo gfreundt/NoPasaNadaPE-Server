@@ -61,4 +61,5 @@ SQL_TABLES = {
     "DataSatMultas": "PLACA",
     "DataSutranMultas": "PLACA",
     "DataSunarpFichas": "PLACA",
+    "DataCallaoMultas": "PLACA",
 }

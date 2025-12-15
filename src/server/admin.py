@@ -39,14 +39,26 @@ def main(self):
 
     if solicitud == "kill":
 
+        # borra placas asociadas con correo / usuario
+        cmd = "UPDATE InfoPlacas SET IdMember_FK = 0 WHERE IdMember_FK IN (SELECT IdMember FROM Infomiembros WHERE Correo = ?)"
+        cursor.execute(cmd, (correo,))
+
+        # borra subscripcion de correo / usuario
         cmd = "DELETE FROM InfoMiembros WHERE Correo = ?"
         cursor.execute(cmd, (correo,))
+
+        # borra activacion de correo / usuario
         cmd = "DELETE FROM InfoClientesAutorizados WHERE Correo = ?"
         cursor.execute(cmd, (correo,))
 
         conn.commit()
-
         return jsonify(f"Kill: {correo}"), 200
+
+    if solicitud == "vacuum":
+
+        # ajusta el tamano de la base de datos (proceso pesado)
+        cursor.execute("VACUUM")
+        conn.commit()
 
     # 3) fallback for unsupported actions
     return jsonify("Error en solicitud."), 400

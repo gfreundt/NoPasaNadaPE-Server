@@ -26,7 +26,6 @@ def alerta(
     member = db_cursor.fetchone()
 
     if not member:
-        print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
         return None
 
     # Random hash for tracking
@@ -70,9 +69,7 @@ def alerta(
         "ano": dt.strftime(dt.now(), "%Y"),
     }
 
-    print("+f+f+f+f+f+f+f+f+f")
-
-    x = {
+    return {
         "to": member["Correo"],
         "bcc": "gabfre@gmail.com",
         "subject": subject,
@@ -84,28 +81,8 @@ def alerta(
         "html": template.render(info),
     }
 
-    print("|||||||||||||||||||||||||||||", x)
-
-    return x
-
 
 def boletin(db_cursor, member, template, email_id, subject, alertas, placas, correo):
-
-    x = generar_data_servicios(db_cursor, correo)
-    from pprint import pprint
-
-    pprint(x)
-
-    # # Build final data injection dict
-    # info = {
-    #     "nombre_usuario": member["NombreCompleto"],
-    #     "fecha_hasta": date_to_mail_format(fecha_hasta),
-    #     "genero": genero,
-    #     "servicio": servicio,
-    #     "placa": placa,
-    #     "vencido": vencido,
-    #     "ano": dt.strftime(dt.now(), "%Y"),
-    # }
 
     return {
         "to": member["Correo"],
@@ -116,7 +93,7 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
         "hashcode": email_id,
         "attachment_paths": [],
         "reset_next_send": 0,
-        "html": template.render(x),
+        "html": template.render(generar_data_servicios(db_cursor, correo)),
     }
 
     _txtal = []

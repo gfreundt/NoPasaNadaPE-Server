@@ -16,16 +16,9 @@ def send(cursor, conn):
         token=ZEPTOMAIL_INFO_TOKEN,
     )
 
-    # elegir los archivos con la palabra "pendientes" y "json" en el nombre en /outbound
-    pendientes = [
-        i
-        for i in os.listdir(os.path.join(NETWORK_PATH, "outbound"))
-        if "pendientes" in i and ".json" in i
-    ]
-
     # procesar contenido de cada archivo de pendientes por separado
-    respuesta = []
-    for pendiente in pendientes:
+    respuesta = {}
+    for pendiente in ("boletines_pendientes.json", "alertas_pendientes.json"):
 
         if "boletines" in pendiente:
             tipo_mensaje = "BOLETIN"
@@ -60,20 +53,25 @@ def send(cursor, conn):
             rpta.append(1 if resp_zeptomail else 0)
 
             # actualiza base de datos indicando que siguiente mensaje es en un mes
-            cmd = "UPDATE InfoMiembros SET NextMessageSend = DATE(NextMessageSend, '+1 month') WHERE Correo = ?"
+            cmd = "UPDATE InfoMiembros SET NextMessageSend = DATE('now', '+1 month') WHERE IdMember = ?"
             cursor.execute(
                 cmd,
-                (mensaje["to"],),
+                (mensaje["idMember"],),
             )
-
-        respuesta.append(f"{pendiente} - {sum(rpta)} Correctos de {len(data)}")
         conn.commit()
 
-        # cambiar nombre de archivo de "pendientes" a "enviados"
-        nuevo_nombre = pendiente.replace("pendientes", "enviados")
-        os.rename(
-            os.path.join(NETWORK_PATH, "outbound", pendiente),
-            os.path.join(NETWORK_PATH, "outbound", nuevo_nombre),
-        )
+        # proceso solo si hubieron mensajes que enviar
+        if data:
+
+            # cambiar nombre de archivo de "pendientes" a "enviados" y agregar fecha
+            nuevo_nombre = pendiente.replace(
+                "pendientes", f"enviados-{dt.strftime(dt.now(),"%Y-%M-%d %h:%n:%s")}"
+            )
+            os.rename(
+                os.path.join(NETWORK_PATH, "outbound", pendiente),
+                os.path.join(NETWORK_PATH, "outbound", nuevo_nombre),
+            )
+
+        respuesta.update({tipo_mensaje: len(data)})
 
     return respuesta

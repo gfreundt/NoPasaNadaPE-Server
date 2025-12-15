@@ -40,27 +40,12 @@ def alertas(cursor):
         else:
             alertas.append(mensaje)
 
-    print("****---****", alertas)
-
     # Guardar los mensajes en la carpeta outbound
     maintenance.clear_outbound_folder("alerta")
-    for secuencial, alerta in enumerate(alertas):
-
-        # guardar copia de html para revision en outbound (sistema no envia de estos archivos, solo debug)
-        filename = f"alerta-{secuencial:04d}.html"
-        path = os.path.join(NETWORK_PATH, "outbound", filename)
-        with open(path, "w", encoding="utf-8") as file:
-            file.write(alerta["html"])
-
-    # guardar un solo json con toda la informacion de correos pendientes de envio para "ENVIAR"
-    if alertas:
-        path = os.path.join(
-            NETWORK_PATH,
-            "outbound",
-            f"alertas_pendientes-{str(dt.now())[:19]}.json",
-        )
-        with open(path, "w", encoding="utf-8") as file:
-            json.dump(alertas, file, indent=4)
+    # guardar data en archivo (reemplaza al anterior)
+    path = os.path.join(NETWORK_PATH, "outbound", "alertas_pendientes.json")
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(alertas, file, indent=4)
 
     return [i["html"] for i in alertas]
 
@@ -89,22 +74,10 @@ def boletines(db_cursor):
 
     # Guardar los mensajes en la carpeta outbound
     maintenance.clear_outbound_folder("boletin")
-    for secuencial, boletin in enumerate(boletines):
-        # guardar copia de html para revision en outbound (sistema no envia de estos archivos, solo debug)
-        filename = f"boletin-{secuencial:04d}.html"
-        path = os.path.join(NETWORK_PATH, "outbound", filename)
-        with open(path, "w", encoding="utf-8") as file:
-            file.write(boletin["html"])
-
-    # guardar un solo json con toda la informacion de correos pendientes de envio para "ENVIAR" (solo si hay data)
-    if boletines:
-        path = os.path.join(
-            NETWORK_PATH,
-            "outbound",
-            f"boletines_pendientes-{str(dt.now())[:19]}.json",
-        )
-        with open(path, "w", encoding="utf-8") as file:
-            json.dump(boletines, file, indent=4)
+    # guardar data en archivo (reemplaza al anterior)
+    path = os.path.join(NETWORK_PATH, "outbound", "boletines_pendientes.json")
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(boletines, file, indent=4)
 
     return [i["html"] for i in boletines]
 
@@ -113,8 +86,6 @@ def obtener_datos_boletin(db_cursor, IdMember, template, subject, alertas, corre
     """
     Arma toda la información necesaria para un mensaje HTML individual.
     """
-
-    print(alertas)
 
     # Información del miembro
     db_cursor.execute("SELECT * FROM InfoMiembros WHERE IdMember = ?", (IdMember,))
