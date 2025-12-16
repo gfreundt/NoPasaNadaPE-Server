@@ -1,5 +1,5 @@
+from datetime import datetime as dt
 from flask import render_template, session, redirect, url_for, request
-from src.utils.utils import date_to_mail_format
 
 
 def main(self):
@@ -31,6 +31,9 @@ def generar_data_servicios(cursor, correo):
     )
     data_miembro = cursor.fetchone()
     id_member = data_miembro["IdMember"]
+
+    cursor.execute("SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (id_member,))
+    placas = ", ".join([i["Placa"] for i in cursor.fetchall()])
 
     # crear variables en blanco para incluir en servicios
     vencimientos = {}
@@ -123,6 +126,17 @@ def generar_data_servicios(cursor, correo):
     cursor.execute(cmd)
     multas.update({"SUTRANS": [dict(i) for i in cursor.fetchall()]})
 
+    # multas CALLAO
+    cmd = f"""  SELECT
+                PlacaValidate AS Placa, Codigo, FechaInfraccion, TotalInfraccion, TotalBeneficio, ImageBytes, LastUpdate
+                FROM
+                DataCallaoMultas
+                WHERE
+                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
+            """
+    cursor.execute(cmd)
+    multas.update({"CALMUL": [dict(i) for i in cursor.fetchall()]})
+
     # documentos SOAT
     cmd = f"""  SELECT
                 PlacaValidate AS Placa, LastUpdate
@@ -183,4 +197,6 @@ def generar_data_servicios(cursor, correo):
         "vencimientos": vencimientos,
         "multas": multas,
         "descargas": descargas,
+        "placas": placas,
+        "ano": dt.strftime(dt.now(), "%Y"),
     }

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Servicios | No Pasa Nada PE</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+
+                    <tr>
+                        <td align="center" style="padding: 30px 20px 20px; border-bottom: 3px solid #0056b3;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="font-size: 0; text-align: center;">
+
+                                        <div style="display: inline-block; vertical-align: middle; width: 48%;">
+                                            <img src="https://nopasanadape.com/static/images/logo-nopasanadape-transparente-negro.png" alt="No Pasa Nada PE Logo" width="50" style="display: block; margin: 0 auto 10px;">
+                                            <p style="margin: 0; font-size: 10px; color: #555555; font-weight: bold;">Presentado por</p>
+                                        </div>
+
+                                        <div style="display: inline-block; vertical-align: middle; width: 2%;">
+                                            <div style="height: 40px; width: 1px; background-color: #cccccc; margin: 0 auto;"></div>
+                                        </div>
+
+                                        <div style="display: inline-block; vertical-align: middle; width: 48%;">
+                                            <img src="https://nopasanadape.com/static/images/maquinarias-icon.png" alt="Maquinarias Logo" width="60" style="display: block; margin: 0 auto 10px auto;">
+                                            <p style="margin: 0; font-size: 10px; color: #555555; font-weight: bold;">Exclusivo para</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 40px 40px 20px; color: #333333;">
+
+                            <h1 style="margin: 0 0 5px; font-size: 24px; font-weight: bold; color: #0056b3; text-align: center;">
+                                Estado de Servicios
+                            </h1>
+                            <h2 style="margin: 0 0 30px; font-size: 18px; font-weight: normal; color: #666666; text-align: center;">
+                                Bienvenido, {{ usuario.nombre | default('Miembro') }}
+                            </h2>
+
+                            <h3 style="margin: 30px 0 15px; font-size: 20px; font-weight: bold; color: #333333; text-align: center;">Vencimientos</h3>
+
+                            {% if control.tabla_vencimientos %}
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border: 1px solid #e0e0e0; border-collapse: collapse; margin-bottom: 30px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                <thead style="background-color: #212529; color: #ffffff;">
+                                    <tr>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Servicio</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Estado</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Vigencia</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Última Revisión</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for service_key, items in vencimientos.items() %}
+                                        {% for item in items %}
+                                        <tr>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0; font-weight: bold;">
+                                                {% set service_name = service_key %}
+                                                {% if service_key == 'BREVETES' %}{% set service_name = 'Licencia de Conducir' %}
+                                                {% elif service_key == 'SOATS' %}{% set service_name = 'Certificado SOAT' %}
+                                                {% elif service_key == 'SATIMPS' %}{% set service_name = 'Impuesto SAT' %}
+                                                {% elif service_key == 'REVTECS' %}{% set service_name = 'Revisión Técnica' %}
+                                                {% endif %}
+                                                {{ service_name }}
+                                                {% if item.Placa %}<br><span style="font-size: 12px; color: #6c757d; font-weight: normal;">Placa: {{ item.Placa }}</span>{% endif %}
+                                                {% if item.Codigo and service_key == 'SATIMPS' %}<br><span style="font-size: 12px; color: #6c757d; font-weight: normal;">Código: {{ item.Codigo }}</span>{% endif %}
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                {% set status = item.Estado | default('Desconocido') %}
+                                                {% set color_style = '' %}
+                                                {% if status == 'Vencido' %}
+                                                    {% set color_style = 'color: #dc3545; font-weight: bold;' %}
+                                                {% elif status == 'Vigente' %}
+                                                    {% set color_style = 'color: #28a745; font-weight: bold;' %}
+                                                {% elif status == 'Desconocido' %}
+                                                    {% set color_style = 'color: #ffc107; font-weight: bold;' %}
+                                                {% endif %}
+                                                <span style="{{ color_style }}">{{ status }}</span>
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                <span>{{ item.FechaHasta | default('N/A') }}</span>
+                                                {% if item.FechaHastaDias is not none %}
+                                                    {% set days_label = 'días' %}
+                                                    {% set days_info_color = 'color: #6c757d;' %}
+
+                                                    {# FIX: Use Python's str.format method with the thousands comma specifier #}
+                                                    {% set formatted_days = "{:,}".format(item.FechaHastaDias | abs) %}
+
+                                                    {% if item.FechaHastaDias == 0 %}
+                                                        {% set days_info = 'Hoy' %}
+                                                    {% elif item.FechaHastaDias > 0 %}
+                                                        {# Use formatted_days #}
+                                                        {% set days_info = 'quedan ' + formatted_days + ' ' + days_label %}
+                                                        {% set days_info_color = 'color: #28a745;' %}
+                                                    {% else %}
+                                                        {# Use formatted_days #}
+                                                        {% set days_info = 'hace ' + formatted_days + ' ' + days_label %}
+                                                        {% set days_info_color = 'color: #dc3545;' %}
+                                                    {% endif %}
+                                                    <br><span style="font-size: 12px; {{ days_info_color }} font-weight: bold;">{{ days_info }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                <span>{{ item.LastUpdate | default('N/A') }}</span>
+                                                {% if item.LastUpdateDias is not none %}
+                                                <br><span style="font-size: 12px; color: #6c757d;">hace {{ item.LastUpdateDias }} días</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div style="text-align: center; padding: 20px; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 30px;">
+                                <p style="margin: 0 0 5px; font-weight: bold; font-size: 16px;">No Hay Informacion Disponible</p>
+                                <p style="margin: 0; font-size: 12px; color: #6c757d;">si recien se registra, su información estara disponible pronto.</p>
+                            </div>
+                            {% endif %}
+                            
+                            <h3 style="margin: 30px 0 15px; font-size: 20px; font-weight: bold; color: #333333; text-align: center;">Multas</h3>
+
+                            {% if control.tabla_multas %}
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border: 1px solid #e0e0e0; border-collapse: collapse; margin-bottom: 30px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                <thead style="background-color: #212529; color: #ffffff;">
+                                    <tr>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Servicio</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Fecha</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Falta / Infracción</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Detalle</th>
+                                        <th scope="col" style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #212529;">Última Revisión</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for service_key, items in multas.items() %}
+                                        {% for item in items %}
+                                        <tr>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0; font-weight: bold;">
+                                                {% set service_name = service_key %}
+                                                {% if service_key == 'SATMULS' %}{% set service_name = 'Multas SAT' %}
+                                                {% elif service_key == 'SUTRANS' %}{% set service_name = 'Multas SUTRAN' %}
+                                                {% endif %}
+                                                {{ service_name }}
+                                                {% if item.Placa %}<br><span style="font-size: 12px; color: #6c757d; font-weight: normal;">Placa: {{ item.Placa }}</span>{% endif %}
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                {{ item.FechaEmision | default(item.FechaDoc) | default('N/A') }}
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                {% if item.Falta %}
+                                                    <span style="font-weight: bold;">{{ item.Falta }}</span>
+                                                {% elif item.CodigoInfrac %}
+                                                    <span style="font-weight: bold;">{{ item.CodigoInfrac }}</span>
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                {% set detalle_color = 'color: #dc3545; font-weight: bold;' %}
+                                                {% if service_key == 'SATMULS' %}
+                                                    <span style="{{ detalle_color }}">{{ item.Estado | default('N/A') }}</span>
+                                                    {% if item.Deuda %}
+                                                    <br><span style="font-size: 12px; color: #6c757d;">Deuda: S/ {{ "%.2f"|format(item.Deuda) }}</span>
+                                                    {% endif %}
+                                                {% elif service_key == 'SUTRANS' %}
+                                                    <span style="{{ detalle_color }}">{{ item.Clasificacion | default('N/A') }}</span>
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </td>
+                                            <td style="padding: 10px; font-size: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                                                <span>{{ item.LastUpdate | default('N/A') }}</span>
+                                                {% if item.LastUpdateDias is not none %}
+                                                <br><span style="font-size: 12px; color: #6c757d;">hace {{ item.LastUpdateDias }} días</span>
+                                                {% else %}
+                                                <br><span style="font-size: 12px; color: #6c757d;">Última Actualización</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div style="text-align: center; padding: 20px; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 30px;">
+                                <p style="margin: 0 0 5px; font-weight: bold; font-size: 16px; color: rgb(75, 155, 75)">Ninguna</p>
+                            </div>
+                            {% endif %}
+
+
+                            <div style="margin: 30px 0; text-align: center;">
+                                <a href="dev.nopasanadape.com/maquinarias" target="dev.nopasanadape.com/maquinarias" style="
+                                    background-color: #0056b3;
+                                    border-radius: 8px;
+                                    color: #ffffff;
+                                    display: inline-block;
+                                    font-size: 18px;
+                                    font-weight: bold;
+                                    line-height: 50px;
+                                    text-align: center;
+                                    text-decoration: none;
+                                    width: 100%;
+                                    max-width: 300px;
+                                    mso-padding-alt: 0;
+                                ">
+                                    <span style="mso-text-raise: 15px;">Visita No Pasa Nada PE</span>
+                                </a>
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding: 20px 40px; font-size: 12px; color: #999999; border-top: 1px solid #eeeeee;">
+                            <p style="margin: 0 0 5px; font-weight: bold;">No Pasa Nada PE - Un servicio exclusivo para Maquinarias S.A.</p>
+                            <p style="margin: 0;">&copy; {{ ano }}. Todos los derechos reservados.</p>
+                            <p style="margin: 10px 0 0;">Soporte: <a href="mailto:info@nopasanadape.com" style="color: #0056b3; text-decoration: none;">info@nopasanadape.com</a></p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

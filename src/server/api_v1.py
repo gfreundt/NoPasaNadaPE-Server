@@ -7,6 +7,23 @@ from security.keys import EXTERNAL_AUTH_TOKEN
 from src.comms import enviar_correo_inmediato
 from src.utils.utils import send_pushbullet
 
+SQL_A_API = {
+    "DireccionCorreo": "correo",
+    "Correo": "correo",
+    "FechaEnvio": "timestamp_envio",
+    "RespuestaMensaje": "respuesta_mensaje",
+    "Subject": "asunto",
+    "TipoMensaje": "tipo_mensaje",
+    "Celular": "celular",
+    "CodigoClienteExterno": "codigo_cliente",
+    "IdSolicitud": "id_solicitud",
+    "NombreCompleto": "nombre",
+    "NumeroDocumento": "numero_documento",
+    "PerfilInterno": "perfil",
+    "TimestampCreacion": "timestamp_creado",
+    "TipoDocumento": "tipo_documento",
+}
+
 
 # --- FUNCION AUXILIAR PARA LIMPIAR DATOS ---
 def clean_str(data, key, to_upper=False):
@@ -115,9 +132,19 @@ def api(self, timer_inicio):
 
         # --- SOLICITUD: BASE DE DATOS DE CLIENTES AUTORIZADOS ---
         if solicitud == "clientes_autorizados":
-            cursor.execute("SELECT * FROM InfoClientesAutorizados")
+            cmd = """SELECT A.*, 
+                        CASE WHEN B.Correo IS NOT NULL
+                            THEN 1
+                            ELSE 0
+                        END AS inscrito
+                        FROM InfoClientesAutorizados AS A
+                        LEFT JOIN
+                        InfoMiembros AS B
+                        ON
+                        A.Correo = B.Correo"""
+            cursor.execute(cmd)
             rows = cursor.fetchall()
-            column_names = [col[0] for col in cursor.description]
+            column_names = [SQL_A_API.get(col[0], col[0]) for col in cursor.description]
             registros = [dict(zip(column_names, row)) for row in rows]
             return finalizar(
                 self,
@@ -136,7 +163,7 @@ def api(self, timer_inicio):
                     """
             cursor.execute(cmd, (fecha_desde, fecha_hasta))
             rows = cursor.fetchall()
-            column_names = [col[0] for col in cursor.description]
+            column_names = [SQL_A_API.get(col[0], col[0]) for col in cursor.description]
             registros = [dict(zip(column_names, row)) for row in rows]
             return finalizar(
                 self,
@@ -160,7 +187,6 @@ def api(self, timer_inicio):
                 mensaje={"error": "Lista de clientes invalida."},
             )
 
-        perfil_interno = "MAQ-000"
         respuesta_exitos = []
         respuesta_fallos = []
 
@@ -230,6 +256,7 @@ def api(self, timer_inicio):
             tipo_documento = clean_str(cliente, "tipo_documento")
             numero_documento = clean_str(cliente, "numero_documento")
             celular = clean_str(cliente, "celular")
+            perfil_interno = clean_str(cliente, "perfil")
             codigo_externo = clean_str(cliente, "codigo_externo", to_upper=True)
             correo = clean_str(cliente, "correo").lower()
 

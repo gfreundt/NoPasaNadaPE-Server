@@ -60,5 +60,16 @@ def main(self):
         cursor.execute("VACUUM")
         conn.commit()
 
+    if solicitud == "sunarp_manual":
+        cursor.execute(
+            """SELECT Placa FROM InfoPlacas
+                WHERE IdMember_FK != 0
+                    AND
+                Placa NOT IN (SELECT PlacaValidate FROM DataSunarpFichas)
+            """
+        )
+
+        return jsonify([i["Placa"] for i in cursor.fetchall()]), 200
+
     # 3) fallback for unsupported actions
     return jsonify("Error en solicitud."), 400

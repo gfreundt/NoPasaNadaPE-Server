@@ -91,7 +91,7 @@
     <ul>
         <li><strong>Base URL:</strong> <code>dev.nopasanadape.com/api/v1</code></li>
         <li><strong>Formato:</strong> JSON</li>
-        <li><strong>Autenticación:</strong> todas las solicitudes deben incluir un campo <code>token</code> en el cuerpo del request</li>
+        <li><strong>Autenticación:</strong> todas las solicitudes deben incluir un campo <code>token</code> en el cuerpo de la solicitud</li>
     </ul>
 
     <h3>1.1. Cabecera de Solicitud</h3>
@@ -452,8 +452,8 @@
         }
             ]
         },
- "timestamp": "2025-12-15 16:22:40.255584"
- }
+    "timestamp": "2025-12-15 16:22:40.255584"
+    }
     </pre>
 
     <h3>2.3.3. Solicitud de Baja</h3>
@@ -483,7 +483,7 @@
 
     <p>El array de <code>clientes</code> no puede estar vacío.</p>
 
-    <h3>Ejemplo de Request</h3>
+    <h3>Ejemplo de solicitud</h3>
     <pre>
 {
 "token": "TOKEN_EXTERNO",
@@ -491,16 +491,16 @@
 "usuario": "admin",
 "clientes": [
                 {
-                "correo": "juan.perez@dominio.com"
-                },
+                    "correo": "juan.perez@dominio.com"
+                    },
                 {
-                "correo": "jose.lopez@dominio.com"
-                }
+                    "correo": "jose.lopez@dominio.com"
+                    }
     ]
 }
     </pre>
 
-    <h3>2.3.4. Respuesta de Baja</h3>
+    <h3>2.3.4. Respuesta de baja</h3>
 
     <p>El campo <code>resultados</code> es un array con elementos:</p>
 
@@ -594,26 +594,26 @@
 
     <p>El array de <code>clientes</code> puede no existir o estar vacío.</p>
 
-    <h3>Ejemplos de Request</h3>
+    <h3>Ejemplos de solicitud</h3>
 
     <pre>
 {
-"token": "TOKEN_EXTERNO",
-"solicitud": "mensajes_enviados",
-"usuario": "MAQ-003"
-}
+    "token": "TOKEN_EXTERNO",
+    "solicitud": "mensajes_enviados",
+    "usuario": "MAQ-003"
+    }
     </pre>
 
     <pre>
 {
-"token": "TOKEN_EXTERNO",
-"solicitud": "mensajes_enviados",
-"usuario": "MAQ-002",
-"fecha_desde": "2024-01-01",
-"fecha_hasta": "2024-12-31"
-}
+    "token": "TOKEN_EXTERNO",
+    "solicitud": "mensajes_enviados",
+    "usuario": "MAQ-002",
+    "fecha_desde": "2024-01-01",
+    "fecha_hasta": "2024-12-31"
+    }
     </pre>
-    <h3>2.3.6. Respuesta de Consulta de Mensajes Enviados</h3>
+    <h3>2.3.6. Respuesta de consulta de mensajes enviados</h3>
 
     <p>El campo <code>resultados</code> es un array con dos elementos:</p>
     <ul>
@@ -632,7 +632,7 @@
         </thead>
         <tbody>
             <tr>
-                <td><code>direccion_correo</code></td>
+                <td><code>correo</code></td>
                 <td>string</td>
                 <td>Dirección de correo al que se envió el mensaje.</td>
                 <td>usario@dominio.com</td>
@@ -673,14 +673,14 @@
         "cuenta": 3,
         "data": [
             {
-                "direccion_correo": "juna66@kudimi.com",
+                "correo": "juna66@kudimi.com",
                 "timestamp_envio": "2025-12-14 19:57:41.077390",
                 "respuesta_mensaje": "ok",
                 "asunto": "Tu Boletín de No Pasa Nada PE - Diciembre 2025",
                 "tipo_mensaje": "boletin"
                 },
             {
-                "direccion_correo": "pepe093@kudimi.com",
+                "correo": "pepe093@kudimi.com",
                 "timestamp_envio": "2025-12-14 20:57:27.320659",
                 "respuesta_mensaje": "ok",
                 "asunto": "Tienes una Alerta de No Pasa Nada PE",
@@ -703,7 +703,7 @@
 
     <p>El array de <code>clientes</code> puede no existir o estar vacío.</p>
 
-    <h3>Ejemplo de Request</h3>
+    <h3>Ejemplo de solicitud</h3>
 
     <pre>
 {
@@ -784,7 +784,7 @@
                 <td>Solo caracteres alfabeticos</td>
             </tr>
             <tr>
-                <td><code>suscrito</code></td>
+                <td><code>inscrito</code></td>
                 <td>bool</td>
                 <td>Cliente completó proceso de suscripcion</td>
                 <td><code>true</code> / <code>false</code></td>
@@ -810,7 +810,7 @@
                 "perfil": "VIP9",
                 "timestamp_creado": "2025-12-10 23:08:23.771669",
                 "tipo_documento": "DNI",
-                "suscrito": true
+                "inscrito": true
                 },
             {
                 "celular": "",
@@ -822,7 +822,7 @@
                 "perfil": "REGULAR3",
                 "timestamp_creado": "2025-12-11 23:08:42.250366",
                 "tipo_documento": "",
-                "suscrito": false
+                "inscrito": false
                 }
             ]  
         }
