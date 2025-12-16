@@ -240,12 +240,11 @@ def validaciones(db, forma):
     # --------------------------------------------------------------
     # password
     # --------------------------------------------------------------
-    password_regex = r"^(?=.*[A-Z])(?=.*[\W_])(?=.{8,}).*$"
+    password_regex = r"^(?=.*[A-Z]).{6,}$"
 
     if not re.match(password_regex, forma.get("password1", "")):
         errors["password1"] = (
-            "Contraseña debe tener mínimo 8 caracteres, "
-            "incluir una mayúscula y un carácter especial."
+            "Contraseña debe tener mínimo 6 caracteres e incluir una mayúscula."
         )
 
     elif forma.get("password1") != forma.get("password2"):
