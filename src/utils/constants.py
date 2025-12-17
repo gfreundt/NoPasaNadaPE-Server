@@ -40,10 +40,25 @@ MONTHS_3_LETTERS = (
     "Jun",
     "Jul",
     "Ago",
-    "Set",
+    "Sep",
     "Oct",
     "Nov",
     "Dic",
+)
+
+MESES_NOMBRE_COMPLETO = (
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
 )
 
 # table data
@@ -62,4 +77,9 @@ SQL_TABLES = {
     "DataSutranMultas": "PLACA",
     "DataSunarpFichas": "PLACA",
     "DataCallaoMultas": "PLACA",
+}
+
+FORMATO_PASSWORD = {
+    "regex": r"^(?=.*[A-Z]).{6,}",
+    "mensaje": "Contraseña debe tener mínimo 6 caracteres e incluir una mayúscula.",
 }

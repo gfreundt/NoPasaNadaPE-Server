@@ -185,11 +185,15 @@ def generar_data_servicios(cursor, correo):
     u = cursor.fetchone()
     usuario.update({"nombre": u["NombreCompleto"]})
 
-    # determinar si hay data en tablas para pasarle al HTML
+    hay_vencimientos = any([len(vencimientos[i]) for i in vencimientos])
+    hay_multas = any([len(multas[i]) for i in multas])
+    hay_descargas = any([len(descargas[i]) for i in descargas])
+
     control = {
-        "tabla_vencimientos": any([len(vencimientos[i]) for i in vencimientos]),
-        "tabla_multas": any([len(multas[i]) for i in multas]),
+        "tabla_vencimientos": hay_vencimientos,
+        "tabla_multas": hay_multas,
     }
+    vacio = not (hay_vencimientos or hay_multas or hay_descargas)
 
     return {
         "control": control,
@@ -199,4 +203,5 @@ def generar_data_servicios(cursor, correo):
         "descargas": descargas,
         "placas": placas,
         "ano": dt.strftime(dt.now(), "%Y"),
+        "vacio": vacio,
     }

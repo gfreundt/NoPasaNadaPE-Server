@@ -28,6 +28,7 @@ def activacion(db, correo, nombre=None):
         "html_content": template.render(
             {"nombre": nombre, "ano": dt.strftime(dt.now(), "%Y")}
         ),
+        "tipo_mensaje": "INVITACION",
     }
 
     # enviar
@@ -58,6 +59,7 @@ def desactivacion(db, correo, nombre):
         "html_content": template.render(
             {"nombre": nombre, "ano": dt.strftime(dt.now(), "%Y")}
         ),
+        "tipo_mensaje": "DESACTIVACION",
     }
 
     # enviar
@@ -92,6 +94,7 @@ def inscripcion(db, correo, nombre, placas):
                 "placas": placas,
             }
         ),
+        "tipo_mensaje": "BIENVENIDA",
     }
 
     # enviar
@@ -122,6 +125,7 @@ def eliminacion(db, correo, nombre):
         "html_content": template.render(
             {"nombre": nombre, "ano": dt.strftime(dt.now(), "%Y")}
         ),
+        "tipo_mensaje": "ELIMINA_CUENTA",
     }
 
     # enviar
@@ -156,8 +160,9 @@ def recuperacion_contrasena(db, correo, token):
         "bcc": "gabfre@gmail.com",
         "subject": "Tu nueva contraseña de No Pasa Nada PE",
         "html_content": template.render(
-            {"url": url, "ano": dt.strftime(dt.now(), "%Y")}
+            {"url": url, "ano": dt.strftime(dt.now(), "%Y")},
         ),
+        "tipo_mensaje": "RECUPERA_CONTRASEÑA",
     }
 
     # enviar
@@ -188,6 +193,7 @@ def confirmacion_cambio_contrasena(db, correo):
         "bcc": "gabfre@gmail.com",
         "subject": "Tu nueva contraseña de No Pasa Nada PE",
         "html_content": template.render({"ano": dt.strftime(dt.now(), "%Y")}),
+        "tipo_mensaje": "CONFIRMA_NUEVA_CONTRASEÑA",
     }
 
     # enviar

@@ -65,7 +65,7 @@ def send(cursor, conn):
 
             # cambiar nombre de archivo de "pendientes" a "enviados" y agregar fecha
             nuevo_nombre = pendiente.replace(
-                "pendientes", f"enviados-{dt.strftime(dt.now(),"%Y-%M-%d %h:%n:%s")}"
+                "pendientes", f"enviados-{dt.strftime(dt.now(),"%Y-%m-%d %H:%M:%S")}"
             )
             os.rename(
                 os.path.join(NETWORK_PATH, "outbound", pendiente),

@@ -5,7 +5,7 @@ from datetime import datetime as dt
 from jinja2 import Environment, FileSystemLoader
 
 from src.comms import redactar_mensaje
-from src.utils.constants import NETWORK_PATH
+from src.utils.constants import NETWORK_PATH, MESES_NOMBRE_COMPLETO
 from src.utils.utils import date_to_mail_format
 from src.maintenance import maintenance
 from src.updates import datos_actualizar, necesitan_mensajes
@@ -59,6 +59,8 @@ def boletines(db_cursor):
     environment = Environment(loader=FileSystemLoader("templates/"))
     template_regular = environment.get_template("comms-maquinarias-boletin.html")
 
+    mes = MESES_NOMBRE_COMPLETO[int(dt.strftime(dt.now(), "%m")) - 1]
+
     boletines = []
     for row in necesitan_mensajes.boletines(db_cursor):
         boletines.append(
@@ -66,7 +68,7 @@ def boletines(db_cursor):
                 db_cursor=db_cursor,
                 IdMember=row["IdMember"],
                 template=template_regular,
-                subject="Tu Boletín de No Pasa Nada PE - Diciembre 2025",
+                subject=f"Tu Boletín de No Pasa Nada PE - {mes} 2025",
                 alertas=alertas,
                 correo=row["Correo"],
             )

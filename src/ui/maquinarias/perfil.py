@@ -1,6 +1,7 @@
 import re
 from flask import redirect, request, render_template, url_for, session
 
+from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import compare_text_to_hash, hash_text
 from src.ui.maquinarias import servicios
 
@@ -197,13 +198,8 @@ def validaciones(db, forma):
 
         else:
             # revisar si nuevo password cumple con requisitos
-            password_regex = r"^(?=.*[A-Z])(?=.*[\W_])(?=.{8,}).*$"
-
-            if not re.match(password_regex, forma.get("password1", "")):
-                errors["password1"] = (
-                    "Contraseña debe tener mínimo 8 caracteres, "
-                    "incluir una mayúscula y un carácter especial."
-                )
+            if not re.match(FORMATO_PASSWORD["regex"], forma.get("password1", "")):
+                errors["password1"] = FORMATO_PASSWORD["mensaje"]
 
             elif forma.get("password1") != forma.get("password2"):
                 errors["password2"] = "Las contraseñas no coinciden."

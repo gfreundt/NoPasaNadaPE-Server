@@ -37,10 +37,11 @@ Mi Cuenta | No Pasa Nada PE
                 {% for service_key, items in servicios.vencimientos.items() %}
                     {% for item in items %}
                     {% set service_name = service_key %}
-                    {% if service_key == 'BREVETES' %}{% set service_name = 'Licencia de Conducir' %}
-                    {% elif service_key == 'SOATS' %}{% set service_name = 'Certificado SOAT' %}
+                    {# Unified service names from comms-maquinarias-boletin #}
+                    {% if service_key == 'Licencia de Conducir' %}{% set service_name = 'Licencia de Conducir' %}
+                    {% elif service_key == 'Certificado SOAT' %}{% set service_name = 'Certificado SOAT' %}
                     {% elif service_key == 'SATIMPS' %}{% set service_name = 'Impuesto SAT' %}
-                    {% elif service_key == 'REVTECS' %}{% set service_name = 'Revisión Técnica' %}
+                    {% elif service_key == 'Revision Tecnica' %}{% set service_name = 'Revisión Técnica' %}
                     {% endif %}
                     <tr>
                         <td class="fw-medium">
@@ -66,16 +67,16 @@ Mi Cuenta | No Pasa Nada PE
                                 {% if item.FechaHastaDias is not none %}
                                     {% set days_label = 'días' %}
                                     {% set days_info_color = 'text-secondary' %}
+                                    {% set formatted_days = (item.FechaHastaDias | abs) | string %}
+
                                     {% if item.FechaHastaDias == 0 %}
                                         {% set days_info = 'Hoy' %}
                                     {% elif item.FechaHastaDias > 0 %}
-                                        {# Text adjustment: 'quedan' #}
-                                        {% set days_info = 'quedan ' + item.FechaHastaDias | string + ' ' + days_label %}
-                                        {% set days_info_color = 'text-success' %} {# Vigente = Green #}
+                                        {% set days_info = 'quedan ' + formatted_days + ' ' + days_label %}
+                                        {% set days_info_color = 'text-success' %} 
                                     {% else %}
-                                        {# Text adjustment: 'hace' (all lower case) #}
-                                        {% set days_info = 'hace ' + (item.FechaHastaDias * -1) | string + ' ' + days_label %}
-                                        {% set days_info_color = 'text-danger' %} {# Vencido = Red #}
+                                        {% set days_info = 'hace ' + formatted_days + ' ' + days_label %}
+                                        {% set days_info_color = 'text-danger' %} 
                                     {% endif %}
                                     <span class="small {{ days_info_color }} fw-bold">{{ days_info }}</span>
                                 {% endif %}
@@ -94,10 +95,33 @@ Mi Cuenta | No Pasa Nada PE
                 {% endfor %}
             </tbody>
         </table>
+        
+        {# Conditional messages for Vencimientos (from comms-maquinarias-boletin) #}
+        <div class="mb-4">
+            {% if (servicios.vencimientos['Licencia de Conducir'] | default([]) | length) == 0 %}
+            <div class="text-center p-2 border rounded-3 mb-2 bg-white">
+                <p class="mb-0 fw-bold text-danger" style="font-size: 0.9rem;">No se encontró información de licencia de conducir</p>
+            </div>
+            {% endif %}
+
+            {% if (servicios.vencimientos['Certificado SOAT'] | default([]) | length) == 0 %}
+            <div class="text-center p-2 border rounded-3 mb-2 bg-white">
+                <p class="mb-0 fw-bold text-warning" style="font-size: 0.9rem;">No se encontraron Certificados SOAT</p>
+            </div>
+            {% endif %}
+
+            {% if (servicios.vencimientos['Revision Tecnica'] | default([]) | length) == 0 %}
+            <div class="text-center p-2 border rounded-3 mb-2 bg-white">
+                <p class="mb-0 fw-bold text-warning" style="font-size: 0.9rem;">No se encontraron Revisiones Técnicas</p>
+                <p class="small text-secondary mb-0" style="font-size: 0.7rem;">Si tu auto es nuevo, no son necesarias.</p>
+            </div>
+            {% endif %}
+        </div>
+
         {% else %}
         <div class="text-center p-4 border rounded-3 mb-4">
             <p class="fw-bold mb-1">No Hay Informacion Disponible</p>
-            <p class="small text-secondary mb-0">si recien se registra, su información estara disponible dentro de las proximas 24 horas</p>
+            <p class="small text-secondary mb-0">si recién se registra, su información estará disponible pronto.</p>
         </div>
         {% endif %}
         
@@ -105,8 +129,10 @@ Mi Cuenta | No Pasa Nada PE
         
         <h3 class="fw-bold fs-4 mb-3 text-center">Multas</h3>
         
-        {# Display table if servicios.control.tabla_multas is True, otherwise display message #}
-        {% if servicios.control.tabla_multas %}
+        {# Check if ANY fines are found to display the table #}
+        {% set fines_found = servicios.multas.SATMULS | length > 0 or servicios.multas.SUTRANS | length > 0 or servicios.multas.CALMUL | length > 0 %}
+
+        {% if fines_found %}
         <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
             <thead class="table-dark">
                 <tr>
@@ -121,8 +147,10 @@ Mi Cuenta | No Pasa Nada PE
                 {% for service_key, items in servicios.multas.items() %}
                     {% for item in items %}
                     {% set service_name = service_key %}
-                    {% if service_key == 'SATMULS' %}{% set service_name = 'Multas SAT' %}
-                    {% elif service_key == 'SUTRANS' %}{% set service_name = 'Multas SUTRAN' %}
+                    {# Unified service names (singular) from comms-maquinarias-boletin #}
+                    {% if service_key == 'SATMULS' %}{% set service_name = 'Multa SAT' %}
+                    {% elif service_key == 'SUTRANS' %}{% set service_name = 'Multa SUTRAN' %}
+                    {% elif service_key == 'CALMUL' %}{% set service_name = 'Multa CALLAO' %} 
                     {% endif %}
                     <tr>
                         <td class="fw-medium">
@@ -130,11 +158,11 @@ Mi Cuenta | No Pasa Nada PE
                             {% if item.Placa %}<br><span class="small text-muted">Placa: {{ item.Placa }}</span>{% endif %}
                         </td>
                         <td>
-                            {# Date: Use FechaEmision for SATMULS, FechaDoc for SUTRANS #}
+                            {# Date: Use FechaEmision for SATMULS/CALMUL, FechaDoc for SUTRANS #}
                             {{ item.FechaEmision | default(item.FechaDoc) | default('N/A') }}
                         </td>
                         <td>
-                            {# Falta / Infracción: Use Falta for SATMULS, CodigoInfrac for SUTRANS #}
+                            {# Falta / Infracción: Use Falta for SATMULS/CALMUL, CodigoInfrac for SUTRANS #}
                             {% if item.Falta %}
                                 <span class="fw-bold">{{ item.Falta }}</span>
                             {% elif item.CodigoInfrac %}
@@ -144,9 +172,9 @@ Mi Cuenta | No Pasa Nada PE
                             {% endif %}
                         </td>
                         <td>
-                            {# Detalle: Estado + Deuda for SATMULS, Clasificacion for SUTRANS #}
+                            {# Detalle: Estado + Deuda for SATMULS/CALMUL, Clasificacion for SUTRANS #}
                             {% set detalle_color = 'text-danger fw-bold' %}
-                            {% if service_key == 'SATMULS' %}
+                            {% if service_key == 'SATMULS' or service_key == 'CALMUL' %}
                                 <span class="{{ detalle_color }}">{{ item.Estado | default('N/A') }}</span>
                                 {% if item.Deuda %}
                                 <br><span class="small text-secondary">Deuda: S/ {{ "%.2f"|format(item.Deuda) }}</span>
@@ -172,11 +200,34 @@ Mi Cuenta | No Pasa Nada PE
                 {% endfor %}
             </tbody>
         </table>
+        
         {% else %}
         <div class="text-center p-4 border rounded-3 mb-4">
             <p class="fw-bold mb-1">No Hay Informacion Disponible</p>
         </div>
         {% endif %}
+
+        {# Conditional "No information" blocks for each specific fine service (Green text) (from comms-maquinarias-boletin) #}
+        <div class="mb-4">
+            {% if servicios.multas.SATMULS | length == 0 %}
+            <div class="text-center p-2 border rounded-3 mb-2 bg-white">
+                <p class="mb-0 fw-bold text-success" style="font-size: 0.9rem;">No se encontraron multas SAT Lima</p>
+            </div>
+            {% endif %}
+
+            {% if servicios.multas.SUTRANS | length == 0 %}
+            <div class="text-center p-2 border rounded-3 mb-2 bg-white">
+                <p class="mb-0 fw-bold text-success" style="font-size: 0.9rem;">No se encontraron multas SUTRAN</p>
+            </div>
+            {% endif %}
+
+            {% if servicios.multas.CALMUL | length == 0 %}
+            <div class="text-center p-2 border rounded-3 mb-2 bg-white">
+                <p class="mb-0 fw-bold text-success" style="font-size: 0.9rem;">No se encontraron multas en el CALLAO</p>
+            </div>
+            {% endif %}
+        </div>
+
 
         <h3 class="fw-bold fs-4 mb-3 text-center">Descargas</h3>
 
@@ -277,5 +328,41 @@ Mi Cuenta | No Pasa Nada PE
 
     </div>
 </div>
+
+{# --- MODAL PARA PÁGINA VACÍA --- #}
+<div class="modal fade" id="emptyDataModal" tabindex="-1" aria-labelledby="emptyDataModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {# <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="emptyDataModalLabel">Información No Disponible</h5>
+            </div> #}
+            <div class="modal-body text-center">
+                <i class="bi bi-info-circle-fill text-primary mb-3" style="font-size: 3rem;"></i>
+                <p class="lead">
+                    Aún no contamos con tu información completa.
+                </p>
+                <p class="text-secondary">
+                    Si recién te registras, recibirás tu primer boletín muy pronto y luego podrás visitar esta página con tu información al día.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center flex-column pt-0">
+                <p class="small text-secondary mb-2">
+                    Si tienes alguna duda escríbenos a <a href="mailto:info@nopasanadape.com">info@nopasanadape.com</a>
+                </p>
+                <button type="button" class="btn btn-primary fw-bold" data-bs-dismiss="modal">Continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- SCRIPT PARA MOSTRAR EL MODAL SI servicios.vacio ES TRUE --- #}
+{% if servicios.vacio %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var myModal = new bootstrap.Modal(document.getElementById('emptyDataModal'));
+        myModal.show();
+    });
+</script>
+{% endif %}
 
 {% endblock %}

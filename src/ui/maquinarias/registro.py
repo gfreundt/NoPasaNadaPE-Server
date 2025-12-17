@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime as dt
 from flask import request, render_template, session, redirect, url_for
 
+from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import hash_text, send_pushbullet
 from src.comms import enviar_correo_inmediato
 from src.ui.maquinarias import servicios
@@ -240,12 +241,8 @@ def validaciones(db, forma):
     # --------------------------------------------------------------
     # password
     # --------------------------------------------------------------
-    password_regex = r"^(?=.*[A-Z]).{6,}$"
-
-    if not re.match(password_regex, forma.get("password1", "")):
-        errors["password1"] = (
-            "Contraseña debe tener mínimo 6 caracteres e incluir una mayúscula."
-        )
+    if not re.match(FORMATO_PASSWORD["regex"], forma.get("password1", "")):
+        errors["password1"] = FORMATO_PASSWORD["mensaje"]
 
     elif forma.get("password1") != forma.get("password2"):
         errors["password2"] = "Las contraseñas no coinciden."
