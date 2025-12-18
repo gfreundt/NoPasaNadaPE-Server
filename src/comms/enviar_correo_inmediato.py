@@ -138,7 +138,7 @@ def recuperacion_contrasena(db, correo, token):
 
     # crear URL unico para recuperacion de contraseña
     url = f"http://localhost:5000/recuperar-contrasena/{token}"
-    url = f"https://dev.nopasanadape.com/recuperar-contrasena/{token}"
+    url = f"https://nopasanadape.com/recuperar-contrasena/{token}"
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
