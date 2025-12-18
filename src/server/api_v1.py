@@ -3,7 +3,7 @@ from flask import request, jsonify
 import time
 import re
 import json
-from security.keys import EXTERNAL_AUTH_TOKEN
+from security.keys import EXTERNAL_AUTH_TOKEN_API_V1
 from src.comms import enviar_correo_inmediato
 from src.utils.utils import send_pushbullet
 
@@ -81,7 +81,7 @@ def api(self, timer_inicio):
         data_log["IdSolicitud"] = id_solicitud
 
         # --- VALIDACIONES ---
-        if token != EXTERNAL_AUTH_TOKEN:
+        if token != EXTERNAL_AUTH_TOKEN_API_V1:
             return finalizar(
                 self,
                 timer_inicio,
