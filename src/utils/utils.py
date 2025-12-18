@@ -5,9 +5,13 @@ import socket
 import bcrypt
 import json
 import requests
+import subprocess
+import time
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from src.utils.constants import MONTHS_3_LETTERS
 from security.keys import PUSHBULLET_API_TOKEN
+
+# ----- FORMATTING ----
 
 
 def date_to_db_format(data):
@@ -77,6 +81,74 @@ def date_to_user_format(fecha):
     return f"{_day}-{_month}-{_year}"
 
 
+# ----- NETWORKING ----
+
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 1))  # connect() for UDP doesn't send packets
+    return s.getsockname()[0]
+
+
+def turn_vpn_on(pais="pe", con_tipo="udp"):
+    """
+    Starts the OpenVPN connection in daemon mode.
+    Requires sudo privileges.
+    Returns process successful (True/False)
+    """
+
+    try:
+        subprocess.run(
+            [
+                "sudo",
+                "openvpn",
+                "--config",
+                f"{pais.lower()}-lim.prod.surfshark.com_{con_tipo.lower()}.ovpn",
+                "--daemon",
+            ],
+            check=True,
+        )
+
+    except subprocess.CalledProcessError:
+        return False
+
+    time.sleep(2)
+    return vpn_is_online()
+
+
+def turn_vpn_off():
+    """
+    Stops all running OpenVPN processes.
+    Requires sudo privileges.
+    """
+    subprocess.run(["sudo", "pkill", "openvpn"], check=False)
+
+
+def get_public_ip():
+    """
+    Prints the current public IPv4 address.
+    """
+    result = subprocess.run(
+        ["curl", "-4", "-s", "ifconfig.me"], capture_output=True, text=True, check=True
+    )
+
+    result.stdout.strip()
+
+
+def vpn_is_online():
+    """
+    Returns True if an OpenVPN process is running, False otherwise.
+    """
+    result = subprocess.run(
+        ["pgrep", "-x", "openvpn"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+
+    return result.returncode == 0
+
+
+# ---- DATA TRANSFORMATION -----
+
+
 def base64_to_image(base64_string, output_path):
     try:
         image_data = base64.b64decode(base64_string)
@@ -84,12 +156,6 @@ def base64_to_image(base64_string, output_path):
             file.write(image_data)
     except Exception as e:
         print(f"An error occurred (base64_to_image): {e}")
-
-
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 1))  # connect() for UDP doesn't send packets
-    return s.getsockname()[0]
 
 
 def hash_text(text_string):
@@ -113,6 +179,9 @@ def compare_text_to_hash(text_string, hash_string):
 
     # return boolean on match
     return bcrypt.checkpw(text_bytes, hash_bytes)
+
+
+# ----- MESSAGING -----
 
 
 def send_pushbullet(title, message=""):
