@@ -86,6 +86,8 @@ def enviar_notificacion(mensaje):
 
 def main(self):
 
+    print("@@@@@@@@@@@@@")
+
     if not self.config_autoscraper:
         self.log(action="[ AUTOSCRAPER ] OFFLINE")
         return
