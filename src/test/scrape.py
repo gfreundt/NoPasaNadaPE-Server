@@ -6,11 +6,16 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 import uuid
+import platform
 
 
 def config():
 
-    service = Service("chromedriver.exe", log_path=os.devnull)
+    if platform.system() == "Windows":
+        chromedriver_path = "chromedriver.exe"
+    elif platform.system() == "Linux":
+        chromedriver_path = r"\usr\chromedriver.exe"
+    service = Service(, log_path=os.devnull)
     options = Options()
 
     options.add_argument("--incognito")
