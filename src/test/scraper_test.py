@@ -44,14 +44,14 @@ def vpn_is_online():
     return result.returncode == 0
 
 
-print("ip", print_public_ip)
+print("ip", print_public_ip())
 print("online", vpn_is_online())
 print("on", vpn_on())
 time.sleep(5)
-print("ip", print_public_ip)
+print("ip", print_public_ip())
 print("online", vpn_is_online())
 print("off", vpn_off())
 time.sleep(5)
-print("ip", print_public_ip)
+print("ip", print_public_ip())
 print("online", vpn_is_online())
 print("on", vpn_on())
