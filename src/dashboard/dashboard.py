@@ -36,6 +36,7 @@ class Dashboard:
 
         # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
         if soy_master:
+            print("+++++++++++++ SOY MASTER")
             cron.main(self)
 
     def set_server(self, server_instance):
