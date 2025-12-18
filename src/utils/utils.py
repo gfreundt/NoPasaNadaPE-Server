@@ -1,5 +1,7 @@
 from datetime import datetime as dt
+import io
 import re
+import os
 import base64
 import socket
 import bcrypt
@@ -8,8 +10,12 @@ import requests
 import subprocess
 import time
 from requests.exceptions import Timeout, ConnectionError, RequestException
-from src.utils.constants import MONTHS_3_LETTERS
-from security.keys import PUSHBULLET_API_TOKEN
+from PIL import Image, ImageDraw, ImageFont
+from selenium.webdriver.common.by import By
+
+
+from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH
+from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_API_KEY
 
 # ----- FORMATTING ----
 
@@ -90,7 +96,7 @@ def get_local_ip():
     return s.getsockname()[0]
 
 
-def turn_vpn_on(pais="pe", con_tipo="udp"):
+def start_vpn(pais="pe", con_tipo="udp"):
     """
     Starts the OpenVPN connection in daemon mode.
     Requires sudo privileges.
@@ -101,11 +107,14 @@ def turn_vpn_on(pais="pe", con_tipo="udp"):
         subprocess.run(
             [
                 "sudo",
+                "-S",
                 "openvpn",
                 "--config",
                 f"{pais.lower()}-lim.prod.surfshark.com_{con_tipo.lower()}.ovpn",
                 "--daemon",
             ],
+            input="Holiday21!",
+            text=True,
             check=True,
         )
 
@@ -113,10 +122,10 @@ def turn_vpn_on(pais="pe", con_tipo="udp"):
         return False
 
     time.sleep(2)
-    return vpn_is_online()
+    return True  # vpn_online()
 
 
-def turn_vpn_off():
+def stop_vpn():
     """
     Stops all running OpenVPN processes.
     Requires sudo privileges.
@@ -135,7 +144,7 @@ def get_public_ip():
     result.stdout.strip()
 
 
-def vpn_is_online():
+def vpn_online():
     """
     Returns True if an OpenVPN process is running, False otherwise.
     """
@@ -143,7 +152,7 @@ def vpn_is_online():
         ["pgrep", "-x", "openvpn"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
 
-    return result.returncode == 0
+    return True  # result.returncode == 0
 
 
 # ---- DATA TRANSFORMATION -----
@@ -208,3 +217,122 @@ def send_pushbullet(title, message=""):
 
     except (Timeout, ConnectionError, RequestException):
         return False
+
+
+def use_truecaptcha(image, retries=3):
+    """
+    Recibe imagen y la envia al servicio externo de deteccion TRUECAPTCHA
+    para transformarlo en texto
+
+    :param image: Objeto en Bytes
+    :param retries: Cuantas veces volver a intentar si el servicio esta offline
+
+    Correcto: retorna diccionario, con el texto en llave "result"
+    Error: retorna False
+    """
+
+    # legacy: transform received path to object
+    if type(image) is str:
+        image = open(image, "rb")
+
+    retry_attempts = 0
+    _url = "https://api.apitruecaptcha.org/one/gettext"
+    _data = {
+        "userid": "gabfre@gmail.com",
+        "apikey": TRUECAPTCHA_API_KEY,
+        "data": base64.b64encode(image.read()).decode("ascii"),
+    }
+    while True:
+        try:
+            response = requests.post(url=_url, json=_data)
+            return response.json()
+        except ConnectionError:
+            retry_attempts += 1
+            if retry_attempts <= retries:
+                time.sleep(10)
+                continue
+            return False
+
+
+def solve_recaptcha(webdriver, page_url):
+    """
+    Extracts the sitekey, sends solve request to 2captcha,
+    polls for result, and returns the token.
+    """
+
+    # Find recaptcha sitekey
+    sitekey = webdriver.find_element(By.CSS_SELECTOR, ".g-recaptcha").get_attribute(
+        "data-sitekey"
+    )
+
+    # Send solve request
+    try:
+        resp = requests.post(
+            "http://2captcha.com/in.php",
+            data={
+                "key": TWOCAPTCHA_API_KEY,
+                "method": "userrecaptcha",
+                "googlekey": sitekey,
+                "pageurl": page_url,
+            },
+        ).text
+
+        if "OK|" not in resp:
+            return False
+
+        task_id = resp.split("|")[1]
+
+        # Poll until solved
+        token = None
+        for _ in range(48):  # ~8 minutes max
+            time.sleep(5)
+            check = requests.get(
+                "http://2captcha.com/res.php",
+                params={"key": TWOCAPTCHA_API_KEY, "action": "get", "id": task_id},
+            ).text
+
+            if check == "CAPCHA_NOT_READY":
+                continue
+
+            if "OK|" in check:
+                token = check.split("|")[1]
+                break
+
+            return False
+
+        if not token:
+            return False
+
+        return token
+
+    except Exception:
+        return False
+
+
+def create_soat_certificate(data):
+    """Generates a SOAT certificate image (Mock implementation from gather_soats.py)."""
+    _resources = os.path.join(r"D:\pythonCode", "Resources", "Fonts")
+    font_small = ImageFont.truetype(os.path.join(_resources, "seguisym.ttf"), 30)
+    font_large = ImageFont.truetype(os.path.join(_resources, "seguisym.ttf"), 45)
+
+    # get list of available company logos (Mocking a list)
+    _templates_path = os.path.join(NETWORK_PATH, "static")
+    # cias = [i.split(".")[0] for i in os.listdir(_templates_path)]
+
+    # open blank template image and prepare for edit (Mocking a simple image)
+    base_img = Image.new("RGB", (800, 1200), color="white")
+    editable_img = ImageDraw.Draw(base_img)
+
+    # Mock adding text
+    editable_img.text(
+        (40, 50), f"SOAT Certificate: {data[4]}", font=font_large, fill=(0, 0, 0)
+    )
+    editable_img.text(
+        (40, 100), f"Aseguradora: {data[0]}", font=font_small, fill=(0, 0, 0)
+    )
+
+    # Save image to memory buffer
+    buffer = io.BytesIO()
+    base_img.save(buffer, format="JPEG")
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode("utf-8")

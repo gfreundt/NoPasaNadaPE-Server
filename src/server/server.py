@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import threading
+from threading import Lock
 import time
 import base64
 from datetime import datetime as dt, timedelta as td
@@ -14,16 +15,7 @@ import uuid
 
 # Local imports
 from src.server import settings, updater, api, admin
-
-# from src.ui import (
-#     login,
-#     mis_vencimientos,
-#     registro,
-#     recuperar,
-#     logout,
-#     mis_datos,
-#     acerca_de,
-# )
+from src.dashboard import dashboard
 from src.ui.maquinarias import (
     login as maq_login,
     registro as maq_registro,
@@ -45,6 +37,7 @@ class Database:
     def __init__(self):
         self.conn = None
         self._pid = None
+        self.lock = Lock()
 
     def _ensure_conn(self):
         """Ensures each worker has its own SQLite connection."""
@@ -90,16 +83,22 @@ class Database:
 
 
 class Server:
-    def __init__(self, db, app):
+    def __init__(self, db, app, dash):
         self.db = db
         self.app = app
+        self.dash = dash
         self.data_lock = threading.Lock()
 
+        self.dash.set_server(self)
+
+        # activar jinja extension
         self.app.jinja_env.add_extension("jinja2.ext.do")
 
         # Flask config + routes + OAuth
         settings.set_flask_config(self)
         settings.set_routes(self)
+
+        # activar dashboard
 
         self.oauth = OAuth(app)
         settings.set_oauth_config(self)

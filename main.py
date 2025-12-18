@@ -3,6 +3,7 @@ import logging
 from flask import Flask
 
 from src.server import server
+from src.dashboard import dashboard
 from src.utils.constants import NETWORK_PATH
 from src.utils.utils import get_local_ip
 
@@ -18,7 +19,8 @@ def create_app():
     )
 
     db = server.Database()
-    backend = server.Server(db=db, app=app)
+    dash = dashboard.Dashboard(db=db)
+    backend = server.Server(db=db, app=app, dash=dash)
     app.backend = backend
     return app
 

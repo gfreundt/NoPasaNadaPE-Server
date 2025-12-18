@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='dashboard.css') }}" rel="stylesheet">
+    <style>
+        /* Custom style to make the scraper table text even smaller */
+        .scraper-table-text {
+            font-size: 0.7rem !important;
+        }
+        
+        /* === MODIFICACIONES PARA FILAS DE SCRAPERS (MÁXIMA COMPACTACIÓN) === */
+        .scraper-table-text td, .scraper-table-text th {
+            /* Reduce padding vertical al mínimo */
+            padding: 0.01rem 0.3rem !important; 
+            /* Centrado vertical */
+            vertical-align: middle; 
+        }
+        /* Centrar switches dentro de sus celdas */
+        .scraper-table-text .scraper-switch {
+            vertical-align: middle;
+            margin-top: 0; /* Asegurar que no haya margen extra de Bootstrap */
+        }
+        /* === FIN DE MODIFICACIONES === */
+
+        /* Custom style for the Status Servicios table text */
+        .kpi-table-text {
+            font-size: 0.8rem !important;
+        }
+        /* Ensure table content is centered by default, but only specific cells are bold */
+        .scraper-table-text td {
+            font-weight: normal; /* Override previous global bolding */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid p-3">
+
+        <div class="row">
+        
+            <div class="col-lg-8">
+                
+                <h4 class="fw-bold mb-3 text-center">Processes</h4> 
+
+                <div class="row mb-4" id="cards-container">
+                    {% for i in range(32) %}
+                    <div class="col-6 col-md-3 mb-2 px-1">
+                        <div class="card status-0 h-100" id="card-{{ i }}">
+                            <div class="card-body p-2">
+                                <h6 class="card-title d-flex justify-content-between align-items-center mb-1" style="font-size: 0.85rem;">
+                                    <span id="card-title-{{ i }}" class="text-truncate">Process {{ i+1 }}</span>
+                                    <i id="card-icon-{{ i }}" class="bi" style="font-size: 0.85rem;"></i>
+                                </h4>
+                                <p class="card-text small mb-0" id="card-text-{{ i }}" style="font-size: 0.75rem;">Status: Idle</p>
+                                <p class="mb-0 small" style="font-size: 0.75rem;"><strong id="card-status-label-{{ i }}">Inactive</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12 px-1">
+                        <div class="p-3 border rounded shadow-sm bg-white">
+                            
+                            <table class="table table-bordered table-sm text-center mb-0 scraper-table-text">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th colspan="2" class="fw-bold" style="font-size: 1.3rem;">Actualizar</th>
+                                        <th colspan="1"></th> <th colspan="5" class="fw-bold" style="font-size: 1.3rem;">Scrapers</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 10%;">Alertas</th>
+                                        <th style="width: 10%;">Boletines</th>
+                                        <th style="width: 25%;">Servicios</th>
+                                        <th style="width: 8%;">En Linea</th>
+                                        <th style="width: 10%;">Status</th>
+                                        <th style="width: 10%;">Pendientes</th>
+                                        <th style="width: 15%;">ETA</th>
+                                        <th style="width: 7%;">Trabajadores Activos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataMtcBrevetes"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataMtcBrevetes"></td>
+                                        <td class="text-center fw-bold">DataMtcBrevetes</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataMtcBrevetes" data-service="DataMtcBrevetes" 
+                                                       {% if data.scrapers_en_linea['DataMtcBrevetes'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataMtcBrevetes"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataMtcBrevetes"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataMtcBrevetes"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataMtcBrevetes"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataMtcRecordsConductores"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataMtcRecordsConductores"></td>
+                                        <td class="text-center fw-bold">DataMtcRecordsConductores</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataMtcRecordsConductores" data-service="DataMtcRecordsConductores" 
+                                                       {% if data.scrapers_en_linea['DataMtcRecordsConductores'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataMtcRecordsConductores"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataMtcRecordsConductores"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataMtcRecordsConductores"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataMtcRecordsConductores"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataMtcRevisionesTecnicas"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataMtcRevisionesTecnicas"></td>
+                                        <td class="text-center fw-bold">DataMtcRevisionesTecnicas</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataMtcRevisionesTecnicas" data-service="DataMtcRevisionesTecnicas" 
+                                                       {% if data.scrapers_en_linea['DataMtcRevisionesTecnicas'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataMtcRevisionesTecnicas"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataMtcRevisionesTecnicas"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataMtcRevisionesTecnicas"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataMtcRevisionesTecnicas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataSatImpuestos"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataSatImpuestos"></td>
+                                        <td class="text-center fw-bold">DataSatImpuestos</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataSatImpuestos" data-service="DataSatImpuestos" 
+                                                       {% if data.scrapers_en_linea['DataSatImpuestos'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-satimp"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-satimp"></td>
+                                        <td class="text-center" id="scraperkpi-eta-satimp"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-satimp"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataSatMultas"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataSatMultas"></td>
+                                        <td class="text-center fw-bold">DataSatMultas</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataSatMultas" data-service="DataSatMultas" 
+                                                       {% if data.scrapers_en_linea['DataSatMultas'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataSatMultas"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataSatMultas"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataSatMultas"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataSatMultas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataApesegSoats"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataApesegSoats"></td>
+                                        <td class="text-center fw-bold">DataApesegSoats</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataApesegSoats" data-service="DataApesegSoats" 
+                                                       {% if data.scrapers_en_linea['DataApesegSoats'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataApesegSoats"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataApesegSoats"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataApesegSoats"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataApesegSoats"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataSunarpFichas"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataSunarpFichas"></td>
+                                        <td class="text-center fw-bold">DataSunarpFichas</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataSunarpFichas" data-service="DataSunarpFichas" 
+                                                       {% if data.scrapers_en_linea['DataSunarpFichas'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataSunarpFichas"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataSunarpFichas"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataSunarpFichas"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataSunarpFichas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataSutranMultas"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataSutranMultas"></td>
+                                        <td class="text-center fw-bold">DataSutranMultas</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataSutranMultas" data-service="DataSutranMultas" 
+                                                       {% if data.scrapers_en_linea['DataSutranMultas'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataSutranMultas"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataSutranMultas"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataSutranMultas"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataSutranMultas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-DataCallaoMultas"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-DataCallaoMultas"></td>
+                                        <td class="text-center fw-bold">DataCallaoMultas</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-DataCallaoMultas" data-service="DataCallaoMultas" 
+                                                       {% if data.scrapers_en_linea['DataCallaoMultas'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-DataCallaoMultas"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-DataCallaoMultas"></td>
+                                        <td class="text-center" id="scraperkpi-eta-DataCallaoMultas"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-DataCallaoMultas"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" id="scraperkpi-alertas-Consolidado"></td>
+                                        <td class="text-center" id="scraperkpi-boletines-Consolidado"></td>
+                                        <td class="text-center fw-bold">Consolidado</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-inline-block">
+                                                <input class="form-check-input scraper-switch" type="checkbox" role="switch" onchange="handleScraperToggle(this)"
+                                                       id="switch-Consolidado" data-service="Consolidado" 
+                                                       {% if data.scrapers_en_linea['Consolidado'] %}checked{% endif %}>
+                                            </div>
+                                        </td>
+                                        <td class="text-center" id="scraperkpi-status-extra"></td>
+                                        <td class="text-center" id="scraperkpi-pendientes-extra"></td>
+                                        <td class="text-center" id="scraperkpi-eta-extra"></td>
+                                        <td class="text-center" id="scraperkpi-threads_activos-extra"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12 px-1">
+                        <div class="p-3 border rounded shadow-sm bg-white">
+                            <h6 class="fw-bold mb-2 text-center" style="font-size: 1.3rem;">Status Servicios</h6>
+                            <table class="table table-bordered table-sm text-center mb-0 kpi-table-text">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>nopasanadape.com</th>
+                                        <th>Saldo Truecaptcha</th>
+                                        <th>Saldo Zeptomail</th>
+                                        <th>Saldo 2Captcha</th>
+                                        <th>Saldo BrightData</th>
+                                        <th>Proyeccion Google Cloud</th>
+                                        <th>Status Cloudfare</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td id="kpi-nopasanadape-status"></td>
+                                        <td id="kpi-truecaptcha-balance"></td>
+                                        <td id="kpi-zeptomail-balance"></td>
+                                        <td id="kpi-twocaptcha-balance"></td>
+                                        <td id="kpi-brightdata-balance"></td>
+                                        <td id="kpi-googlecloud-balance"></td>
+                                        <td id="kpi-cloudfare-status"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="col-lg-4 d-flex flex-column">
+                
+                <div class="p-3 border rounded shadow-sm bg-white mb-3 flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">Logs</span>
+                        <form method="POST" action="/clear_logs" style="display:inline;">
+                            <button type="submit" id="clear-btn" class="btn btn-sm text-white" style="background-color: #39e75f;">Limpiar</button>
+                        </form>
+                    </div>
+                    <textarea id="activities-text-area" class="form-control" style="resize: none; height: 95%; min-height: 500px; font-size: 12px;" placeholder="Esperando Comando..." readonly></textarea>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-7">
+                        <div class="p-3 border rounded shadow-sm bg-white">
+                            <div class="row g-1">
+                                <div class="col-6">
+                                    <div class="text-center fw-bold mb-2 small">Alertas</div>
+                                    <form method="POST" action="/datos_alertas" class="mb-2">
+                                        <button type="submit" class="btn btn-primary w-100 btn-sm p-1" style="font-size: 0.7rem;">Datos</button>
+                                    </form>
+                                    <form method="POST" action="/actualizar" class="mb-2">
+                                        <button type="submit" class="btn btn-primary w-100 btn-sm p-1" style="font-size: 0.7rem;">Actualizar</button>
+                                    </form>
+                                    <form method="POST" action="/generar_alertas" class="mb-2">
+                                        <button type="submit" class="btn btn-primary w-100 btn-sm p-1" style="font-size: 0.7rem;">Generar</button>
+                                    </form>
+                                </div>
+        
+                                <div class="col-6">
+                                    <div class="text-center fw-bold mb-2 small">Boletines</div>
+                                    <form method="POST" action="/datos_boletines" class="mb-2">
+                                        <button type="submit" class="btn btn-primary w-100 btn-sm p-1" style="font-size: 0.7rem;">Datos</button>
+                                    </form>
+                                    <form method="POST" action="/actualizar" class="mb-2">
+                                        <button type="submit" class="btn btn-primary w-100 btn-sm p-1" style="font-size: 0.7rem;">Actualizar</button>
+                                    </form>
+                                    <form method="POST" action="/generar_boletines" class="mb-2">
+                                        <button type="submit" class="btn btn-primary w-100 btn-sm p-1" style="font-size: 0.7rem;">Generar</button>
+                                    </form>
+                                </div>
+                                
+                                <div class="col-12 mt-2">
+                                    <form method="POST" action="/enviar_mensajes" class="mb-2">
+                                        <button type="submit" class="btn btn-success w-100 btn-sm p-1" style="font-size: 0.7rem;">Enviar</button>
+                                    </form>
+                                    <form method="POST" action="/actualizar_de_json" class="mb-0">
+                                        <button type="submit" class="btn btn-danger w-100 text-white btn-sm p-1" style="font-size: 0.7rem;">Actualizar JSON</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="row g-1">
+                                <div class="col-12">
+                                    <div class="text-center fw-bold mb-2 small">Administracion</div>
+                                </div>
+                                <div class="col-6">
+                                    <form method="POST" action="/db_info" class="mb-2">
+                                        <button type="submit" class="btn btn-warning w-100 text-dark btn-sm p-1" style="font-size: 0.7rem;">DB Informacion</button>
+                                    </form>
+                                    <form method="POST" action="/db_backup" class="mb-2">
+                                        <button type="submit" class="btn btn-warning w-100 text-dark btn-sm p-1" style="font-size: 0.7rem;">DB Completa</button>
+                                    </form>
+                                </div>
+                                <div class="col-6">
+                                    <form method="POST" action="/db_vacuum" class="mb-2">
+                                        <button type="submit" class="btn btn-danger w-100 text-white btn-sm p-1" style="font-size: 0.7rem;">DB Vacuum</button>
+                                    </form>
+                                    <form method="POST" action="/test" class="mb-0">
+                                        <button type="submit" class="btn btn-success w-100 text-dark btn-sm p-1" style="font-size: 0.7rem;">Server Test</button>
+                                    </form>
+                                </div>
+                                
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                    <div class="col-5">
+                        <div class="p-3 border rounded shadow-sm bg-white h-100">
+                            <div class="text-center fw-bold mb-3 small">Configuracion</div>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="autoscraperSwitch" data-config-key="autoscraper"
+                                       onchange="handleConfigToggle(this)"> 
+                                <label class="form-check-label small" for="autoscraperSwitch">Autoscraper</label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="automensajesSwitch" data-config-key="automensaje"
+                                       onchange="handleConfigToggle(this)">
+                                <label class="form-check-label small" for="automensajesSwitch">Automensajes</label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="pushbulletSwitch" data-config-key="enviar_pushbullet"
+                                       onchange="handleConfigToggle(this)">
+                                <label class="form-check-label small" for="pushbulletSwitch">Pushbullet</label>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            
+        </div>
+    </div>
+
+<script>
+    
+    /**
+     * Handles the state change for any individual scraper switch and sends the new state to the Flask server.
+     * Uses data-service attribute to identify the scraper.
+     * @param {HTMLInputElement} checkbox - The switch input element.
+     */
+    function handleScraperToggle(checkbox) {
+        const scraperKey = checkbox.getAttribute('data-service');
+        const newState = checkbox.checked; // true (on) or false (off)
+        
+        // 1. Prepare the data to send 
+        const data = {
+            'scraper_name': scraperKey, // Key used by monitor.py's toggle_scraper_status
+            'status': newState
+        };
+
+        // 2. Send the request to the Flask server
+        fetch('/toggle_scraper_status', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data) 
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error(`Server error when toggling scraper ${scraperKey}:`, response.statusText);
+                alert(`Error updating scraper ${scraperKey} status on the server.`); 
+                // Revert the switch state on failure
+                checkbox.checked = !newState;
+                throw new Error('Server update failed.');
+            }
+            return response.json(); 
+        })
+        .then(data => {
+            console.log(`Scraper ${scraperKey} status updated successfully:`, data.message);
+        })
+        .catch(error => {
+            if (error.message !== 'Server update failed.') {
+                console.error('Network or fetch error:', error);
+                alert('Could not connect to the server.');
+                // Revert the switch state on network/connection failure
+                checkbox.checked = !newState;
+            }
+        });
+    }
+
+    /**
+     * Handles the state change for any config switch (Autoscraper, Automensajes, Pushbullet) 
+     * and sends the new state to the Flask server.
+     * Uses data-config-key attribute to identify the setting.
+     * @param {HTMLInputElement} checkbox - The switch input element.
+     */
+    function handleConfigToggle(checkbox) {
+        const configKey = checkbox.getAttribute('data-config-key');
+        const newState = checkbox.checked; // true (on) or false (off)
+        
+        // 1. Prepare the data to send 
+        const data = {};
+        data[configKey] = newState;
+
+        // 2. Send the request to the Flask server
+        fetch('/toggle_config', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data) 
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error(`Server error when toggling ${configKey}:`, response.statusText);
+                alert(`Error updating ${configKey} status on the server.`); 
+                // Revert the switch state on failure
+                checkbox.checked = !newState;
+                throw new Error('Server update failed.');
+            }
+            return response.json(); 
+        })
+        .then(data => {
+            console.log(`${configKey} status updated successfully:`, data.message);
+        })
+        .catch(error => {
+            if (error.message !== 'Server update failed.') {
+                console.error('Network or fetch error:', error);
+                alert('Could not connect to the server.');
+                // Revert the switch state on network/connection failure
+                checkbox.checked = !newState;
+            }
+        });
+    }
+
+</script>
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+
+</body>
+</html>

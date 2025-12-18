@@ -4,10 +4,12 @@ from src.updates import configuracion_plazos
 ULTIMA_ACTUALIZACION_HORAS = 48
 
 
-def alertas(db_cursor):
+def alertas(db):
     """
     Genera requerimientos de actualización basados en las reglas de configuracion_plazos.
     """
+
+    cursor = db.cursor()
 
     # Generamos los fragmentos SQL dinámicamente
     sql_soat = configuracion_plazos.generar_sql_condicion("s.FechaHasta", "SOAT")
@@ -65,8 +67,8 @@ def alertas(db_cursor):
       AND {sql_satimp}
     """
 
-    db_cursor.execute(query)
-    results = db_cursor.fetchall()
+    cursor.execute(query)
+    results = cursor.fetchall()
 
     upd = {"brevetes": [], "soats": [], "revtecs": [], "satimps": []}
 
@@ -84,11 +86,13 @@ def alertas(db_cursor):
     return {k: list(set(v)) for k, v in upd.items()}
 
 
-def boletines(db_cursor):
+def boletines(db):
     """
     Genera requerimientos de actualización para boletines.
     """
     SUNARP_DAYS = 120
+
+    cursor = db.cursor()
 
     # Definimos los CTEs 'TargetUsers' y 'TargetPlacas' al principio.
     query = f"""
@@ -207,8 +211,8 @@ def boletines(db_cursor):
 
     """
 
-    db_cursor.execute(query)
-    results = db_cursor.fetchall()
+    cursor.execute(query)
+    results = cursor.fetchall()
 
     # Inicializar diccionario
     upd = {

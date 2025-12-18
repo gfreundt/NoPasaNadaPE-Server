@@ -30,10 +30,10 @@ def update(self):
         do_update(post.get("data", {}), cursor, conn)
         return jsonify({"status": "Update OK"})
 
-    if instruction == "generar_alertas":
-        print("Client Request --> GENERAR ALERTAS")
-        payload = generar_mensajes.alertas(cursor)
-        return jsonify(payload)
+    # if instruction == "generar_alertas":
+    #     print("Client Request --> GENERAR ALERTAS")
+    #     payload = generar_mensajes.alertas(cursor)
+    #     return jsonify(payload)
 
     if instruction == "generar_boletines":
         print("Client Request --> GENERAR BOLETINES")

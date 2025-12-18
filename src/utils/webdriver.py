@@ -1,0 +1,188 @@
+import os
+import platform
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+import subprocess
+import requests
+import json
+import uuid
+from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH
+
+
+class ChromeUtils:
+
+    def __init__(self, **kwargs):
+
+        # load configuration defaults and adjust them to passed arguments
+        parameters = {
+            "incognito": True,
+            "headless": False,
+            "window_size": False,
+            "load_profile": False,
+            "no_driver_update": False,
+            "maximized": False,
+            "proxy": False,
+        } | kwargs
+
+        # update driver to match the current Chrome version
+        if not parameters["no_driver_update"]:
+            self.driver_update()
+
+        # start driver configuration objects
+        self.options = Options()
+        self.service = Service(CHROMEDRIVER_PATH, log_path=os.devnull)
+
+        prefs = {
+            # 1. Download Location and Prompt Control
+            "download.default_directory": os.path.join(NETWORK_PATH, "static"),
+            "download.prompt_for_download": False,  # 👈 CRITICAL: Prevents the "Save As..." dialog
+            "download.directory_upgrade": True,
+            # 2. PDF and Printing Control (For btnprint to save file)
+            "plugins.always_open_pdf_externally": True,  # Forces PDFs to download instead of opening in a new tab
+            "printing.print_preview_disabled": True,  # 👈 CRITICAL: Bypasses the Print Preview GUI
+            "savefile.default_directory": os.path.join(NETWORK_PATH, "static"),
+            "printing.default_destination_selection_rules": {
+                "kind": "local",
+                "name": "Save as PDF",  # Ensures the automatic background print target is "Save as PDF"
+            },
+            # Set the sticky settings for the print job (optional, but good for completeness)
+            "printing.print_preview_sticky_settings.appState": '{"recentDestinations":[{"id":"Save as PDF","origin":"local"}],"selectedDestinationId":"Save as PDF","version":2}',
+            # 3. Security and Download Behavior
+            "safebrowsing.enabled": True,  # Recommended for general download stability
+            "browser.set_download_behavior": {"behavior": "allow"},
+        }
+        self.options.add_experimental_option("prefs", prefs)
+
+        self.options.add_argument("--disable-dev-shm-usage")
+        # add configurable options
+        if parameters["incognito"]:
+            self.options.add_argument("--incognito")
+        if parameters["headless"]:
+            self.options.add_argument("--headless=new")
+        if parameters["window_size"]:
+            self.options.add_argument(
+                f"--window-size={parameters['window_size'][0]},{parameters['window_size'][1]}"
+            )
+
+        # add fixed options
+        self.options.add_argument("--no-sandbox")
+        self.options.add_argument("--disable-gpu")
+        # self.options.add_argument("--silent")
+        self.options.add_argument("--disable-blink-features=AutomationControlled")
+        # self.options.add_argument("--disable-notifications")
+        # self.options.add_argument("--log-level=3")
+        self.options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        self.options.add_experimental_option("useAutomationExtension", False)
+        self.options.add_argument(
+            "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.176 Safari/537.36"
+        )
+
+    def proxy_driver(self, residential=True):
+        # build a new session id to force a different IP
+        session = uuid.uuid4().hex[:8]
+        raw_username = (
+            f"{PROXY_RES_USERNAME if residential else PROXY_DC_USERNAME}{session}"
+        )
+        password = PROXY_RES_PASSWORD if residential else PROXY_DC_PASSWORD
+        _seleniumwire_options = {
+            "proxy": {
+                "http": f"http://{raw_username}:{password}@{PROXY_HOST}:{PROXY_PORT}",
+                "https": f"http://{raw_username}:{password}@{PROXY_HOST}:{PROXY_PORT}",
+            }
+        }
+        self.options.add_argument("--ignore-certificate-errors")
+
+        return webdriver_wire.Chrome(
+            service=self.service,
+            seleniumwire_options=_seleniumwire_options,
+            options=self.options,
+        )
+
+    def direct_driver(self):
+
+        return webdriver.Chrome(
+            service=self.service,
+            options=self.options,
+        )
+
+    def driver_update(self, **kwargs):
+        return
+        """Compares current Chrome browser and Chrome driver versions and updates driver if necessary"""
+
+        def check_chrome_version():
+            result = subprocess.check_output(
+                r'reg query "HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon" /v version'
+            ).decode("utf-8")
+            return result.split(" ")[-1].split(".")[0]
+
+        def check_chromedriver_version():
+            try:
+                version = subprocess.check_output(f"{CURRENT_PATH} -v").decode("utf-8")
+                return version.split(".")[0][-3:]
+            except KeyboardInterrupt:
+                return 0
+
+        def download_chromedriver(target_version):
+            # extract latest data from Google API
+            api_data = json.loads(requests.get(GOOGLE_CHROMEDRIVER_API).text)
+
+            # find latest build for current Chrome version and download zip file
+            endpoints = api_data["milestones"][str(target_version)]["downloads"][
+                "chromedriver"
+            ]
+            url = [i["url"] for i in endpoints if i["platform"] == "win64"][0]
+            with open(TARGET_PATH, mode="wb") as download_file:
+                download_file.write(requests.get(url).content)
+
+            # delete current chromedriver.exe
+            if os.path.exists(CURRENT_PATH):
+                os.remove(CURRENT_PATH)
+
+            # unzip downloaded file contents into Resources folder
+            cmd = rf'Expand-Archive -Force -Path {TARGET_PATH} -DestinationPath "{BASE_PATH}"'
+            subprocess.run(["powershell", "-Command", cmd])
+
+            # move chromedriver.exe to correct folder
+            os.rename(os.path.join(UNZIPPED_PATH, "chromedriver.exe"), CURRENT_PATH)
+
+            # delete unnecesary files after unzipping
+            os.remove(os.path.join(UNZIPPED_PATH, "LICENSE.chromedriver"))
+
+        def file_cleanup(path):
+
+            try:
+                # erase downloaded zip file
+                os.remove(TARGET_PATH)
+
+                # erase files in unzipped folder and then erase folder
+                _folder = os.path.join(path, "chromedriver-win64")
+                for file in _folder:
+                    os.remove(file)
+                os.rmdir(_folder)
+
+            except Exception:
+                pass
+
+        # define URIs
+        GOOGLE_CHROMEDRIVER_API = "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone-with-downloads.json"
+        if "Windows" in platform.uname().system:
+            BASE_PATH = os.path.join("src")
+        else:
+            BASE_PATH = r"/home/gfreundt/pythonCode/Resources"
+
+        CURRENT_PATH = os.path.join(BASE_PATH, "chromedriver.exe")
+        TARGET_PATH = os.path.join(BASE_PATH, "chromedriver.zip")
+        UNZIPPED_PATH = os.path.join(BASE_PATH, "chromedriver-win64")
+
+        # get current browser and chromedriver versions
+        driver = check_chromedriver_version()
+        browser = check_chrome_version()
+
+        # if versions don't match, get the correct chromedriver from repository
+        if driver != browser:
+            download_chromedriver(browser)
+            print("*** Updated Chromedriver ***")
+            # clean all unnecessary files
+            file_cleanup(BASE_PATH)
