@@ -27,8 +27,10 @@ def is_master_worker(self):
 
     try:
         fcntl.flock(self._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        print("Available!")
         return True
     except (IOError, BlockingIOError):
+        print("Not Available")
         self._lock_file_handle.close()
         return False
 
