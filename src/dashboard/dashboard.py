@@ -27,15 +27,16 @@ logging.getLogger("werkzeug").disabled = True
 
 
 class Dashboard:
-    def __init__(self, db):
+    def __init__(self, db, soy_master):
         self.db = db
         self.data_lock = db.lock
 
         # crear estrcutura de variables y valores iniciales
         self.set_initial_data()
 
-        # iniciar cron (procesos automaticos que corren cada cierto plazo)
-        cron.main(self)
+        # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
+        if soy_master:
+            cron.main(self)
 
     def set_server(self, server_instance):
         self.server = server_instance

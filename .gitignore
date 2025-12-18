@@ -7,3 +7,4 @@ security/
 chromedriver*
 __pycache__/
 *.pyc
+.dashboard_init.lock

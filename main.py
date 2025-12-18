@@ -5,7 +5,7 @@ from flask import Flask
 from src.server import server
 from src.dashboard import dashboard
 from src.utils.constants import NETWORK_PATH
-from src.utils.utils import get_local_ip
+from src.utils.utils import get_local_ip, is_master_worker
 
 logging.getLogger("werkzeug").disabled = True
 
@@ -18,8 +18,13 @@ def create_app():
         static_folder=os.path.join(NETWORK_PATH, "static"),
     )
 
+    # inicia la base de datos
     db = server.Database()
-    dash = dashboard.Dashboard(db=db)
+
+    # inicia Dash para todos los workers pero solo uno es considerado "master"
+    db._lock_file_handle = None
+    dash = dashboard.Dashboard(db=db, soy_master=is_master_worker(db))
+
     backend = server.Server(db=db, app=app, dash=dash)
     app.backend = backend
     return app
