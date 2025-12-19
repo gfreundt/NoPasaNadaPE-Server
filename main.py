@@ -24,12 +24,7 @@ def create_app():
 
     # inicia Dash para todos los workers pero solo uno es considerado "master"
     db._lock_file_handle = None
-    if is_master_worker(db):
-        dash = dashboard.Dashboard(db=db)
-        db.soy_master = True
-    else:
-        dash = None
-        db.soy_master = False
+    dash = dashboard.Dashboard(db=db, soy_master=is_master_worker(db))
 
     backend = server.Server(db=db, app=app, dash=dash)
     app.backend = backend

@@ -21,15 +21,16 @@ from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_
 # --- GUNICORN ---
 
 
-def is_master_worker(self):
-    lock_path = ".dashboard_init.lock"
-    self._lock_file_handle = open(lock_path, "a")
+def is_master_worker(db):
+    lock_path = "/tmp/dashboard_init.lock"
+    db._lock_file_handle = open(lock_path, "a")
 
     try:
-        fcntl.flock(self._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(db._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return True
-    except (IOError, BlockingIOError):
-        self._lock_file_handle.close()
+    except (OSError, BlockingIOError):
+        db._lock_file_handle.close()
+        db._lock_file_handle = None
         return False
 
 
