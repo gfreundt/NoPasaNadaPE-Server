@@ -53,6 +53,8 @@ def gather(
                 placa=placa, webdriver=webdriver
             )
 
+            print("-------------", scraper_response)
+
             # si respuesta es texto, hubo un error -- regresar
             if isinstance(scraper_response, str):
                 dash.log(
@@ -90,25 +92,24 @@ def gather(
                 dash.log(action=f"[ CALMUL ] {placa}")
                 continue
 
-            # ajustar formato de fechas al de la base de datos (YYYY-MM-DD)
-            _n = date_to_db_format(data=scraper_response)
+            for response in scraper_response:
 
-            # agregar registo a acumulador de respuestas (compartido con otros scrapers)
-            local_response.append(
-                {
-                    "PlacaValidate": placa,
-                    "Codigo": _n[0],
-                    "NumeroPapeleta": _n[1],
-                    "FechaInfraccion": _n[2],
-                    "TotalInfraccion": _n[3],
-                    "TotalBeneficio": _n[4],
-                    "ImageBytes": _n[5],
-                    "LastUpdate": dt.now().strftime("%Y-%m-%d"),
-                }
-            )
+                # ajustar formato de fechas al de la base de datos (YYYY-MM-DD)
+                _n = date_to_db_format(data=response)
 
-            # calcular ETA aproximado
-            procesados += 1
+                # agregar registo a acumulador de respuestas (compartido con otros scrapers)
+                local_response.append(
+                    {
+                        "PlacaValidate": placa,
+                        "Codigo": _n[0],
+                        "NumeroPapeleta": _n[1],
+                        "FechaInfraccion": _n[2],
+                        "TotalInfraccion": _n[3],
+                        "TotalBeneficio": _n[4],
+                        "ImageBytes": _n[5],
+                        "LastUpdate": dt.now().strftime("%Y-%m-%d"),
+                    }
+                )
 
             # texto en dashboard
             dash.log(action=f"[ BREVETES ] {placa}")

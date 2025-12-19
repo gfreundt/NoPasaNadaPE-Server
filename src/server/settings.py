@@ -7,6 +7,7 @@ from security.keys import (
     FACEBOOK_CLIENT_SECRET,
     MICROSOFT_CLIENT_ID,
     MICROSOFT_CLIENT_SECRET,
+    DASHBOARD_URL,
 )
 
 
@@ -233,7 +234,7 @@ def set_routes(self):
 
     # -------- URL DE INGRESO --------
     self.app.add_url_rule(
-        "/dashboard",
+        DASHBOARD_URL,
         endpoint="/dashboard",
         view_func=self.dash.dashboard,
     )

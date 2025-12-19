@@ -1,13 +1,3 @@
-from datetime import datetime as dt
-from flask import request, jsonify
-
-from src.utils.constants import SQL_TABLES
-from security.keys import UPDATER_TOKEN
-from src.comms import send_messages_and_alerts, generar_mensajes, enviar_correo_diferido
-from src.maintenance import maintenance
-from src.updates import datos_actualizar, necesitan_mensajes
-
-
 def update(self):
 
     post = request.json or {}
@@ -20,30 +10,30 @@ def update(self):
     cursor, conn = self.db.cursor(), self.db.conn
     instruction = post.get("instruction")
 
-    if instruction == "datos_alerta":
-        return jsonify(datos_actualizar.alertas(cursor))
+    # if instruction == "datos_alerta":
+    #     return jsonify(datos_actualizar.alertas(cursor))
 
-    if instruction == "datos_boletin":
-        return jsonify(datos_actualizar.boletines(cursor))
+    # if instruction == "datos_boletin":
+    #     return jsonify(datos_actualizar.boletines(cursor))
 
-    if instruction == "do_updates":
-        do_update(post.get("data", {}), cursor, conn)
-        return jsonify({"status": "Update OK"})
+    # if instruction == "do_updates":
+    #     do_update(post.get("data", {}), cursor, conn)
+    #     return jsonify({"status": "Update OK"})
 
     # if instruction == "generar_alertas":
     #     print("Client Request --> GENERAR ALERTAS")
     #     payload = generar_mensajes.alertas(cursor)
     #     return jsonify(payload)
 
-    if instruction == "generar_boletines":
-        print("Client Request --> GENERAR BOLETINES")
-        payload = generar_mensajes.boletines(cursor)
-        return jsonify(payload)
+    # if instruction == "generar_boletines":
+    #     print("Client Request --> GENERAR BOLETINES")
+    #     payload = generar_mensajes.boletines(cursor)
+    #     return jsonify(payload)
 
-    if instruction == "send_messages":
-        print("Client Request --> SEND MESSAGES")
-        result = enviar_correo_diferido.send(cursor, conn)
-        return jsonify(result)
+    # if instruction == "send_messages":
+    #     print("Client Request --> SEND MESSAGES")
+    #     result = enviar_correo_mensajes.send(cursor, conn)
+    #     return jsonify(result)
 
     if instruction == "get_kpis":
         return jsonify(do_get_kpis(cursor))

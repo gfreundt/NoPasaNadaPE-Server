@@ -27,10 +27,8 @@ def is_master_worker(self):
 
     try:
         fcntl.flock(self._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        print("Available!")
         return True
     except (IOError, BlockingIOError):
-        print("Not Available")
         self._lock_file_handle.close()
         return False
 
@@ -121,17 +119,17 @@ def start_vpn(pais="pe", con_tipo="udp"):
     Returns process successful (True/False)
     """
 
+    vpn_location = "pe-lim" if pais.lower() == "pe" else "ar-bua"
+
     try:
         subprocess.run(
             [
                 "sudo",
-                "-S",
                 "openvpn",
                 "--config",
-                f"{pais.lower()}-lim.prod.surfshark.com_{con_tipo.lower()}.ovpn",
+                rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
                 "--daemon",
             ],
-            input="Holiday21!",
             text=True,
             check=True,
         )
@@ -140,7 +138,7 @@ def start_vpn(pais="pe", con_tipo="udp"):
         return False
 
     time.sleep(2)
-    return True  # vpn_online()
+    return vpn_online()
 
 
 def stop_vpn():
@@ -149,6 +147,16 @@ def stop_vpn():
     Requires sudo privileges.
     """
     subprocess.run(["sudo", "pkill", "openvpn"], check=False)
+    time.sleep(0.5)
+
+
+def switch_vpn(current):
+    """
+    Stops all running OpenVPN processes.
+    Requires sudo privileges.
+    """
+    stop_vpn()
+    return start_vpn(pais="ar" if current == "pe" else "pe")
 
 
 def get_public_ip():
@@ -170,7 +178,7 @@ def vpn_online():
         ["pgrep", "-x", "openvpn"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
 
-    return True  # result.returncode == 0
+    return result.returncode == 0
 
 
 # ---- DATA TRANSFORMATION -----

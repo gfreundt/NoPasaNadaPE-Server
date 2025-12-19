@@ -3,7 +3,7 @@ from email.message import EmailMessage
 from email.utils import formataddr
 import requests
 from datetime import datetime as dt
-import pprint
+from pprint import pprint
 
 
 class Email:
@@ -97,6 +97,12 @@ class Email:
                 response_request_id = respuesta.get("request_id")
                 response_message = "OK"
             self.registrar_envio_bd(email, response_request_id, response_message)
+
+        else:
+
+            response_message = "OK"
+            pprint(headers)
+            pprint(payload)
 
         # responder True si ok con la progrmacion de envio del mensaje
         return response_message == "OK"

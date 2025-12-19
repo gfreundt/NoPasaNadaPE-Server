@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 import time
 
 # local imports
-from src.utils.utils import date_to_db_format
+from src.utils.utils import date_to_db_format, switch_vpn
 from src.scrapers import scrape_soat as scraper
 from src.utils.constants import ASEGURADORAS, NETWORK_PATH, HEADLESS
 from src.utils.webdriver import ChromeUtils
@@ -63,7 +63,7 @@ def gather(
             # si se esta llegando al limite con un mismo IP, reiniciar con IP nuevo
             if same_ip_scrapes > 10:
                 webdriver.quit()
-                webdriver = chromedriver.proxy_driver()
+                switch_vpn(dash.server.vpn_location)
 
             # aumentar contador de usos del mismo IP y mandar a scraper
             scraper_response = scraper.browser_wrapper(placa=placa, webdriver=webdriver)
@@ -161,12 +161,12 @@ def gather(
 def create_certificate(data):
 
     # load fonts
-    _resources = os.path.join(r"D:\pythonCode", "Resources", "Fonts")
+    _resources = os.path.join(NETWORK_PATH, "static", "fonts")
     font_small = ImageFont.truetype(os.path.join(_resources, "seguisym.ttf"), 30)
     font_large = ImageFont.truetype(os.path.join(_resources, "seguisym.ttf"), 45)
 
     # get list of available company logos
-    _templates_path = os.path.join(NETWORK_PATH, "static")
+    _templates_path = os.path.join(NETWORK_PATH, "static", "images", "soat")
     cias = [i.split(".")[0] for i in os.listdir(_templates_path)]
 
     # open blank template image and prepare for edit

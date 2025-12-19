@@ -11,7 +11,8 @@ logging.getLogger("werkzeug").disabled = True
 
 
 def create_app():
-    print(f" > SERVER RUNNING ON: http://{get_local_ip()}:5000")
+    print(f" > SERVER: http://{get_local_ip()}:5000/")
+    print(f" > DASHBOARD: http://{get_local_ip()}:5000/dashboard")
     app = Flask(
         __name__,
         template_folder=os.path.join(NETWORK_PATH, "templates"),

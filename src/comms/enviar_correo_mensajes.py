@@ -1,12 +1,15 @@
 import os
-from datetime import datetime as dt, timedelta as td
+from datetime import datetime as dt
 import json
 from src.utils.email import Email
 from src.utils.constants import NETWORK_PATH
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 
-def send(cursor, conn):
+def send(db):
+
+    cursor = db.cursor()
+    conn = db.conn
 
     # activate send account
     email = Email(
@@ -49,7 +52,7 @@ def send(cursor, conn):
             }
 
             # armar correos en bulk
-            resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=False)
+            resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=True)
             rpta.append(1 if resp_zeptomail else 0)
 
             # actualiza base de datos indicando que siguiente mensaje es en un mes

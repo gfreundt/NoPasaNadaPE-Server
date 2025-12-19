@@ -6,6 +6,7 @@ import atexit
 import queue
 from threading import Thread, Lock
 from src.utils.constants import NETWORK_PATH, GATHER_ITERATIONS
+from src.utils.utils import vpn_online, start_vpn, stop_vpn
 
 
 # local imports
@@ -30,24 +31,26 @@ from src.updates import (
 
 def gather_threads(dash, all_updates):
 
-    # # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans,calmul
+    # # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
     from src.test.test_data import get_test_data
 
-    all_updates = get_test_data([1, 0, 0, 0, 0, 0, 0, 0, 0])
-    print(all_updates)
+    all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
+    all_updates = get_test_data([0, 0, 0, 0, 0, 0, 0, 0, 8])
 
     # log change of dashboard status
     dash.log(general_status=("Activo", 1))
     dash.scrapers_corriendo = True
 
     lock = Lock()
-    all_threads = []
+    vpn_pe_threads = []
+    vpn_ar_threads = []
     full_response = {}
     atexit.register(update_local_gather_file, full_response)
+    atexit.register(stop_vpn)
 
     # records vehiculares
     if all_updates.get("recvehic"):
-        all_threads.append(
+        vpn_ar_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -63,7 +66,7 @@ def gather_threads(dash, all_updates):
 
     # brevetes
     if all_updates.get("brevetes"):
-        all_threads.append(
+        vpn_ar_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -79,7 +82,7 @@ def gather_threads(dash, all_updates):
 
     # multas sat
     if all_updates.get("satmuls"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -95,7 +98,7 @@ def gather_threads(dash, all_updates):
 
     # revisiones tecnicas
     if all_updates.get("revtecs"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -111,7 +114,7 @@ def gather_threads(dash, all_updates):
 
     # multas sutran
     if all_updates.get("sutrans"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -127,7 +130,7 @@ def gather_threads(dash, all_updates):
 
     # impuestos sat
     if all_updates.get("satimps"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=gather_satimps.manage_sub_threads,
                 args=(dash, lock, all_updates["satimps"], full_response),
@@ -136,7 +139,7 @@ def gather_threads(dash, all_updates):
 
     # sunat
     if all_updates.get("sunats"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -152,7 +155,7 @@ def gather_threads(dash, all_updates):
 
     # lineas osiptel
     if all_updates.get("osipteles"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -168,7 +171,7 @@ def gather_threads(dash, all_updates):
 
     # multas jne
     if all_updates.get("jnemultas"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -184,7 +187,7 @@ def gather_threads(dash, all_updates):
 
     # afiliaciones jne
     if all_updates.get("jneafils"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -200,7 +203,7 @@ def gather_threads(dash, all_updates):
 
     # fichas sunarp
     if all_updates.get("sunarps"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -214,15 +217,30 @@ def gather_threads(dash, all_updates):
             )
         )
 
-    # soat
+    # soat (los primeros 12 con un vpn, los otros 12 con otro vpn)
     if all_updates.get("soats"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["soats"],
+                    all_updates["soats"][:12],
+                    full_response,
+                    gather_soats,
+                    "DataApesegSoats",
+                ),
+            )
+        )
+
+    if all_updates.get("soats") and len(all_updates["soats"]) > 12:
+        vpn_ar_threads.append(
+            Thread(
+                target=manage_sub_threads,
+                args=(
+                    dash,
+                    lock,
+                    all_updates["soats"][12:24],
                     full_response,
                     gather_soats,
                     "DataApesegSoats",
@@ -232,7 +250,7 @@ def gather_threads(dash, all_updates):
 
     # callao multas
     if all_updates.get("calmul"):
-        all_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -246,42 +264,64 @@ def gather_threads(dash, all_updates):
             )
         )
 
-    # iniciar threads con intervalos para que subthreads puedan iniciar sin generar conflictos
-    with lock:
-        dash.data["scrapers_kpis"].update(
-            {
-                "extra": {
-                    "status": "ACTIVO",
+    print("PE", vpn_pe_threads)
+    print("AR", vpn_ar_threads)
+
+    for thread_group, pais in zip((vpn_pe_threads, vpn_ar_threads), ("pe", "ar")):
+
+        if not thread_group:
+            continue
+
+        # inicia la VPN en el pais que corresponde
+        exito = start_vpn(pais)
+        if not exito:
+            print("VPN no se pudo prender!")
+            return
+
+        with lock:
+            print(f"ACTIVO VPN: {pais}")
+            dash.data["scrapers_kpis"].update(
+                {
+                    "extra": {
+                        "status": f"ACTIVO VPN: {pais}",
+                    }
                 }
-            }
-        )
-    for thread in all_threads:
-        thread.start()
-        time.sleep(2 * GATHER_ITERATIONS)
+            )
 
-    # grabar cada 90 segundos lo que este en memoria de respuestas por si hay un error critico
-    # y mas adelante poder actualizar manualmente la respuesta parcial
-    start_time = time.perf_counter()
-    while any(t.is_alive() for t in all_threads):
-        time.sleep(10)
-        if time.perf_counter() - start_time > 90:
-            update_local_gather_file(full_response)
-            start_time = time.perf_counter()
+        # iniciar threads con intervalos para que subthreads puedan iniciar sin generar conflictos
+        for thread in thread_group:
+            thread.start()
+            time.sleep(2 * GATHER_ITERATIONS)
 
-    with lock:
-        dash.data["scrapers_kpis"].update(
-            {
-                "extra": {
-                    "status": "INACTIVO",
+        # se queda en esta seccion hasta que todos los threads hayan terminado
+        start_time = time.perf_counter()
+        while any(t.is_alive() for t in thread_group):
+
+            time.sleep(10)
+
+            # grabar cada 90 segundos lo que este en memoria de respuestas
+            if time.perf_counter() - start_time > 90:
+                update_local_gather_file(full_response)
+                start_time = time.perf_counter()
+
+        with lock:
+            dash.data["scrapers_kpis"].update(
+                {
+                    "extra": {
+                        "status": "INACTIVO",
+                    }
                 }
-            }
-        )
-    # final log update
-    dash.log(general_status=("Esperando", 2))
+            )
 
-    # update local changes file and return all update data as a dictionary
+        # detiene la VPN
+        stop_vpn()
+        time.sleep(5)
+
+    # actualiza el archivo local que guarda la data de actualizaciones
     dash.scrapers_corriendo = False
     update_local_gather_file(full_response)
+
+    dash.log(general_status=("Esperando", 2))
     return full_response
 
 
@@ -397,8 +437,6 @@ def manage_sub_threads(
             {update_key: {"status": "INACTIVO", "eta": "", "threads_activos": ""}}
         )
     full_response.update({update_key: local_response})
-
-    print(full_response)
 
 
 def update_local_gather_file(full_response):

@@ -1,20 +1,18 @@
 import os
 import platform
 from selenium import webdriver
+
+# REMOVED: seleniumwire
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 import subprocess
-import requests
 import json
-import uuid
+from security.keys import PROXY_DATACENTER, PROXY_RESIDENTIAL
 from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH
 
 
 class ChromeUtils:
-
     def __init__(self, **kwargs):
-
-        # load configuration defaults and adjust them to passed arguments
         parameters = {
             "incognito": True,
             "headless": False,
@@ -25,87 +23,71 @@ class ChromeUtils:
             "proxy": False,
         } | kwargs
 
-        # update driver to match the current Chrome version
         if not parameters["no_driver_update"]:
             self.driver_update()
 
-        # start driver configuration objects
         self.options = Options()
+        # Use log_path=os.devnull to keep your VPS logs clean
         self.service = Service(CHROMEDRIVER_PATH, log_path=os.devnull)
 
         prefs = {
-            # 1. Download Location and Prompt Control
             "download.default_directory": os.path.join(NETWORK_PATH, "static"),
-            "download.prompt_for_download": False,  # 👈 CRITICAL: Prevents the "Save As..." dialog
+            "download.prompt_for_download": False,
             "download.directory_upgrade": True,
-            # 2. PDF and Printing Control (For btnprint to save file)
-            "plugins.always_open_pdf_externally": True,  # Forces PDFs to download instead of opening in a new tab
-            "printing.print_preview_disabled": True,  # 👈 CRITICAL: Bypasses the Print Preview GUI
+            "plugins.always_open_pdf_externally": True,
+            "printing.print_preview_disabled": True,
             "savefile.default_directory": os.path.join(NETWORK_PATH, "static"),
             "printing.default_destination_selection_rules": {
                 "kind": "local",
-                "name": "Save as PDF",  # Ensures the automatic background print target is "Save as PDF"
+                "name": "Save as PDF",
             },
-            # Set the sticky settings for the print job (optional, but good for completeness)
             "printing.print_preview_sticky_settings.appState": '{"recentDestinations":[{"id":"Save as PDF","origin":"local"}],"selectedDestinationId":"Save as PDF","version":2}',
-            # 3. Security and Download Behavior
-            "safebrowsing.enabled": True,  # Recommended for general download stability
-            "browser.set_download_behavior": {"behavior": "allow"},
+            "safebrowsing.enabled": True,
         }
         self.options.add_experimental_option("prefs", prefs)
 
+        # Standard VPS arguments
+        self.options.add_argument("--no-sandbox")
         self.options.add_argument("--disable-dev-shm-usage")
-        # add configurable options
+        self.options.add_argument("--disable-gpu")
+
         if parameters["incognito"]:
             self.options.add_argument("--incognito")
         if parameters["headless"]:
             self.options.add_argument("--headless=new")
-        if parameters["window_size"]:
-            self.options.add_argument(
-                f"--window-size={parameters['window_size'][0]},{parameters['window_size'][1]}"
-            )
 
-        # add fixed options
-        self.options.add_argument("--no-sandbox")
-        self.options.add_argument("--disable-gpu")
-        # self.options.add_argument("--silent")
         self.options.add_argument("--disable-blink-features=AutomationControlled")
-        # self.options.add_argument("--disable-notifications")
-        # self.options.add_argument("--log-level=3")
-        self.options.add_experimental_option("excludeSwitches", ["enable-logging"])
-        self.options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        self.options.add_experimental_option(
+            "excludeSwitches", ["enable-logging", "enable-automation"]
+        )
         self.options.add_experimental_option("useAutomationExtension", False)
         self.options.add_argument(
             "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.176 Safari/537.36"
         )
 
-    def proxy_driver(self, residential=True):
-        # build a new session id to force a different IP
-        session = uuid.uuid4().hex[:8]
-        raw_username = (
-            f"{PROXY_RES_USERNAME if residential else PROXY_DC_USERNAME}{session}"
-        )
-        password = PROXY_RES_PASSWORD if residential else PROXY_DC_PASSWORD
-        _seleniumwire_options = {
-            "proxy": {
-                "http": f"http://{raw_username}:{password}@{PROXY_HOST}:{PROXY_PORT}",
-                "https": f"http://{raw_username}:{password}@{PROXY_HOST}:{PROXY_PORT}",
-            }
-        }
+    def proxy_driver(self, residential=False):
+        """
+        Replaces selenium-wire with selenium-interceptor for proxy support.
+        """
+        proxy_url = PROXY_RESIDENTIAL if residential else PROXY_DATACENTER
         self.options.add_argument("--ignore-certificate-errors")
 
-        return webdriver_wire.Chrome(
-            service=self.service,
-            seleniumwire_options=_seleniumwire_options,
-            options=self.options,
-        )
+        # 1. Start a standard driver
+        driver = webdriver.Chrome(service=self.service, options=self.options)
+
+        # 2. Wrap it with the Interceptor
+        # This handles proxy authentication via CDP (DevTools Protocol)
+        interceptor = Interceptor(driver)
+
+        # This tells the browser to use your proxy for all requests
+        interceptor.set_proxy(proxy_url)
+
+        # We return the driver. If you need to intercept specific requests,
+        # you can also return the interceptor object.
+        return driver
 
     def direct_driver(self):
-
-        return webdriver.Chrome(
-            service=self.service,
-            options=self.options,
-        )
+        return webdriver.Chrome(service=self.service, options=self.options)
 
     def driver_update(self, **kwargs):
         return

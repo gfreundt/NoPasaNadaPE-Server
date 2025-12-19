@@ -1,0 +1,91 @@
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fa; /* light, clean neutral */
+        }
+
+        /* Status card colors */
+        .status-0 {
+            background-color: #f1f3f5 !important;  /* Inactive - soft gray */
+        }
+        .status-1 {
+            background-color: #e6f4ea !important;  /* Active - mint green */
+        }
+        .status-2 {
+            background-color: #fdecea !important;  /* Crashed - soft alert red */
+        }
+        .status-3 {
+            background-color: #fff9e6 !important;  /* Finished ok - light gold */
+        }
+
+        /* Info panels */
+        .info-1,
+        .info-2 {
+            padding: 15px;
+            padding-top: 10px;
+            background-color: #f8f9fb !important;  /* Slightly tinted white */
+            font-size: smaller;
+            border-left: 4px solid #0d6efd;
+        }
+
+        /* General status (top-right box) */
+        .general-0 {
+            background-color: #dee2e6 !important;  /* Neutral gray */
+            color: #212529;
+        }
+        .general-1 {
+            background-color: #198754 !important;  /* Success green */
+            color: white;
+        }
+        .general-2 {
+            background-color: #ffc107 !important;  /* Warning yellow */
+            color: black;
+        }
+        .general-3 {
+            background-color: #b95c51 !important;  /* Alert red */
+            color: black;
+        }
+        table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+
+    /* Set all table cells to same width and center text */
+    .inner-table td {
+      width: 80px; /* adjust as needed */
+      text-align: center;
+      padding: 8px;
+    }
+
+    /* Center the inner table inside the outer column */
+    .outer-table td {
+      text-align: center;
+    }
+
+/* Scraper table — balanced compact rows (true midpoint) */
+table.scraper-table-text td,
+table.scraper-table-text th {
+  padding-top: 0.08rem !important;
+  padding-bottom: 0.08rem !important;
+  padding-left: 0.28rem !important;
+  padding-right: 0.28rem !important;
+  line-height: 1.1 !important;       /* midpoint between crushed and loose */
+  vertical-align: middle !important;
+}
+
+/* Keep switches perfectly centered */
+table.scraper-table-text td .form-check.form-switch {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Remove Bootstrap offsets */
+table.scraper-table-text td .form-check {
+  padding-left: 0 !important;
+}
+
+table.scraper-table-text td .form-check-input {
+  margin: 0 !important;
+}

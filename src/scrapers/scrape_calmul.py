@@ -66,6 +66,10 @@ def browser(placa, webdriver):
             By.XPATH, "/html/body/div[3]/div[3]/div/div[2]/div/table/tbody/tr"
         )
 
+        # no hay multas
+        if not filas:
+            return []
+
         response = []
         for row_element in filas:
             cells = row_element.find_elements(By.XPATH, "./td")[1:7]

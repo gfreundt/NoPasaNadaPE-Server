@@ -20,6 +20,7 @@ from src.server import do_updates
 from src.dashboard import update_kpis
 from src.utils.utils import start_vpn, stop_vpn, vpn_online
 from src.updates import datos_actualizar, necesitan_mensajes
+from src.comms import generar_mensajes, enviar_correo_mensajes
 from pprint import pprint
 
 
@@ -36,7 +37,6 @@ class Dashboard:
 
         # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
         if soy_master:
-            print("+++++++++++++ +SOY MASTER")
             cron.main(self)
 
     def set_server(self, server_instance):
@@ -146,11 +146,9 @@ class Dashboard:
             total += len(val)
         self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
 
-        return redirect("/")
+        return redirect("/dashboard")
 
     def datos_boletin(self):
-        print("******")
-
         # solicitar actualizacion a servidor
         self.actualizar_datos = datos_actualizar.boletines(self.db)
 
@@ -166,30 +164,46 @@ class Dashboard:
         return redirect("/dashboard")
 
     def actualizar(self):
-
-        start_vpn()
-
-        # detener si VPN no esta en linea
-        if not vpn_online() and self.config_obligar_vpn:
-            self.log(
-                action="[ ACTUALIZACION ] ERROR - VPN no esta en linea.",
-            )
-            return redirect("/dashboard")
-        print("--1--")
+        # logica general de scrapers
         scraper_responses = gather_all.gather_threads(
             dash=self, all_updates=self.actualizar_datos
         )
-        print("--2--")
+
+        # inserta resultado de scrapers en base de datos
         do_updates.main(db=self.db, data=scraper_responses)
 
         self.log(
             action=f"[ ACTUALIZACION ] Tamaño: {len(json.dumps(scraper_responses).encode("utf-8")) / 1024:.3f} kB",
         )
-        self.log(action="[ERROR] Actualizacion:")
+        return redirect("/dashboard")
 
-        # borrar informacion de datos para actualizar, obliga a actualizarlos otra vez
-        delattr(self, "actualizar_datos")
+    def generar_alertas(self):
+        # genera todas las alertas que tocan y las guarda en "alertas_pendientes.json"
+        mensajes = generar_mensajes.alertas(db=self.db)
+        if len(mensajes) > 0:
+            self.log(action=f"[ CREAR ALERTAS ] Total: {len(mensajes)}")
 
+        # mantenerse en la misma pagina
+        return redirect("/dashboard")
+
+    def generar_boletines(self):
+        # genera todos los boletines que tocan y los guarda en "boletines_pendientes.json"
+        mensajes = generar_mensajes.boletines(db=self.db)
+        if len(mensajes) > 0:
+            self.log(action=f"[ CREAR BOLETINES ] Total: {len(mensajes)}")
+
+        # mantenerse en la misma pagina
+        return redirect("/dashboard")
+
+    def enviar_mensajes(self):
+        # envia todos los mensajes pendientes en "alertas_pendientes.json" y "boletines_pendientes.json"
+        mensajes = enviar_correo_mensajes.send(db=self.db)
+        if mensajes["ALERTA"] != 0 or mensajes["BOLETIN"] != 0:
+            self.log(
+                action=f"[ ENVIAR MENSAJES ] Alertas: {mensajes["ALERTA"]} | Boletines: {mensajes["BOLETIN"]}"
+            )
+
+        # mantenerse en la misma pagina
         return redirect("/dashboard")
 
     def toggle_scraper_status(self):
@@ -227,74 +241,6 @@ class Dashboard:
             self.log(action="[ MANTENIMIENTO ] Comando DB Vacuum enviado.")
         else:
             self.log(action=f"[ERROR] DB Vacuum: {response.status_code}")
-        return redirect("/")
-
-    def generar_alertas(self):
-
-        # borrar todos los mensajes antiguos
-        maintenance.clear_outbound_folder(tipo="alertas")
-
-        # dar comando al servidor
-        _json = {
-            "token": UPDATER_TOKEN,
-            "instruction": "generar_alertas",
-        }
-        mensajes = requests.post(url=self.url, json=_json).json()
-
-        # grabar copia local de los mensjes generados por el servidor
-        for secuencial, texto in enumerate(mensajes, start=1):
-            with open(
-                os.path.join(NETWORK_PATH, "outbound", f"alerta-{secuencial:04d}.html"),
-                "w",
-                encoding="utf-8",
-            ) as outfile:
-                outfile.write(texto)
-        if len(mensajes) > 0:
-            self.log(action=f"[ CREAR ALERTAS ] Total: {len(mensajes)}")
-
-        # mantenerse en la misma pagina
-        return redirect("/")
-
-    def generar_boletines(self):
-
-        # borrar todos los mensajes antiguos
-        maintenance.clear_outbound_folder(tipo="boletines")
-
-        # dar comando al servidor
-        _json = {
-            "token": UPDATER_TOKEN,
-            "instruction": "generar_boletines",
-        }
-        mensajes = requests.post(url=self.url, json=_json).json()
-
-        # grabar copia local de los mensjes generados por el servidor
-        for secuencial, texto in enumerate(mensajes, start=1):
-            with open(
-                os.path.join(
-                    NETWORK_PATH, "outbound", f"boletin-{secuencial:04d}.html"
-                ),
-                "w",
-                encoding="utf-8",
-            ) as outfile:
-                outfile.write(texto)
-        if len(mensajes) > 0:
-            self.log(action=f"[ CREAR BOLETINES ] Total: {len(mensajes)}")
-
-        # mantenerse en la misma pagina
-        return redirect("/")
-
-    def enviar_mensajes(self):
-        _json = {
-            "token": UPDATER_TOKEN,
-            "instruction": "send_messages",
-        }
-        mensajes = requests.post(url=self.url, json=_json).json()
-
-        if mensajes["ALERTA"] != 0 or mensajes["BOLETIN"] != 0:
-            self.log(
-                action=f"[ ENVIAR MENSAJES ] Alertas: {mensajes["ALERTA"]} | Boletines: {mensajes["BOLETIN"]}"
-            )
-
         return redirect("/")
 
     def hacer_tests(self):
@@ -411,6 +357,5 @@ class Dashboard:
         return flask_thread
 
     def runx(self):
-        # print(f"MONITOR RUNNING ON: http://{get_local_ip()}:7400")
         print("MONITOR RUNNING ON: http://localhost:7400/")
         self.app.run(debug=False, threaded=True, host="0.0.0.0", port=7400)

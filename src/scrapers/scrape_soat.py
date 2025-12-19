@@ -43,14 +43,12 @@ def browser(placa, webdriver):
 
         # ingresar captcha en campo
         webdriver.find_element(By.ID, "captcha").send_keys(captcha_txt)
-
         # apretar "Consultar"
         but = webdriver.find_element(
             By.XPATH, "/html/body/div/div/main/div/form/button"
         )
         webdriver.execute_script("arguments[0].click();", but)
         time.sleep(3)
-
         # detectar captcha incorrecto, intentar otra vez
         msg = webdriver.find_elements(By.XPATH, "/html/body/div/div/main/div/form/p")
         if msg and "incorrecto" in msg[0].text:
@@ -58,20 +56,17 @@ def browser(placa, webdriver):
             webdriver.refresh()
             time.sleep(2)
             continue
-
         # sin respuesta
         msg = webdriver.find_elements(By.XPATH, "/html/body/div/div/main/div/div/h2")
         if msg and "la placa solicitada" in msg[0].text:
             webdriver.quit()
             return []
-
         # extraer data de respuesta (espera hasta 10 segundos que aparezca)
         WebDriverWait(webdriver, 10).until(
             EC.presence_of_element_located(
                 (By.XPATH, "/html/body/div/div/main/div/div/table/tbody/tr[1]/td")
             )
         )
-
         # busca datos, si no existen responder con error de scraper
         try:
             response = [

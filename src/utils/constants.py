@@ -31,8 +31,6 @@ elif platform.system() == "Windows":
 else:
     NETWORK_PATH = os.path.join("/var", "www", "app")
 
-print(CHROMEDRIVER_PATH)
-
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
 
 # 3-letter months

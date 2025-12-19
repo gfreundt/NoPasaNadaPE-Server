@@ -11,11 +11,13 @@ from src.maintenance import maintenance
 from src.updates import datos_actualizar, necesitan_mensajes
 
 
-def alertas(cursor):
+def alertas(db):
     """
     Crea el HTML de las alertas que deben ser enviadas en esta iteración y
     las guarda en el folder "outbound".
     """
+
+    cursor = db.cursor()
 
     # Load HTML template
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -41,7 +43,7 @@ def alertas(cursor):
             alertas.append(mensaje)
 
     # Guardar los mensajes en la carpeta outbound
-    maintenance.clear_outbound_folder("alerta")
+    # maintenance.clear_outbound_folder("alerta")
     # guardar data en archivo (reemplaza al anterior)
     path = os.path.join(NETWORK_PATH, "outbound", "alertas_pendientes.json")
     with open(path, "w", encoding="utf-8") as file:
@@ -50,10 +52,12 @@ def alertas(cursor):
     return [i["html"] for i in alertas]
 
 
-def boletines(db_cursor):
+def boletines(db):
     """
     Crea mensajes regulares en HTML y los guarda en /outbound.
     """
+
+    cursor = db.cursor()
 
     # Carga plantilla HTML
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -62,10 +66,10 @@ def boletines(db_cursor):
     mes = MESES_NOMBRE_COMPLETO[int(dt.strftime(dt.now(), "%m")) - 1]
 
     boletines = []
-    for row in necesitan_mensajes.boletines(db_cursor):
+    for row in necesitan_mensajes.boletines(cursor):
         boletines.append(
             obtener_datos_boletin(
-                db_cursor=db_cursor,
+                cursor=cursor,
                 IdMember=row["IdMember"],
                 template=template_regular,
                 subject=f"Tu Boletín de No Pasa Nada PE - {mes} 2025",
@@ -75,7 +79,7 @@ def boletines(db_cursor):
         )
 
     # Guardar los mensajes en la carpeta outbound
-    maintenance.clear_outbound_folder("boletin")
+    # maintenance.clear_outbound_folder("boletin")
     # guardar data en archivo (reemplaza al anterior)
     path = os.path.join(NETWORK_PATH, "outbound", "boletines_pendientes.json")
     with open(path, "w", encoding="utf-8") as file:
@@ -84,27 +88,27 @@ def boletines(db_cursor):
     return [i["html"] for i in boletines]
 
 
-def obtener_datos_boletin(db_cursor, IdMember, template, subject, alertas, correo):
+def obtener_datos_boletin(cursor, IdMember, template, subject, alertas, correo):
     """
     Arma toda la información necesaria para un mensaje HTML individual.
     """
 
     # Información del miembro
-    db_cursor.execute("SELECT * FROM InfoMiembros WHERE IdMember = ?", (IdMember,))
-    member = db_cursor.fetchone()
+    cursor.execute("SELECT * FROM InfoMiembros WHERE IdMember = ?", (IdMember,))
+    member = cursor.fetchone()
     if not member:
         return ""  # evita crasheos si el IdMember está huérfano
 
     # Placas asociadas
-    db_cursor.execute("SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (IdMember,))
-    placas = [row["Placa"] for row in db_cursor.fetchall()]
+    cursor.execute("SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (IdMember,))
+    placas = [row["Placa"] for row in cursor.fetchall()]
 
     # Generar hash único para email tracking
     email_id = f"{member['CodMemberInterno']}|{str(uuid.uuid4())[-12:]}"
 
     # Crear HTML final usando tu mega función compose()
     return redactar_mensaje.boletin(
-        db_cursor=db_cursor,
+        db_cursor=cursor,
         member=member,
         template=template,
         email_id=email_id,

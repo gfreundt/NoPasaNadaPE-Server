@@ -1,5 +1,5 @@
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
-from src.utils.utils import send_pushbullet, start_vpn, stop_vpn
+from src.utils.utils import send_pushbullet
 import time
 from datetime import datetime as dt
 
@@ -22,60 +22,17 @@ def flujo(self, tipo_mensaje):
 
         # si ya no hay actualizaciones pendientes, siguiente paso
         if all([len(j) == 0 for j in pendientes.values()]):
-            stop_vpn()
-            self.vpn_location == ""
             return True
 
-        else:
+        self.actualizar()
 
-            if _first:
-                iniciar_vpn_ideal(self, pendientes)
-                self.actualizar()
-                _first = False
-                continue
+        # aumentar contador de repeticiones, si excede limite parar
+        repetir += 1
+        if repetir > AUTOSCRAPER_REPETICIONES:
+            return False
 
-            else:
-
-                # reevaluar si se debe cambiar de pais de VPN
-                iniciar_vpn_ideal(self, pendientes)
-                self.actualizar()
-
-                # aumentar contador de repeticiones, si excede limite parar
-                repetir += 1
-                if repetir > AUTOSCRAPER_REPETICIONES:
-                    return False
-
-                # reintentar scraping
-                time.sleep(3)
-
-
-def iniciar_vpn_ideal(self, pendientes):
-
-    if not self.config_obligar_vpn:
-        return
-
-    # determinar si se necesita solo brevete y recvehic o algo mas
-    solo_mtc = True
-    for key, value_list in pendientes.items():
-        if key not in {"brevetes", "recvehic"}:
-            if value_list:
-                solo_mtc = False
-                break
-
-    # si solo se necesitan servicios mtc, pais debe ser AR
-    pais_necesario = "AR" if solo_mtc else "PE"
-
-    # VPN ya esta en pais necesario, no cambiar VPN
-    if self.vpn_location == pais_necesario:
-        self.log(action=f"[ VPN MANTIENE ( {self.vpn_location} )]")
-        return
-    else:
-        self.vpn_location = pais_necesario
-
-    # para actual pais y empezar el nuevo
-    stop_vpn()
-    start_vpn(self.vpn_location)
-    self.log(action=f"[ VPN PRENDIDA ( {self.vpn_location} )]")
+        # reintentar scraping
+        time.sleep(3)
 
 
 def enviar_notificacion(mensaje):
