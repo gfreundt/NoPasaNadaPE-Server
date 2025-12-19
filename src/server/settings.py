@@ -194,7 +194,7 @@ def set_dash_routes(self):
     # -------- URL DE INGRESO --------
     self.app.add_url_rule(
         DASHBOARD_URL,
-        endpoint="/dashboard",
+        endpoint="dashboard",
         view_func=self.dash.dashboard,
     )
     # endpoint usado por JavaScript para actualizar datos (AJAX)
@@ -217,9 +217,15 @@ def set_dash_routes(self):
         methods=["POST"],
     )
     self.app.add_url_rule(
-        "/actualizar",
-        endpoint="actualizar",
-        view_func=self.dash.actualizar,
+        "/actualizar_alertas",
+        endpoint="actualizar_alertas",
+        view_func=self.dash.actualizar_alertas,
+        methods=["POST"],
+    )
+    self.app.add_url_rule(
+        "/actualizar_boletines",
+        endpoint="actualizar_boletines",
+        view_func=self.dash.actualizar_boletines,
         methods=["POST"],
     )
     self.app.add_url_rule(

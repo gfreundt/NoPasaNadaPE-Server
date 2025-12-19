@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, redirect, request
+from flask import Flask, render_template, jsonify, redirect, request, url_for
 import threading
 import logging
 from copy import deepcopy as copy
@@ -30,7 +30,6 @@ logging.getLogger("werkzeug").disabled = True
 class Dashboard:
     def __init__(self, db, soy_master):
         self.db = db
-        self.data_lock = db.lock
 
         # crear estrcutura de variables y valores iniciales
         self.set_initial_data()
@@ -137,7 +136,7 @@ class Dashboard:
     # -------- ACCIONES DE BOTONES ----------
     def datos_alerta(self):
         # solicitar actualizacion a servidor
-        self.actualizar_datos = datos_actualizar.alertas(self.db)
+        self.actualizar_datos_alertas = datos_actualizar.alertas(self.db)
 
         # actualizar kpis para dashboard con respuesta
         total = 0
@@ -146,11 +145,11 @@ class Dashboard:
             total += len(val)
         self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
 
-        return redirect("/dashboard")
+        return redirect(url_for("dashboard"))
 
     def datos_boletin(self):
         # solicitar actualizacion a servidor
-        self.actualizar_datos = datos_actualizar.boletines(self.db)
+        self.actualizar_datos_boletines = datos_actualizar.boletines(self.db)
 
         # actualizar kpis para dashboard con respuesta
         total = 0
@@ -161,12 +160,13 @@ class Dashboard:
 
         # actualizar log de dashboard
         # self.log(action="[ DATOS BOLETIN ] Actualizado")
-        return redirect("/dashboard")
+        return redirect(url_for("dashboard"))
 
-    def actualizar(self):
+    def actualizar_alertas(self):
         # logica general de scrapers
+        all_updates = self.actualizar_datos_alertas
         scraper_responses = gather_all.gather_threads(
-            dash=self, all_updates=self.actualizar_datos
+            dash=self, all_updates=all_updates
         )
 
         # inserta resultado de scrapers en base de datos
@@ -175,7 +175,22 @@ class Dashboard:
         self.log(
             action=f"[ ACTUALIZACION ] Tamaño: {len(json.dumps(scraper_responses).encode("utf-8")) / 1024:.3f} kB",
         )
-        return redirect("/dashboard")
+        return redirect(url_for("dashboard"))
+
+    def actualizar_boletines(self):
+        # logica general de scrapers
+        all_updates = self.actualizar_datos_boletines
+        scraper_responses = gather_all.gather_threads(
+            dash=self, all_updates=all_updates
+        )
+
+        # inserta resultado de scrapers en base de datos
+        do_updates.main(db=self.db, data=scraper_responses)
+
+        self.log(
+            action=f"[ ACTUALIZACION ] Tamaño: {len(json.dumps(scraper_responses).encode("utf-8")) / 1024:.3f} kB",
+        )
+        return redirect(url_for("dashboard"))
 
     def generar_alertas(self):
         # genera todas las alertas que tocan y las guarda en "alertas_pendientes.json"
@@ -184,7 +199,7 @@ class Dashboard:
             self.log(action=f"[ CREAR ALERTAS ] Total: {len(mensajes)}")
 
         # mantenerse en la misma pagina
-        return redirect("/dashboard")
+        return redirect(url_for("dashboard"))
 
     def generar_boletines(self):
         # genera todos los boletines que tocan y los guarda en "boletines_pendientes.json"
@@ -193,7 +208,7 @@ class Dashboard:
             self.log(action=f"[ CREAR BOLETINES ] Total: {len(mensajes)}")
 
         # mantenerse en la misma pagina
-        return redirect("/dashboard")
+        return redirect(url_for("dashboard"))
 
     def enviar_mensajes(self):
         # envia todos los mensajes pendientes en "alertas_pendientes.json" y "boletines_pendientes.json"
@@ -204,7 +219,7 @@ class Dashboard:
             )
 
         # mantenerse en la misma pagina
-        return redirect("/dashboard")
+        return redirect(url_for("dashboard"))
 
     def toggle_scraper_status(self):
         """

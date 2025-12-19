@@ -89,11 +89,9 @@ class Server:
 
         self.data_lock = threading.Lock()
 
-        # solo crea objeto si esta corriendo en el "master worker" y maneja el dash
-        if dash:
-            self.dash = dash
-            self.dash.set_server(self)
-            settings.set_dash_routes(self)
+        self.dash = dash
+        self.dash.set_server(self)
+        settings.set_dash_routes(self)
 
         # activar jinja extension
         self.app.jinja_env.add_extension("jinja2.ext.do")

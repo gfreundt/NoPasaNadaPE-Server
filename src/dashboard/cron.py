@@ -2,6 +2,7 @@ import time
 import threading
 
 from src.dashboard import auto_scraper, update_kpis
+from src.updates import datos_actualizar
 
 
 def thread(self):
@@ -12,8 +13,8 @@ def thread(self):
         update_kpis.main(self)
 
         # 2. Actualiza alertas y boletines por procesar
-        self.datos_alerta()
-        self.datos_boletin()
+        datos_actualizar.alertas(self.db)
+        datos_actualizar.boletines(self.db)
 
         # 3. Empieza el scraping automatico
         auto_scraper.main(self)

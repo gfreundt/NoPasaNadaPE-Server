@@ -1,5 +1,6 @@
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
 from src.utils.utils import send_pushbullet
+from src.comms import generar_mensajes
 import time
 from datetime import datetime as dt
 
@@ -8,7 +9,6 @@ def flujo(self, tipo_mensaje):
 
     # intentar una cantidad de veces actualizar el 100% de pendientes
     repetir = 0
-    _first = True
     while True:
 
         # solicitar alertas/boletines pendientes para enviar a actualizar
@@ -43,8 +43,6 @@ def enviar_notificacion(mensaje):
 
 def main(self):
 
-    print("@@@@@@@@@@@@@")
-
     if not self.config_autoscraper:
         self.log(action="[ AUTOSCRAPER ] OFFLINE")
         return
@@ -73,10 +71,10 @@ def main(self):
 
         if exito1 and exito2:
             # generar y enviar mensajes
-            self.generar_alertas()
-            self.generar_boletines()
+            generar_mensajes.alertas(db=self.db)
+            generar_mensajes.boletines(db=self.db)
 
-            self.enviar_mensajes()
+            self.server.enviar_correo_mensajes.send(db=self.db)
             if self.config_enviar_pushbullet:
                 enviar_notificacion(mensaje="Nuevos mensajes enviados")
 
