@@ -20,7 +20,7 @@ def thread(self):
         auto_scraper.main(self)
 
         # 99. Espera dos minutos antes de volver a empezar
-        time.sleep(120)
+        time.sleep(15)
 
 
 def main(self):

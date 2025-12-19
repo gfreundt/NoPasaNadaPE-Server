@@ -1,6 +1,6 @@
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
 from src.utils.utils import send_pushbullet
-from src.comms import generar_mensajes
+from src.comms import generar_mensajes, enviar_correo_mensajes
 import time
 from datetime import datetime as dt
 
@@ -14,11 +14,10 @@ def flujo(self, tipo_mensaje):
         # solicitar alertas/boletines pendientes para enviar a actualizar
         if tipo_mensaje == "alertas":
             self.datos_alerta()
+            pendientes = self.actualizar_datos_alertas.json()
         elif tipo_mensaje == "boletines":
             self.datos_boletin()
-
-        # tomar datos pendientes de ser actualizados del atributo
-        pendientes = self.actualizar_datos.json()
+            pendientes = self.actualizar_datos_boletines.json()
 
         # si ya no hay actualizaciones pendientes, siguiente paso
         if all([len(j) == 0 for j in pendientes.values()]):
@@ -74,7 +73,7 @@ def main(self):
             generar_mensajes.alertas(db=self.db)
             generar_mensajes.boletines(db=self.db)
 
-            self.server.enviar_correo_mensajes.send(db=self.db)
+            enviar_correo_mensajes.send(db=self.db)
             if self.config_enviar_pushbullet:
                 enviar_notificacion(mensaje="Nuevos mensajes enviados")
 

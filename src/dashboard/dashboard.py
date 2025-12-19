@@ -5,12 +5,9 @@ from copy import deepcopy as copy
 import os
 from datetime import datetime as dt, timedelta as td
 import requests
-import subprocess
 import json
 from collections import deque
-import time
 from src.dashboard import cron
-from src.utils.utils import get_local_ip, vpn_online
 from src.utils.constants import (
     NETWORK_PATH,
     TABLAS_BD,
@@ -18,8 +15,7 @@ from src.utils.constants import (
 from src.updates import gather_all
 from src.server import do_updates
 from src.dashboard import update_kpis
-from src.utils.utils import start_vpn, stop_vpn, vpn_online
-from src.updates import datos_actualizar, necesitan_mensajes
+from src.updates import datos_actualizar
 from src.comms import generar_mensajes, enviar_correo_mensajes
 from pprint import pprint
 
@@ -45,7 +41,7 @@ class Dashboard:
         self.vpn_location = ""
         self.log_entries = deque(maxlen=55)
         self.assigned_cards = []
-        self.config_autoscraper = False
+        self.config_autoscraper = True
         self.config_automensaje = False
         self.config_enviar_pushbullet = False
         self.config_obligar_vpn = True
