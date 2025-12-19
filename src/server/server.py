@@ -86,10 +86,13 @@ class Server:
     def __init__(self, db, app, dash):
         self.db = db
         self.app = app
-        self.dash = dash
+
         self.data_lock = threading.Lock()
 
-        self.dash.set_server(self)
+        # solo crea objeto si esta corriendo en el "master worker" y maneja el dash
+        if dash:
+            self.dash = dash
+            self.dash.set_server(self)
 
         # activar jinja extension
         self.app.jinja_env.add_extension("jinja2.ext.do")
