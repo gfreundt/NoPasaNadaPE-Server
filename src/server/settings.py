@@ -11,7 +11,7 @@ from security.keys import (
 )
 
 
-def set_routes(self):
+def set_server_routes(self):
 
     # user interface routes
     self.app.add_url_rule(
@@ -86,49 +86,6 @@ def set_routes(self):
         view_func=self.nuevo_password,
         methods=["GET"],
     )
-
-    # self.app.add_url_rule(
-    #     rule="/login",
-    #     endpoint="ui-login",
-    #     view_func=self.login,
-    #     methods=["GET", "POST", "HEAD"],
-    # )
-    # self.app.add_url_rule(
-    #     rule="/recuperar",
-    #     endpoint="ui-recuperar",
-    #     view_func=self.recuperar,
-    #     methods=["GET", "POST"],
-    # )
-    # self.app.add_url_rule(
-    #     rule="/registro",
-    #     endpoint="ui-registro",
-    #     view_func=self.registro,
-    #     methods=["GET", "POST"],
-    # )
-    # self.app.add_url_rule(
-    #     rule="/mis-datos",
-    #     endpoint="cuenta-mis-datos",
-    #     view_func=self.mis_datos,
-    #     methods=["GET", "POST"],
-    # )
-    # self.app.add_url_rule(
-    #     rule="/mis-vencimientos",
-    #     endpoint="cuenta-mis-vencimientos",
-    #     view_func=self.mis_vencimientos,
-    #     methods=["GET", "POST"],
-    # )
-    # self.app.add_url_rule(
-    #     rule="/acerca-de",
-    #     endpoint="ui-acerca-de",
-    #     view_func=self.acerca_de,
-    #     methods=["GET"],
-    # )
-    # self.app.add_url_rule(
-    #     rule="/logout",
-    #     endpoint="logout",
-    #     view_func=self.logout,
-    #     methods=["GET"],
-    # )
 
     # direct link
     self.app.add_url_rule(
@@ -232,6 +189,8 @@ def set_routes(self):
     )
     # --- DASHBOARD
 
+
+def set_dash_routes(self):
     # -------- URL DE INGRESO --------
     self.app.add_url_rule(
         DASHBOARD_URL,

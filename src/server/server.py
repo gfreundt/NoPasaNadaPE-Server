@@ -93,13 +93,14 @@ class Server:
         if dash:
             self.dash = dash
             self.dash.set_server(self)
+            settings.set_dash_routes(self)
 
         # activar jinja extension
         self.app.jinja_env.add_extension("jinja2.ext.do")
 
         # Flask config + routes + OAuth
         settings.set_flask_config(self)
-        settings.set_routes(self)
+        settings.set_server_routes(self)
 
         # activar dashboard
 

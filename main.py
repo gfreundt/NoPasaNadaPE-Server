@@ -26,8 +26,10 @@ def create_app():
     db._lock_file_handle = None
     if is_master_worker(db):
         dash = dashboard.Dashboard(db=db)
+        db.soy_master = True
     else:
         dash = None
+        db.soy_master = False
 
     backend = server.Server(db=db, app=app, dash=dash)
     app.backend = backend
