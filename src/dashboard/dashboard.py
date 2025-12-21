@@ -13,7 +13,6 @@ from src.utils.constants import (
     TABLAS_BD,
 )
 from src.updates import gather_all
-from src.server import do_updates
 from src.dashboard import update_kpis
 from src.updates import datos_actualizar
 from src.comms import generar_mensajes, enviar_correo_mensajes
@@ -39,7 +38,7 @@ class Dashboard:
 
     def set_initial_data(self):
         self.vpn_location = ""
-        self.log_entries = deque(maxlen=55)
+        self.log_entries = deque(maxlen=35)
         self.assigned_cards = []
         self.config_autoscraper = True
         self.config_automensaje = False
@@ -126,7 +125,7 @@ class Dashboard:
         endpoint for dashboard to update continually on dashboard information:
         sends back a dictionary (self.data)
         """
-        with self.data_lock:
+        with self.server.data_lock:
             return jsonify(self.data)
 
     # -------- ACCIONES DE BOTONES ----------
@@ -136,7 +135,7 @@ class Dashboard:
 
         # actualizar kpis para dashboard con respuesta
         total = 0
-        for key, val in zip(TABLAS_BD, self.actualizar_datos.values()):
+        for key, val in zip(TABLAS_BD, self.actualizar_datos_alertas.values()):
             self.data["scrapers_kpis"][key]["alertas"] = len(val)
             total += len(val)
         self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
@@ -149,7 +148,7 @@ class Dashboard:
 
         # actualizar kpis para dashboard con respuesta
         total = 0
-        for key, val in zip(TABLAS_BD, self.actualizar_datos.values()):
+        for key, val in zip(TABLAS_BD, self.actualizar_datos_boletines.values()):
             self.data["scrapers_kpis"][key]["boletines"] = len(val)
             total += len(val)
         self.data["scrapers_kpis"]["Acumulado"]["boletines"] = total
@@ -161,30 +160,24 @@ class Dashboard:
     def actualizar_alertas(self):
         # logica general de scrapers
         all_updates = self.actualizar_datos_alertas
-        scraper_responses = gather_all.gather_threads(
+        tamano_actualizacion = gather_all.gather_threads(
             dash=self, all_updates=all_updates
         )
 
-        # inserta resultado de scrapers en base de datos
-        do_updates.main(db=self.db, data=scraper_responses)
-
         self.log(
-            action=f"[ ACTUALIZACION ] Tamaño: {len(json.dumps(scraper_responses).encode("utf-8")) / 1024:.3f} kB",
+            action=f"[ ACTUALIZACION ALERTAS ] Tamaño: {tamano_actualizacion} kB",
         )
         return redirect(url_for("dashboard"))
 
     def actualizar_boletines(self):
         # logica general de scrapers
         all_updates = self.actualizar_datos_boletines
-        scraper_responses = gather_all.gather_threads(
+        tamano_actualizacion = gather_all.gather_threads(
             dash=self, all_updates=all_updates
         )
 
-        # inserta resultado de scrapers en base de datos
-        do_updates.main(db=self.db, data=scraper_responses)
-
         self.log(
-            action=f"[ ACTUALIZACION ] Tamaño: {len(json.dumps(scraper_responses).encode("utf-8")) / 1024:.3f} kB",
+            action=f"[ ACTUALIZACION BOLETINES ] Tamaño: {tamano_actualizacion} kB",
         )
         return redirect(url_for("dashboard"))
 
@@ -228,7 +221,7 @@ class Dashboard:
 
         # Utilizamos _ALL_SERVICES para validar que el servicio sea conocido
         if service and service in TABLAS_BD:
-            with self.data_lock:
+            with self.server.data_lock:
                 self.data["scrapers_en_linea"][service] = is_checked
             self.log(
                 action=f"[ CONFIG ] Scraper {service} toggled {'ON' if is_checked else 'OFF'}"
@@ -292,7 +285,7 @@ class Dashboard:
             ] and isinstance(new_status, bool):
                 attr_name = f"config_{key}"
 
-                with self.data_lock:
+                with self.server.data_lock:
                     # Use setattr to dynamically update the class attribute
                     setattr(self, attr_name, new_status)
 

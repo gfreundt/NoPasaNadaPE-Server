@@ -1,6 +1,7 @@
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
 from src.utils.utils import send_pushbullet
 from src.comms import generar_mensajes, enviar_correo_mensajes
+from src.updates import datos_actualizar, gather_all
 import time
 from datetime import datetime as dt
 
@@ -13,17 +14,23 @@ def flujo(self, tipo_mensaje):
 
         # solicitar alertas/boletines pendientes para enviar a actualizar
         if tipo_mensaje == "alertas":
-            self.datos_alerta()
-            pendientes = self.actualizar_datos_alertas.json()
+            pendientes = datos_actualizar.alertas(self.db)
         elif tipo_mensaje == "boletines":
-            self.datos_boletin()
-            pendientes = self.actualizar_datos_boletines.json()
+            pendientes = datos_actualizar.boletines(self.db)
 
-        # si ya no hay actualizaciones pendientes, siguiente paso
+        # si ya no hay actualizaciones pendientes, regresar True
         if all([len(j) == 0 for j in pendientes.values()]):
             return True
 
-        self.actualizar()
+        # realizar scraping
+        tamano_actualizacion = gather_all.gather_threads(
+            dash=self, all_updates=pendientes
+        )
+
+        # reportar en dashboard
+        self.log(
+            action=f"[ ACTUALIZACION ] Tamaño: {tamano_actualizacion} kB",
+        )
 
         # aumentar contador de repeticiones, si excede limite parar
         repetir += 1
@@ -40,49 +47,29 @@ def enviar_notificacion(mensaje):
     send_pushbullet(title=title, message=mensaje)
 
 
-def main(self):
+def main(self, tipo_mensaje):
 
+    # no activar si el switch de autoscraper esta apagado
     if not self.config_autoscraper:
-        self.log(action="[ AUTOSCRAPER ] OFFLINE")
+        self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] OFFLINE")
         return
 
-    # determinar cantidad de alertas y boletines que hay por procesar
-    try:
-        por_procesar = [
-            sum(
-                [
-                    0 if not i.get(t) else int(i[t])
-                    for i in self.data["scrapers_kpis"].values()
-                ]
-            )
-            for t in ("alertas", "boletines")
-        ]
+    # procesar alertas/boletines
+    exito = flujo(self, tipo_mensaje=tipo_mensaje)
 
-        # procesar alertas si hay pendientes
-        exito1 = True
-        if por_procesar[0]:
-            exito1 = flujo(self, tipo_mensaje="alertas")
+    if exito:
+        # generar y enviar mensajes
+        generar_mensajes.alertas(db=self.db)
+        generar_mensajes.boletines(db=self.db)
 
-        # procesar boletines si hay pendientes
-        exito2 = True
-        if por_procesar[1]:
-            exito2 = flujo(self, tipo_mensaje="boletines")
+        enviar_correo_mensajes.send(db=self.db)
+        if self.config_enviar_pushbullet:
+            enviar_notificacion(mensaje="Nuevos mensajes enviados")
 
-        if exito1 and exito2:
-            # generar y enviar mensajes
-            generar_mensajes.alertas(db=self.db)
-            generar_mensajes.boletines(db=self.db)
+        # informar proceso completo y volver
+        self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] OK")
+        return
 
-            enviar_correo_mensajes.send(db=self.db)
-            if self.config_enviar_pushbullet:
-                enviar_notificacion(mensaje="Nuevos mensajes enviados")
-
-            # informar proceso completo y volver
-            self.log(action="[ AUTOSCRAPER ] OK")
-            return
-
-        # informar proceso no puedo terminar
-        self.log(action="[ AUTOSCRAPER ] NO TERMINO.")
-
-    except Exception as e:
-        print(f"Error {e}")
+    # informar proceso no puedo terminar
+    enviar_notificacion(mensaje="Error en Scraping!!")
+    self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] NO TERMINO.")

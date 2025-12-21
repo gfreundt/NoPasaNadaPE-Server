@@ -4,7 +4,7 @@ from flask import Flask
 
 from src.server import server
 from src.dashboard import dashboard
-from src.utils.constants import NETWORK_PATH
+from src.utils.constants import NETWORK_PATH, DASHBOARD_URL
 from src.utils.utils import get_local_ip, is_master_worker
 
 logging.getLogger("werkzeug").disabled = True
@@ -12,7 +12,7 @@ logging.getLogger("werkzeug").disabled = True
 
 def create_app():
     print(f" > SERVER: http://{get_local_ip()}:5000/")
-    print(f" > DASHBOARD: http://{get_local_ip()}:5000/dashboard")
+    print(f" > DASHBOARD: http://{get_local_ip()}:5000/{DASHBOARD_URL}")
     app = Flask(
         __name__,
         template_folder=os.path.join(NETWORK_PATH, "templates"),

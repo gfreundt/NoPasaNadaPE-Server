@@ -1,29 +1,27 @@
-import time
+import schedule
 import threading
-
+import time
 from src.dashboard import auto_scraper, update_kpis
-from src.updates import datos_actualizar
 
 
-def thread(self):
+def run_scheduler_loop(self):
+
+    # activar al iniciar
+    update_kpis.main(self)
+    auto_scraper.main(self, "boletines")
+    auto_scraper.main(self, "alertas")
+
+    # schedule
+    schedule.every(15).minutes.do(update_kpis.main, self)
+    schedule.every(10).minutes.do(auto_scraper.main, self, "boletines")
+    schedule.every(4).hours.do(auto_scraper.main, self, "alertas")
 
     while True:
-
-        # 1. Actualiza los KPIs de servicios de terceros (truecaptcha, etc..)
-        update_kpis.main(self)
-
-        # 2. Actualiza alertas y boletines por procesar
-        datos_actualizar.alertas(self.db)
-        datos_actualizar.boletines(self.db)
-
-        # 3. Empieza el scraping automatico
-        auto_scraper.main(self)
-
-        # 99. Espera dos minutos antes de volver a empezar
-        time.sleep(15)
+        schedule.run_pending()
+        time.sleep(1)
 
 
 def main(self):
-    t = threading.Thread(target=thread, args=(self,), daemon=True)
+    t = threading.Thread(target=run_scheduler_loop, args=(self,), daemon=True)
     self.log(action="[ SERVICIO ] CRON: Activado")
     t.start()

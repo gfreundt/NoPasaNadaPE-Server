@@ -5,6 +5,7 @@ import json
 import atexit
 import queue
 from threading import Thread, Lock
+from src.server import do_updates
 from src.utils.constants import NETWORK_PATH, GATHER_ITERATIONS
 from src.utils.utils import vpn_online, start_vpn, stop_vpn
 
@@ -317,12 +318,16 @@ def gather_threads(dash, all_updates):
         stop_vpn()
         time.sleep(5)
 
-    # actualiza el archivo local que guarda la data de actualizaciones
+    # actualiza el archivo local que guarda la data de actualizaciones (solo debug)
     dash.scrapers_corriendo = False
     update_local_gather_file(full_response)
 
+    # actualiza base de datos con todo lo obtenido
     dash.log(general_status=("Esperando", 2))
-    return full_response
+    do_updates.main(db=dash.db, data=full_response)
+
+    # devuelve dato del tamaño de los datos actualizados en Kb (solo referencia)
+    return f"{len(json.dumps(full_response).encode("utf-8")) / 1024:.3f}"
 
 
 def manage_sub_threads(

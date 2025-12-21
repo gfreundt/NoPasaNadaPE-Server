@@ -135,7 +135,7 @@ SCRAPER_TIMEOUT = {
     "calmul": 90,
 }
 
-DASHBOARD_URL = "wvpeagu2d27l6v7b"
+DASHBOARD_URL = "cc1c667091b8GWe8JawqlOEkY11af6ff2e"
 
 # aseguradora info
 ASEGURADORAS = {
