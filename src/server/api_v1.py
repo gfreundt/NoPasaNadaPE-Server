@@ -480,7 +480,7 @@ def finalizar(
     if exitos and solicitud == "alta":
         for item in exitos:
             enviar_correo_inmediato.activacion(self.db, item["correo"])
-        if self.config_send_pushbullet:
+        if self.config_enviar_pushbullet:
             send_pushbullet(
                 title=f"NoPasaNadaPE - Correos de Activacion Enviados ({len(exitos)})"
             )
@@ -488,7 +488,7 @@ def finalizar(
     elif exitos and solicitud == "baja":
         for item in exitos:
             enviar_correo_inmediato.desactivacion(self.db, item["correo"], nombre=None)
-        if self.config_send_pushbullet:
+        if self.config_enviar_pushbullet:
             send_pushbullet(
                 title=f"NoPasaNadaPE - Correos de DESActivacion Enviados ({len(exitos)})"
             )

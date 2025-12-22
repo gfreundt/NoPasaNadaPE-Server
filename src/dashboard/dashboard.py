@@ -25,12 +25,23 @@ logging.getLogger("werkzeug").disabled = True
 class Dashboard:
     def __init__(self, db, soy_master):
         self.db = db
+        self.master = soy_master
+
+        # temporal
+
+        cursor = db.cursor()
+        cursor.execute(
+            "DELETE FROM InfoPlacas WHERE IdMember_FK = (SELECT IdMember FROM InfoMiembros WHERE Correo ='gabfre@gmail.com')"
+        )
+        cursor.execute("DELETE FROM InfoMiembros WHERE Correo = 'gabfre@gmail.com'")
+
+        #
 
         # crear estrcutura de variables y valores iniciales
         self.set_initial_data()
 
         # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
-        if soy_master:
+        if self.master:
             cron.main(self)
 
     def set_server(self, server_instance):
@@ -131,30 +142,12 @@ class Dashboard:
     # -------- ACCIONES DE BOTONES ----------
     def datos_alerta(self):
         # solicitar actualizacion a servidor
-        self.actualizar_datos_alertas = datos_actualizar.alertas(self.db)
-
-        # actualizar kpis para dashboard con respuesta
-        total = 0
-        for key, val in zip(TABLAS_BD, self.actualizar_datos_alertas.values()):
-            self.data["scrapers_kpis"][key]["alertas"] = len(val)
-            total += len(val)
-        self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
-
+        self.actualizar_datos_alertas = datos_actualizar.alertas(self)
         return redirect(url_for("dashboard"))
 
     def datos_boletin(self):
         # solicitar actualizacion a servidor
-        self.actualizar_datos_boletines = datos_actualizar.boletines(self.db)
-
-        # actualizar kpis para dashboard con respuesta
-        total = 0
-        for key, val in zip(TABLAS_BD, self.actualizar_datos_boletines.values()):
-            self.data["scrapers_kpis"][key]["boletines"] = len(val)
-            total += len(val)
-        self.data["scrapers_kpis"]["Acumulado"]["boletines"] = total
-
-        # actualizar log de dashboard
-        # self.log(action="[ DATOS BOLETIN ] Actualizado")
+        self.actualizar_datos_boletines = datos_actualizar.boletines(self)
         return redirect(url_for("dashboard"))
 
     def actualizar_alertas(self):
@@ -163,7 +156,6 @@ class Dashboard:
         tamano_actualizacion = gather_all.gather_threads(
             dash=self, all_updates=all_updates
         )
-
         self.log(
             action=f"[ ACTUALIZACION ALERTAS ] Tamaño: {tamano_actualizacion} kB",
         )

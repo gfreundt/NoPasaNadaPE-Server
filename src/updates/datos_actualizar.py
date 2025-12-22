@@ -1,15 +1,16 @@
 # datos_actualizar.py
 from src.updates import configuracion_plazos
+from src.utils.constants import TABLAS_BD
 
 ULTIMA_ACTUALIZACION_HORAS = 48
 
 
-def alertas(db):
+def alertas(self):
     """
     Genera requerimientos de actualización basados en las reglas de configuracion_plazos.
     """
 
-    cursor = db.cursor()
+    cursor = self.db.cursor()
 
     # Generamos los fragmentos SQL dinámicamente
     sql_soat = configuracion_plazos.generar_sql_condicion("s.FechaHasta", "SOAT")
@@ -70,29 +71,37 @@ def alertas(db):
     cursor.execute(query)
     results = cursor.fetchall()
 
-    upd = {"brevetes": [], "soats": [], "revtecs": [], "satimps": []}
+    # upd = {"soats": [], "revtecs": [], "brevetes": [], "satimps": []}
+    upd = {}
 
     for row in results:
         tipo = row[0]
         if tipo == "BREVETE":
-            upd["brevetes"].append((row[1], row[2], row[3]))
+            upd["DataMtcBrevetes"].append((row[1], row[2], row[3]))
         elif tipo == "SOAT":
-            upd["soats"].append(row[4])
+            upd["DataApesegSoats"].append(row[4])
         elif tipo == "REVTEC":
-            upd["revtecs"].append(row[4])
+            upd["DataMtcRevisionesTecnicas"].append(row[4])
         elif tipo == "SATIMP":
-            upd["satimps"].append((row[1], row[2], row[3]))
+            upd["DataSatImpuestos"].append((row[1], row[2], row[3]))
+
+    # actualizar kpis para dashboard con respuesta
+    total = 0
+    for key, val in upd.items():
+        self.data["scrapers_kpis"][key]["alertas"] = len(val)
+        total += len(val)
+    self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
 
     return {k: list(set(v)) for k, v in upd.items()}
 
 
-def boletines(db):
+def boletines(self):
     """
     Genera requerimientos de actualización para boletines.
     """
     SUNARP_DAYS = 120
 
-    cursor = db.cursor()
+    cursor = self.db.cursor()
 
     # Definimos los CTEs 'TargetUsers' y 'TargetPlacas' al principio.
     query = f"""

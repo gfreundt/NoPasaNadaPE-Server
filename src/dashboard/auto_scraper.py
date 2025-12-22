@@ -14,11 +14,13 @@ def flujo(self, tipo_mensaje):
 
         # solicitar alertas/boletines pendientes para enviar a actualizar
         if tipo_mensaje == "alertas":
-            pendientes = datos_actualizar.alertas(self.db)
+            pendientes = datos_actualizar.alertas(self)
+
         elif tipo_mensaje == "boletines":
-            pendientes = datos_actualizar.boletines(self.db)
+            pendientes = datos_actualizar.boletines(self)
 
         # si ya no hay actualizaciones pendientes, regresar True
+        print(pendientes)
         if all([len(j) == 0 for j in pendientes.values()]):
             return True
 

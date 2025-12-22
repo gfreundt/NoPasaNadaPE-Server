@@ -92,7 +92,7 @@ FORMATO_PASSWORD = {
 HEADLESS = {
     "brevetes": True,
     "satimp": True,
-    "soat": True,
+    "soat": False,
     "jneafil": True,
     "jnemulta": True,
     "osiptel": True,
@@ -175,7 +175,7 @@ MTC_CAPTCHAS = {
     "platano": 24,
     "puerta": 25,
     "reloj": 26,
-    "patineta": 27,
+    "scooter": 27,
     "silla": 28,
     "tasa": 29,
     "tienda": 30,
