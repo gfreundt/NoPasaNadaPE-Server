@@ -7,7 +7,7 @@ import queue
 from threading import Thread, Lock
 from src.server import do_updates
 from src.utils.constants import NETWORK_PATH, GATHER_ITERATIONS
-from src.utils.utils import vpn_online, start_vpn, stop_vpn
+from src.utils.utils import vpn_online, start_vpn, stop_vpn, get_public_ip
 
 
 # local imports
@@ -213,7 +213,7 @@ def gather_threads(dash, all_updates):
             dash.log(action="Failed VPN")
             return
 
-        dash.log(action="Success VPN")
+        dash.log(action="Success VPN:",get_public_ip)
 
         with lock:
             dash.data["scrapers_kpis"].update(
