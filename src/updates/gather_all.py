@@ -50,14 +50,14 @@ def gather_threads(dash, all_updates):
     atexit.register(stop_vpn)
 
     # records vehiculares
-    if all_updates.get("recvehic"):
+    if all_updates.get("DataMtcRecordsConductores"):
         vpn_ar_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["recvehic"],
+                    all_updates["DataMtcRecordsConductores"],
                     full_response,
                     gather_recvehic,
                     "DataMtcRecordsConductores",
@@ -66,14 +66,14 @@ def gather_threads(dash, all_updates):
         )
 
     # brevetes
-    if all_updates.get("brevetes"):
+    if all_updates.get("DataMtcBrevetes"):
         vpn_ar_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["brevetes"],
+                    all_updates["DataMtcBrevetes"],
                     full_response,
                     gather_brevetes,
                     "DataMtcBrevetes",
@@ -82,14 +82,14 @@ def gather_threads(dash, all_updates):
         )
 
     # multas sat
-    if all_updates.get("satmuls"):
+    if all_updates.get("DataSatMultas"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["satmuls"],
+                    all_updates["DataSatMultas"],
                     full_response,
                     gather_satmuls,
                     "DataSatMultas",
@@ -98,14 +98,14 @@ def gather_threads(dash, all_updates):
         )
 
     # revisiones tecnicas
-    if all_updates.get("revtecs"):
+    if all_updates.get("DataMtcRevisionesTecnicas"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["revtecs"],
+                    all_updates["DataMtcRevisionesTecnicas"],
                     full_response,
                     gather_revtecs,
                     "DataMtcRevisionesTecnicas",
@@ -114,14 +114,14 @@ def gather_threads(dash, all_updates):
         )
 
     # multas sutran
-    if all_updates.get("sutrans"):
+    if all_updates.get("DataSutranMultas"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["sutrans"],
+                    all_updates["DataSutranMultas"],
                     full_response,
                     gather_sutrans,
                     "DataSutranMultas",
@@ -130,23 +130,28 @@ def gather_threads(dash, all_updates):
         )
 
     # impuestos sat
-    if all_updates.get("satimps"):
+    if all_updates.get("DataSatImpuestos"):
         vpn_pe_threads.append(
             Thread(
                 target=gather_satimps.manage_sub_threads,
-                args=(dash, lock, all_updates["satimps"], full_response),
+                args=(
+                    dash,
+                    lock,
+                    all_updates["DataSatImpuestos"],
+                    full_response,
+                ),
             )
         )
 
     # sunat
-    if all_updates.get("sunats"):
+    if all_updates.get("DataSunatRucs"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["sunats"],
+                    all_updates["DataSunatRucs"],
                     full_response,
                     gather_sunats,
                     "DataSunatRucs",
@@ -154,63 +159,15 @@ def gather_threads(dash, all_updates):
             )
         )
 
-    # lineas osiptel
-    if all_updates.get("osipteles"):
-        vpn_pe_threads.append(
-            Thread(
-                target=manage_sub_threads,
-                args=(
-                    dash,
-                    lock,
-                    all_updates["osipteles"],
-                    full_response,
-                    gather_osipteles,
-                    "DataOsiptelLineas",
-                ),
-            )
-        )
-
-    # multas jne
-    if all_updates.get("jnemultas"):
-        vpn_pe_threads.append(
-            Thread(
-                target=manage_sub_threads,
-                args=(
-                    dash,
-                    lock,
-                    all_updates["jnemultas"],
-                    full_response,
-                    gather_jnemultas,
-                    "DataJneMultas",
-                ),
-            )
-        )
-
-    # afiliaciones jne
-    if all_updates.get("jneafils"):
-        vpn_pe_threads.append(
-            Thread(
-                target=manage_sub_threads,
-                args=(
-                    dash,
-                    lock,
-                    all_updates["jneafils"],
-                    full_response,
-                    gather_jneafils,
-                    "DataJneAfiliaciones",
-                ),
-            )
-        )
-
     # fichas sunarp
-    if all_updates.get("sunarps"):
+    if all_updates.get("DataSunarpFichas"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["sunarps"],
+                    all_updates["DataSunarpFichas"],
                     full_response,
                     gather_sunarps,
                     "DataSunarpFichas",
@@ -219,14 +176,14 @@ def gather_threads(dash, all_updates):
         )
 
     # soat (los primeros 12 con un vpn, los otros 12 con otro vpn)
-    if all_updates.get("soats"):
+    if all_updates.get("DataApesegSoats"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["soats"][:12],
+                    all_updates["DataApesegSoats"][:12],
                     full_response,
                     gather_soats,
                     "DataApesegSoats",
@@ -234,14 +191,14 @@ def gather_threads(dash, all_updates):
             )
         )
 
-    if all_updates.get("soats") and len(all_updates["soats"]) > 12:
+    if all_updates.get("DataApesegSoats") and len(all_updates["DataApesegSoats"]) > 12:
         vpn_ar_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["soats"][12:24],
+                    all_updates["DataApesegSoats"][12:24],
                     full_response,
                     gather_soats,
                     "DataApesegSoats",
@@ -250,23 +207,20 @@ def gather_threads(dash, all_updates):
         )
 
     # callao multas
-    if all_updates.get("calmul"):
+    if all_updates.get("DataCallaoMultas"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
                     dash,
                     lock,
-                    all_updates["calmul"],
+                    all_updates["DataCallaoMultas"],
                     full_response,
                     gather_calmul,
                     "DataCallaoMultas",
                 ),
             )
         )
-
-    print("PE", vpn_pe_threads)
-    print("AR", vpn_ar_threads)
 
     for thread_group, pais in zip((vpn_pe_threads, vpn_ar_threads), ("pe", "ar")):
 
@@ -276,11 +230,9 @@ def gather_threads(dash, all_updates):
         # inicia la VPN en el pais que corresponde
         exito = start_vpn(pais)
         if not exito:
-            print("VPN no se pudo prender!")
             return
 
         with lock:
-            print(f"ACTIVO VPN: {pais}")
             dash.data["scrapers_kpis"].update(
                 {
                     "extra": {

@@ -1,6 +1,5 @@
 # datos_actualizar.py
 from src.updates import configuracion_plazos
-from src.utils.constants import TABLAS_BD
 
 ULTIMA_ACTUALIZACION_HORAS = 48
 
@@ -225,20 +224,27 @@ def boletines(self):
 
     # Inicializar diccionario
     upd = {
-        "brevetes": [],
-        "soats": [],
-        "revtecs": [],
-        "sunarps": [],
-        "satimps": [],
-        "satmuls": [],
-        "sutrans": [],
-        "recvehic": [],
-        "calmul": [],
+        "DataMtcBrevetes": [],
+        "DataApesegSoats": [],
+        "DataMtcRevisionesTecnicas": [],
+        "DataSunarpFichas": [],
+        "DataSatImpuestos": [],
+        "DataSatMultas": [],
+        "DataSutranMultas": [],
+        "DataMtcRecordVehiculares": [],
+        "DataCallaoMultas": [],
     }
 
     for row in results:
         key = row[0]
-        if key in ["soats", "revtecs", "sunarps", "satmuls", "sutrans", "calmul"]:
+        if key in [
+            "DataApesegSoats",
+            "DataMtcRevisionesTecnicas",
+            "DataSunarpFichas",
+            "DataSatMultas",
+            "DataSutranMultas",
+            "DataCallaoMultas",
+        ]:
             upd[key].append(row[4])
         else:
             upd[key].append((row[1], row[2], row[3]))
