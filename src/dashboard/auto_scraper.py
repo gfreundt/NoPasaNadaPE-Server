@@ -31,7 +31,7 @@ def flujo(self, tipo_mensaje):
 
         # reportar en dashboard
         self.log(
-            action=f"[ ACTUALIZACION ] Tamaño: {tamano_actualizacion} kB",
+            action=f"[ ACTUALIZACION {tipo_mensaje.upper()}] Tamaño: {tamano_actualizacion} kB",
         )
 
         # aumentar contador de repeticiones, si excede limite parar
