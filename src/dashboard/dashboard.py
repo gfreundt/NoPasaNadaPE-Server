@@ -16,6 +16,7 @@ from src.updates import gather_all
 from src.dashboard import update_kpis
 from src.updates import datos_actualizar
 from src.comms import generar_mensajes, enviar_correo_mensajes
+from src.utils.utils import get_public_ip
 from pprint import pprint
 
 
@@ -40,6 +41,7 @@ class Dashboard:
 
         # crear estrcutura de variables y valores iniciales
         self.set_initial_data()
+        self.log(action=f"Original IP: {self.original_ip}")
 
         # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
         if self.master:
@@ -58,6 +60,8 @@ class Dashboard:
         self.config_obligar_vpn = True
         self.siguiente_autoscraper = dt.now() + td(minutes=5)
         self.scrapers_corriendo = False
+
+        self.original_ip = get_public_ip()
 
         _empty_card = {
             "title": "No Asignado",
