@@ -246,7 +246,7 @@ def boletines(self):
         ]:
             upd[key].append(row["Placa"])
         else:
-            upd[key].append((row["IdMember"], row["DocTipo"], row["DocNum"]))
+            upd[key].append((row["IdMember_FK"], row["DocTipo"], row["DocNum"]))
 
     # Retornar listas únicas
     return {i: list(set(j)) for i, j in upd.items()}
