@@ -116,7 +116,7 @@ def boletines(self):
     )
 
     -- 1. BREVETES (Usa TargetUsers)
-    SELECT 'brevetes' AS KeyName, u.IdMember AS IdMember_FK, u.DocTipo, u.DocNum, NULL AS Placa
+    SELECT 'DataMtcBrevetes' AS KeyName, u.IdMember AS IdMember_FK, u.DocTipo, u.DocNum, NULL AS Placa
     FROM TargetUsers u
     WHERE u.DocTipo = 'DNI'
       AND u.IdMember NOT IN (
@@ -131,7 +131,7 @@ def boletines(self):
     UNION ALL
 
     -- 2. SOATS (Usa TargetPlacas)
-    SELECT 'soats', NULL, NULL, NULL, p.Placa
+    SELECT 'DataApesegSoats', NULL, NULL, NULL, p.Placa
     FROM TargetPlacas p
     WHERE p.Placa NOT IN (
           SELECT PlacaValidate FROM DataApesegSoats 
@@ -145,7 +145,7 @@ def boletines(self):
     UNION ALL
 
     -- 3. REVTECS (Usa TargetPlacas)
-    SELECT 'revtecs', NULL, NULL, NULL, p.Placa
+    SELECT 'DataMtcRevisionesTecnicas', NULL, NULL, NULL, p.Placa
     FROM TargetPlacas p
     WHERE p.Placa NOT IN (
           SELECT PlacaValidate FROM DataMtcRevisionesTecnicas 
@@ -159,7 +159,7 @@ def boletines(self):
     UNION ALL
 
     -- 4. SUNARPS (Usa TargetPlacas)
-    SELECT 'sunarps', NULL, NULL, NULL, p.Placa
+    SELECT 'DataSunarpFichas', NULL, NULL, NULL, p.Placa
     FROM TargetPlacas p
     WHERE p.Placa NOT IN (
           SELECT Placa FROM InfoPlacas 
@@ -169,7 +169,7 @@ def boletines(self):
     UNION ALL
 
     -- 5. SATIMPS (Usa TargetUsers)
-    SELECT 'satimps', u.IdMember, u.DocTipo, u.DocNum, NULL
+    SELECT 'DataSatImpuestos', u.IdMember, u.DocTipo, u.DocNum, NULL
     FROM TargetUsers u
     WHERE u.IdMember NOT IN (
           SELECT IdMember FROM InfoMiembros 
@@ -179,7 +179,7 @@ def boletines(self):
     UNION ALL
 
     -- 6. SATMULS (Usa TargetPlacas)
-    SELECT 'satmuls', NULL, NULL, NULL, p.Placa
+    SELECT 'DataSatMultas', NULL, NULL, NULL, p.Placa
     FROM TargetPlacas p
     WHERE p.Placa NOT IN (
           SELECT Placa FROM InfoPlacas 
@@ -189,7 +189,7 @@ def boletines(self):
     UNION ALL
 
     -- 7. SUTRANS (Usa TargetPlacas)
-    SELECT 'sutrans', NULL, NULL, NULL, p.Placa
+    SELECT 'DataSutranMultas', NULL, NULL, NULL, p.Placa
     FROM TargetPlacas p
     WHERE p.Placa NOT IN (
           SELECT Placa FROM InfoPlacas 
@@ -199,7 +199,7 @@ def boletines(self):
     UNION ALL
 
     -- 8. RECVEHIC (Usa TargetUsers)
-    SELECT 'recvehic', u.IdMember, u.DocTipo, u.DocNum, NULL
+    SELECT 'DataMtcRevisionesTecnicas', u.IdMember, u.DocTipo, u.DocNum, NULL
     FROM TargetUsers u
     WHERE u.DocTipo = 'DNI'
       AND u.IdMember NOT IN (
@@ -210,7 +210,7 @@ def boletines(self):
     UNION ALL
 
     -- 9. CAMUL (Usa TargetPlacas)
-    SELECT 'calmul', NULL, NULL, NULL, p.Placa
+    SELECT 'DataCallaoMultas', NULL, NULL, NULL, p.Placa
     FROM TargetPlacas p
     WHERE p.Placa NOT IN (
           SELECT Placa FROM InfoPlacas 
