@@ -126,7 +126,7 @@ def start_vpn(pais="pe", con_tipo="udp"):
         if "/var/www" in NETWORK_PATH:
             subprocess.run(
                 [
-                    "openvpn",
+                    "/usr/sbin/openvpn",
                     "--config",
                     rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
                     "--daemon",
@@ -160,7 +160,7 @@ def stop_vpn():
     Requires sudo privileges.
     """
     if "/var/www" in NETWORK_PATH:
-        subprocess.run(["pkill", "openvpn"], check=False)
+        subprocess.run(["/usr/bin/pkill", "openvpn"], check=False)
     else:
         subprocess.run(["sudo", "pkill", "openvpn"], check=False)
     time.sleep(0.5)
@@ -180,7 +180,10 @@ def get_public_ip():
     Prints the current public IPv4 address.
     """
     result = subprocess.run(
-        ["curl", "-4", "-s", "ifconfig.me"], capture_output=True, text=True, check=True
+        ["/usr/bin/curl", "-4", "-s", "ifconfig.me"],
+        capture_output=True,
+        text=True,
+        check=True,
     )
 
     result.stdout.strip()
@@ -191,7 +194,9 @@ def vpn_online():
     Returns True if an OpenVPN process is running, False otherwise.
     """
     result = subprocess.run(
-        ["pgrep", "-x", "openvpn"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ["/usr/bin/pgrep", "-x", "openvpn"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
     return result.returncode == 0

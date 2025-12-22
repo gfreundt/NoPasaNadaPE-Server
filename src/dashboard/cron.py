@@ -13,7 +13,7 @@ def run_scheduler_loop(self):
 
     # schedule
     schedule.every(15).minutes.do(update_kpis.main, self)
-    schedule.every(10).minutes.do(auto_scraper.main, self, "boletines")
+    schedule.every(2).minutes.do(auto_scraper.main, self, "boletines")
     schedule.every(4).hours.do(auto_scraper.main, self, "alertas")
 
     while True:
