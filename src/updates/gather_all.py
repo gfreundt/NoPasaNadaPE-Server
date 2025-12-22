@@ -213,7 +213,7 @@ def gather_threads(dash, all_updates):
             dash.log(action="Failed VPN")
             return
 
-        dash.log(action="Success VPN:",get_public_ip)
+        dash.log(action="Success VPN:" + get_public_ip())
 
         with lock:
             dash.data["scrapers_kpis"].update(
