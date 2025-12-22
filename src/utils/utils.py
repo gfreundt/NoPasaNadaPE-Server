@@ -123,17 +123,29 @@ def start_vpn(pais="pe", con_tipo="udp"):
     vpn_location = "pe-lim" if pais.lower() == "pe" else "ar-bua"
 
     try:
-        subprocess.run(
-            [
-                "sudo",
-                "openvpn",
-                "--config",
-                rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
-                "--daemon",
-            ],
-            text=True,
-            check=True,
-        )
+        if "/var/www" in NETWORK_PATH:
+            subprocess.run(
+                [
+                    "openvpn",
+                    "--config",
+                    rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
+                    "--daemon",
+                ],
+                text=True,
+                check=True,
+            )
+        else:
+            subprocess.run(
+                [
+                    "sudo",
+                    "openvpn",
+                    "--config",
+                    rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
+                    "--daemon",
+                ],
+                text=True,
+                check=True,
+            )
 
     except subprocess.CalledProcessError:
         return False
@@ -147,17 +159,11 @@ def stop_vpn():
     Stops all running OpenVPN processes.
     Requires sudo privileges.
     """
-    subprocess.run(["sudo", "pkill", "openvpn"], check=False)
+    if "/var/www" in NETWORK_PATH:
+        subprocess.run(["pkill", "openvpn"], check=False)
+    else:
+        subprocess.run(["sudo", "pkill", "openvpn"], check=False)
     time.sleep(0.5)
-
-
-def switch_vpn(current):
-    """
-    Stops all running OpenVPN processes.
-    Requires sudo privileges.
-    """
-    stop_vpn()
-    return start_vpn(pais="ar" if current == "pe" else "pe")
 
 
 def get_public_ip():
