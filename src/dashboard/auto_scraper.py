@@ -20,7 +20,7 @@ def flujo(self, tipo_mensaje):
             pendientes = datos_actualizar.boletines(self)
 
         # si ya no hay actualizaciones pendientes, regresar True
-        print(pendientes)
+        print("*************", pendientes)
         if all([len(j) == 0 for j in pendientes.values()]):
             return True
 

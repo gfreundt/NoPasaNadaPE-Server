@@ -19,10 +19,6 @@ from src.updates import (
     gather_recvehic,
     gather_sunarps,
     gather_satmuls,
-    gather_sunats,
-    gather_osipteles,
-    gather_jnemultas,
-    gather_jneafils,
     gather_soats,
     gather_calmul,
 )
@@ -35,8 +31,8 @@ def gather_threads(dash, all_updates):
     # # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
     # from src.test.test_data import get_test_data
 
-    # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
-    # all_updates = get_test_data([0, 0, 0, 0, 0, 0, 0, 0, 8])
+    # # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
+    # all_updates = get_test_data([0, 0, 0, 0, 0, 1, 0, 0, 0])
 
     # log change of dashboard status
     dash.log(general_status=("Activo", 1))
@@ -143,22 +139,6 @@ def gather_threads(dash, all_updates):
             )
         )
 
-    # sunat
-    if all_updates.get("DataSunatRucs"):
-        vpn_pe_threads.append(
-            Thread(
-                target=manage_sub_threads,
-                args=(
-                    dash,
-                    lock,
-                    all_updates["DataSunatRucs"],
-                    full_response,
-                    gather_sunats,
-                    "DataSunatRucs",
-                ),
-            )
-        )
-
     # fichas sunarp
     if all_updates.get("DataSunarpFichas"):
         vpn_pe_threads.append(
@@ -230,7 +210,10 @@ def gather_threads(dash, all_updates):
         # inicia la VPN en el pais que corresponde
         exito = start_vpn(pais)
         if not exito:
+            dash.log(action="Failed VPN")
             return
+
+        dash.log(action="Success VPN")
 
         with lock:
             dash.data["scrapers_kpis"].update(

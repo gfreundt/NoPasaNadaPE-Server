@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 import time
 
 # local imports
-from src.utils.utils import date_to_db_format, switch_vpn
+from src.utils.utils import date_to_db_format
 from src.scrapers import scrape_soat as scraper
 from src.utils.constants import ASEGURADORAS, NETWORK_PATH, HEADLESS
 from src.utils.webdriver import ChromeUtils
@@ -25,7 +25,6 @@ def gather(
         window_size=(1920, 1080),
     )
     webdriver = chromedriver.direct_driver()
-    same_ip_scrapes = 0
 
     # iniciar variables para calculo de ETA
     tiempo_inicio = time.perf_counter()
@@ -60,14 +59,8 @@ def gather(
                 lastUpdate=f"ETA: {eta}",
             )
 
-            # si se esta llegando al limite con un mismo IP, reiniciar con IP nuevo
-            if same_ip_scrapes > 10:
-                webdriver.quit()
-                switch_vpn(dash.server.vpn_location)
-
             # aumentar contador de usos del mismo IP y mandar a scraper
             scraper_response = scraper.browser_wrapper(placa=placa, webdriver=webdriver)
-            same_ip_scrapes += 1
             procesados += 1
 
             # si respuesta es texto, hubo un error -- regresar
@@ -140,18 +133,18 @@ def gather(
         except KeyboardInterrupt:
             quit()
 
-        except Exception as e:
-            # devolver registro a la cola para que otro thread lo complete
-            if record_item is not None:
-                queue_update_data.put(record_item)
+        # except Exception as e:
+        #     # devolver registro a la cola para que otro thread lo complete
+        #     if record_item is not None:
+        #         queue_update_data.put(record_item)
 
-            # actualizar dashboard
-            dash.log(
-                card=card,
-                text=f"Crash (Gather): {str(e)[:55]}",
-                status=2,
-            )
-            break
+        #     # actualizar dashboard
+        #     dash.log(
+        #         card=card,
+        #         text=f"Crash (Gather): {str(e)[:55]}",
+        #         status=2,
+        #     )
+        #     break
 
     # sacar worker de lista de activos cerrar driver
     dash.assigned_cards.remove(card)

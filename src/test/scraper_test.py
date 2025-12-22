@@ -1,5 +1,6 @@
 import subprocess
 import time
+from src.utils.constants import NETWORK_PATH
 
 OVPN_CONFIG = "/etc/openvpn/client/pe-lim.prod.surfshark.com_udp.ovpn"
 
@@ -9,7 +10,12 @@ def vpn_on():
     Starts the OpenVPN connection in daemon mode.
     Requires sudo privileges.
     """
-    subprocess.run(["sudo", "openvpn", "--config", OVPN_CONFIG, "--daemon"], check=True)
+    if "var/www" in NETWORK_PATH:
+        subprocess.run(["openvpn", "--config", OVPN_CONFIG, "--daemon"], check=True)
+    else:
+        subprocess.run(
+            ["sudo", "openvpn", "--config", OVPN_CONFIG, "--daemon"], check=True
+        )
 
     time.sleep(2)
 
@@ -19,7 +25,10 @@ def vpn_off():
     Stops all running OpenVPN processes.
     Requires sudo privileges.
     """
-    subprocess.run(["sudo", "pkill", "openvpn"], check=False)
+    if "var/www" in NETWORK_PATH:
+        subprocess.run(["pkill", "openvpn"], check=False)
+    else:
+        subprocess.run(["sudo", "pkill", "openvpn"], check=False)
 
 
 def print_public_ip():

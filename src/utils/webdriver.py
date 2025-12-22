@@ -55,6 +55,8 @@ class ChromeUtils:
             self.options.add_argument("--incognito")
         if parameters["headless"]:
             self.options.add_argument("--headless=new")
+        if parameters["window_size"]:
+            self.options.add_argument("--window-size=1920,1080")
 
         self.options.add_argument("--disable-blink-features=AutomationControlled")
         self.options.add_experimental_option(
