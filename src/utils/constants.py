@@ -92,7 +92,7 @@ FORMATO_PASSWORD = {
 HEADLESS = {
     "brevetes": True,
     "satimp": True,
-    "soat": False,
+    "soat": True,
     "jneafil": True,
     "jnemulta": True,
     "osiptel": True,

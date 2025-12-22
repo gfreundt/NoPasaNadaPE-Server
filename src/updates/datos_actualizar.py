@@ -219,9 +219,6 @@ def boletines(self):
 
     """
 
-    cursor.execute(query)
-    results = cursor.fetchall()
-
     # Inicializar diccionario
     upd = {
         "DataMtcBrevetes": [],
@@ -235,8 +232,10 @@ def boletines(self):
         "DataCallaoMultas": [],
     }
 
-    for row in results:
-        key = row[0]
+    cursor.execute(query)
+
+    for row in cursor.fetchall():
+        key = row["KeyName"]
         if key in [
             "DataApesegSoats",
             "DataMtcRevisionesTecnicas",
@@ -245,9 +244,9 @@ def boletines(self):
             "DataSutranMultas",
             "DataCallaoMultas",
         ]:
-            upd[key].append(row[4])
+            upd[key].append(row["Placa"])
         else:
-            upd[key].append((row[1], row[2], row[3]))
+            upd[key].append((row["IdMember"], row["DocTipo"], row["DocNum"]))
 
     # Retornar listas únicas
     return {i: list(set(j)) for i, j in upd.items()}
