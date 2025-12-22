@@ -166,6 +166,15 @@ def stop_vpn():
     time.sleep(0.5)
 
 
+def switch_vpn(current):
+    """
+    Stops all running OpenVPN processes.
+    Requires sudo privileges.
+    """
+    stop_vpn()
+    return start_vpn(pais="ar" if current == "pe" else "pe")
+
+
 def get_public_ip():
     """
     Prints the current public IPv4 address.
