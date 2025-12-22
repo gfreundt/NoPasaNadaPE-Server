@@ -179,14 +179,11 @@ def get_public_ip():
     """
     Prints the current public IPv4 address.
     """
-    result = subprocess.run(
-        ["/usr/bin/curl", "-4", "-s", "ifconfig.me"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
 
-    result.stdout.strip()
+    response = requests.get("https://api.apify.com/v2/browser-info")
+    data = response.json()
+
+    return data["clientIp"]
 
 
 def vpn_online():
