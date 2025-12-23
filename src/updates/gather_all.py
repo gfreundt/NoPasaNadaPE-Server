@@ -28,6 +28,12 @@ from src.updates import (
 
 def gather_threads(dash, all_updates):
 
+    if dash.scrapers_corriendo:
+        dash.log(action="[ SCRAPERS ] No activado. Otra instancia corriendo.")
+        return
+
+    dash.scrapers_corriendo = True
+
     # # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
     # from src.test.test_data import get_test_data
     # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
@@ -35,7 +41,6 @@ def gather_threads(dash, all_updates):
 
     # log change of dashboard status
     dash.log(general_status=("Activo", 1))
-    dash.scrapers_corriendo = True
 
     lock = Lock()
     vpn_pe_threads = []
