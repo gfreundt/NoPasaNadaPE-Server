@@ -52,7 +52,7 @@ def send(db):
             }
 
             # armar correos en bulk
-            resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=True)
+            resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=False)
             rpta.append(1 if resp_zeptomail else 0)
 
             # actualiza base de datos indicando que siguiente mensaje es en un mes
