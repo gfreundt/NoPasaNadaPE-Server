@@ -45,7 +45,7 @@ class Dashboard:
         self.siguiente_autoscraper = dt.now() + td(minutes=5)
         self.scrapers_corriendo = False
 
-        self.ip_original = get_public_ip()
+        self.ip_original, _ = get_public_ip()
 
         _empty_card = {
             "title": "No Asignado",

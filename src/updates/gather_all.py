@@ -213,7 +213,7 @@ def gather_threads(dash, all_updates):
             return 0
 
         ip, pa = get_public_ip()
-        dash.log(action="Nuevo IP: " + {ip}[{pa}])
+        dash.log(action="Nuevo IP: " + f"{ip} [{pa}]")
 
         with lock:
             dash.data["scrapers_kpis"].update(
