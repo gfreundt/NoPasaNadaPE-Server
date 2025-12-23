@@ -7,7 +7,7 @@ AUTOSCRAPER_REPETICIONES = 3
 
 
 IPS_CONOCIDOS = {
-    "AR": [],
+    "AR": ["89.117.41.84"],
     "PE": ["95.173.223.116"],
     "US": ["72.60.155.196"],
 }

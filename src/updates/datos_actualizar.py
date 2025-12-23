@@ -199,7 +199,7 @@ def boletines(self):
     UNION ALL
 
     -- 8. RECVEHIC (Usa TargetUsers)
-    SELECT 'DataMtcRevisionesTecnicas', u.IdMember, u.DocTipo, u.DocNum, NULL
+    SELECT 'DataMtcRecordsConductores', u.IdMember, u.DocTipo, u.DocNum, NULL
     FROM TargetUsers u
     WHERE u.DocTipo = 'DNI'
       AND u.IdMember NOT IN (
@@ -251,6 +251,9 @@ def boletines(self):
     # Retornar listas únicas
     print({i: list(set(j)) for i, j in upd.items()})
     return {i: list(set(j)) for i, j in upd.items()}
+
+    # alternativa si siguen los None
+    return {i: list(set(val for val in j if val is not None)) for i, j in upd.items()}
 
     # DEBUG
     return {
