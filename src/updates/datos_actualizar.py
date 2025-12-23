@@ -249,15 +249,17 @@ def boletines(self):
             upd[key].append((row["IdMember_FK"], row["DocTipo"], row["DocNum"]))
 
     # Retornar listas únicas
-    # return {i: list(set(j)) for i, j in upd.items()}
-    return {
-        "DataMtcBrevetes": [],
-        "DataApesegSoats": [],
-        "DataMtcRevisionesTecnicas": [],
-        "DataSunarpFichas": [],
-        "DataSatImpuestos": [],
-        "DataSatMultas": [],
-        "DataSutranMultas": [],
-        "DataMtcRecordsConductores": [(8, "DNI", "10059264")],
-        "DataCallaoMultas": [],
-    }
+    return {i: list(set(j)) for i, j in upd.items()}
+
+    # DEBUG
+    # return {
+    #     "DataMtcBrevetes": [],
+    #     "DataApesegSoats": [],
+    #     "DataMtcRevisionesTecnicas": [],
+    #     "DataSunarpFichas": [],
+    #     "DataSatImpuestos": [],
+    #     "DataSatMultas": [],
+    #     "DataSutranMultas": [],
+    #     "DataMtcRecordsConductores": [(8, "DNI", "10059264")],
+    #     "DataCallaoMultas": [],
+    # }
