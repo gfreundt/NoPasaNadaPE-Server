@@ -159,12 +159,12 @@ def boletines(self):
     UNION ALL
 
     -- 4. SUNARPS (Usa TargetPlacas)
-    SELECT 'DataSunarpFichas', NULL, NULL, NULL, p.Placa
-    FROM TargetPlacas p
-    WHERE p.Placa NOT IN (
-          SELECT Placa FROM InfoPlacas 
-          WHERE LastUpdateSunarpFichas >= datetime('now','localtime', '-{SUNARP_DAYS} days')
-      )
+    -- SELECT 'DataSunarpFichas', NULL, NULL, NULL, p.Placa
+    -- FROM TargetPlacas p
+    -- WHERE p.Placa NOT IN (
+    --      SELECT Placa FROM InfoPlacas 
+    --      WHERE LastUpdateSunarpFichas >= datetime('now','localtime', '-{SUNARP_DAYS} days')
+    --  )
 
     UNION ALL
 
