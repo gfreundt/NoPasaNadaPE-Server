@@ -20,7 +20,7 @@ def send(db):
     )
 
     # procesar contenido de cada archivo de pendientes por separado
-    respuesta = {}
+    respuesta = []
     for pendiente in ("boletines_pendientes.json", "alertas_pendientes.json"):
 
         if "boletines" in pendiente:
@@ -75,6 +75,7 @@ def send(db):
                 os.path.join(NETWORK_PATH, "outbound", nuevo_nombre),
             )
 
-        respuesta.update({tipo_mensaje: len(data)})
+        # cuenta de boletines y alertas enviadas (en ese orden)
+        respuesta.append(len(data))
 
     return respuesta

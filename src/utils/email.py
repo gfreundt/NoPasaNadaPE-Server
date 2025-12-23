@@ -101,8 +101,6 @@ class Email:
         else:
 
             response_message = "OK"
-            pprint(headers)
-            pprint(payload)
 
         # responder True si ok con la progrmacion de envio del mensaje
         return response_message == "OK"

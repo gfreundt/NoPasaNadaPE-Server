@@ -30,7 +30,7 @@ def flujo(self, tipo_mensaje):
 
         # reportar en dashboard
         self.log(
-            action=f"[ ACTUALIZACION {tipo_mensaje.upper()}] Tamaño: {tamano_actualizacion} kB",
+            action=f"[ ACT {tipo_mensaje.upper()}] Data: {tamano_actualizacion} kB",
         )
 
         # aumentar contador de repeticiones, si excede limite parar
@@ -52,25 +52,36 @@ def main(self, tipo_mensaje):
 
     # no activar si el switch de autoscraper esta apagado
     if not self.config_autoscraper:
-        self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] OFFLINE")
+        self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] OFFLINE")
         return
 
     # procesar alertas/boletines
-    exito, falto = flujo(self, tipo_mensaje=tipo_mensaje)
+    exito, fallo = flujo(self, tipo_mensaje=tipo_mensaje)
 
     if exito:
-        # generar y enviar mensajes
-        generar_mensajes.alertas(db=self.db)
-        generar_mensajes.boletines(db=self.db)
+        # generar mensajes
+        a = generar_mensajes.alertas(db=self.db)
+        if a > 0:
+            self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] Generado A: {a}")
+        b = generar_mensajes.boletines(db=self.db)
+        if b > 0:
+            self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] Generado B: {b}")
 
-        enviar_correo_mensajes.send(db=self.db)
+        # enviar mensajes
+        b, a = enviar_correo_mensajes.send(db=self.db)
+        if a > 0:
+            self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] Enviado A: {a}")
+        if b > 0:
+            self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] Enviado B: {b}")
         if self.config_enviar_pushbullet:
-            enviar_notificacion(mensaje="Nuevos mensajes enviados")
+            enviar_notificacion(
+                mensaje=f"Nuevos mensajes enviados. ALERTAS: {a}. BOLETINES: {b}"
+            )
 
         # informar proceso completo y volver
-        self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] OK")
+        self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] OK")
         return
 
     # informar proceso no puedo terminar
     enviar_notificacion(mensaje="Error en Scraping!!")
-    self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] NO TERMINO por {falto}")
+    self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] ERROR {fallo}")

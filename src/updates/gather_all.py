@@ -267,7 +267,7 @@ def gather_threads(dash, all_updates):
     do_updates.main(db=dash.db, data=full_response)
 
     # devuelve dato del tamaño de los datos actualizados en Kb (solo referencia)
-    return f"{len(json.dumps(full_response).encode("utf-8")) / 1024:.3f}"
+    return f"{len(json.dumps(full_response).encode("utf-8")) / 1024:1f}"
 
 
 def manage_sub_threads(

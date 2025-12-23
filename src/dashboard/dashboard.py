@@ -164,7 +164,7 @@ class Dashboard:
         )
 
         self.log(
-            action=f"[ ACTUALIZACION BOLETINES ] Tamaño: {tamano_actualizacion} kB",
+            action=f"[ ACT BOLETINES ] Data: {tamano_actualizacion} kB",
         )
         return redirect(url_for("dashboard"))
 

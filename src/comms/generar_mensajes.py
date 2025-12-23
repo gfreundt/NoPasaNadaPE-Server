@@ -6,9 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.comms import redactar_mensaje
 from src.utils.constants import NETWORK_PATH, MESES_NOMBRE_COMPLETO
-from src.utils.utils import date_to_mail_format
-from src.maintenance import maintenance
-from src.updates import datos_actualizar, necesitan_mensajes
+from src.updates import necesitan_mensajes
 
 
 def alertas(db):
@@ -49,7 +47,7 @@ def alertas(db):
     with open(path, "w", encoding="utf-8") as file:
         json.dump(alertas, file, indent=4)
 
-    return [i["html"] for i in alertas]
+    return len(alertas)
 
 
 def boletines(db):
@@ -85,7 +83,7 @@ def boletines(db):
     with open(path, "w", encoding="utf-8") as file:
         json.dump(boletines, file, indent=4)
 
-    return [i["html"] for i in boletines]
+    return len(boletines)
 
 
 def obtener_datos_boletin(cursor, IdMember, template, subject, alertas, correo):
