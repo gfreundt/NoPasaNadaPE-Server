@@ -139,7 +139,7 @@ def gather_threads(dash, all_updates):
         )
 
     # fichas sunarp
-    if all_updates.get("DataSunarpFichas"):
+    if False:  # all_updates.get("DataSunarpFichas"):
         vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
