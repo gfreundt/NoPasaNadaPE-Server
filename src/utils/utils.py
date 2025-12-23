@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 import fcntl
 
 
-from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH
+from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS
 from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_API_KEY
 
 # --- GUNICORN ---
@@ -151,7 +151,7 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
         return False
 
     time.sleep(2)
-    return vpn_online(ip_original)
+    return True  # vpn_online(ip_original)
 
 
 def stop_vpn():
@@ -172,11 +172,13 @@ def get_public_ip():
     """
     try:
         response = requests.get("https://api.apify.com/v2/browser-info")
-        data = response.json()
+        ip = response.json()["clientIp"].strip()
+        pais = next((code for code, ips in IPS_CONOCIDOS.items() if ip in ips), "")
 
-        return data["clientIp"].strip()
+        return ip, pais
+
     except Exception:
-        return ""
+        return "", ""
 
 
 def vpn_online(ip_original):

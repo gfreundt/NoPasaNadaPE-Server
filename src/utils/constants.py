@@ -1,6 +1,15 @@
 import os
 import platform
 
+# administrables
+GATHER_ITERATIONS = 4
+AUTOSCRAPER_REPETICIONES = 3
+
+
+IPS_CONOCIDOS = {
+    "AR": [],
+    "PE": [],
+}
 
 # paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -182,6 +191,3 @@ MTC_CAPTCHAS = {
     "timon": 31,
     "zapato": 32,
 }
-
-GATHER_ITERATIONS = 5
-AUTOSCRAPER_REPETICIONES = 3

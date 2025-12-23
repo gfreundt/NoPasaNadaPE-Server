@@ -210,9 +210,10 @@ def gather_threads(dash, all_updates):
         exito = start_vpn(dash.ip_original, pais)
         if not exito:
             dash.log(action="Failed VPN")
-            return
+            return 0
 
-        dash.log(action="Nuevo IP: " + get_public_ip())
+        ip, pa = get_public_ip()
+        dash.log(action="Nuevo IP: " + {ip}[{pa}])
 
         with lock:
             dash.data["scrapers_kpis"].update(
