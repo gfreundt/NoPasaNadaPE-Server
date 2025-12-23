@@ -113,7 +113,7 @@ def get_local_ip():
     return s.getsockname()[0]
 
 
-def start_vpn(pais="pe", con_tipo="udp"):
+def start_vpn(ip_original, pais="pe", con_tipo="udp"):
     """
     Starts the OpenVPN connection in daemon mode.
     Requires sudo privileges.
@@ -166,15 +166,6 @@ def stop_vpn():
     time.sleep(0.5)
 
 
-def switch_vpn(current):
-    """
-    Stops all running OpenVPN processes.
-    Requires sudo privileges.
-    """
-    stop_vpn()
-    return start_vpn(pais="ar" if current == "pe" else "pe")
-
-
 def get_public_ip():
     """
     Prints the current public IPv4 address.
@@ -183,22 +174,13 @@ def get_public_ip():
         response = requests.get("https://api.apify.com/v2/browser-info")
         data = response.json()
 
-        return data["clientIp"]
-    except:
+        return data["clientIp"].strip()
+    except Exception:
         return ""
 
 
-def vpn_online():
-    """
-    Returns True if an OpenVPN process is running, False otherwise.
-    """
-    result = subprocess.run(
-        ["/usr/bin/pgrep", "-x", "openvpn"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-    return result.returncode == 0
+def vpn_online(ip_original):
+    return get_public_ip() == ip_original
 
 
 # ---- DATA TRANSFORMATION -----

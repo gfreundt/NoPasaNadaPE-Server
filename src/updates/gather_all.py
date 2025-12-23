@@ -7,7 +7,7 @@ import queue
 from threading import Thread, Lock
 from src.server import do_updates
 from src.utils.constants import NETWORK_PATH, GATHER_ITERATIONS
-from src.utils.utils import vpn_online, start_vpn, stop_vpn, get_public_ip
+from src.utils.utils import start_vpn, stop_vpn, get_public_ip
 
 
 # local imports
@@ -207,7 +207,7 @@ def gather_threads(dash, all_updates):
             continue
 
         # inicia la VPN en el pais que corresponde
-        exito = start_vpn(pais)
+        exito = start_vpn(dash.ip_original, pais)
         if not exito:
             dash.log(action="Failed VPN")
             return
