@@ -151,7 +151,7 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
         return False
 
     time.sleep(2)
-    return vpn_online()
+    return vpn_online(ip_original)
 
 
 def stop_vpn():
