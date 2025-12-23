@@ -22,7 +22,7 @@ def flujo(self, tipo_mensaje):
         # si ya no hay actualizaciones pendientes, regresar True
         print("*************", pendientes)
         if all([len(j) == 0 for j in pendientes.values()]):
-            return True
+            return True, None
 
         # realizar scraping
         tamano_actualizacion = gather_all.gather_threads(
@@ -37,7 +37,7 @@ def flujo(self, tipo_mensaje):
         # aumentar contador de repeticiones, si excede limite parar
         repetir += 1
         if repetir > AUTOSCRAPER_REPETICIONES:
-            return False
+            return False, pendientes
 
         # reintentar scraping
         time.sleep(3)
@@ -57,7 +57,7 @@ def main(self, tipo_mensaje):
         return
 
     # procesar alertas/boletines
-    exito = flujo(self, tipo_mensaje=tipo_mensaje)
+    exito, falto = flujo(self, tipo_mensaje=tipo_mensaje)
 
     if exito:
         # generar y enviar mensajes
@@ -74,4 +74,4 @@ def main(self, tipo_mensaje):
 
     # informar proceso no puedo terminar
     enviar_notificacion(mensaje="Error en Scraping!!")
-    self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] NO TERMINO.")
+    self.log(action=f"[ AUTOSCRAPER {tipo_mensaje.upper()} ] NO TERMINO por {falto}")
