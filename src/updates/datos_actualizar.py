@@ -166,7 +166,7 @@ def boletines(self):
     --      WHERE LastUpdateSunarpFichas >= datetime('now','localtime', '-{SUNARP_DAYS} days')
     --  )
 
-    UNION ALL
+    -- UNION ALL
 
     -- 5. SATIMPS (Usa TargetUsers)
     SELECT 'DataSatImpuestos', u.IdMember, u.DocTipo, u.DocNum, NULL
