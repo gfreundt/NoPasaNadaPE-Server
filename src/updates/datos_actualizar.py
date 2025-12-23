@@ -224,13 +224,14 @@ def boletines(self):
         "DataMtcBrevetes": [],
         "DataApesegSoats": [],
         "DataMtcRevisionesTecnicas": [],
-        "DataSunarpFichas": [],
         "DataSatImpuestos": [],
         "DataSatMultas": [],
         "DataSutranMultas": [],
         "DataMtcRecordsConductores": [],
         "DataCallaoMultas": [],
     }
+
+    #    "DataSunarpFichas": [],
 
     cursor.execute(query)
 
@@ -239,11 +240,10 @@ def boletines(self):
         if key in [
             "DataApesegSoats",
             "DataMtcRevisionesTecnicas",
-            "DataSunarpFichas",
             "DataSatMultas",
             "DataSutranMultas",
             "DataCallaoMultas",
-        ]:
+        ]:  # "DataSunarpFichas",
             upd[key].append(row["Placa"])
         else:
             upd[key].append((row["IdMember_FK"], row["DocTipo"], row["DocNum"]))
@@ -256,10 +256,11 @@ def boletines(self):
         "DataMtcBrevetes": [],
         "DataApesegSoats": [],
         "DataMtcRevisionesTecnicas": ["GTY111"],
-        "DataSunarpFichas": [],
         "DataSatImpuestos": [],
         "DataSatMultas": [],
         "DataSutranMultas": [],
         "DataMtcRecordsConductores": [],
         "DataCallaoMultas": [],
     }
+
+    # "DataSunarpFichas": [],
