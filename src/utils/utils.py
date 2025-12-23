@@ -180,7 +180,7 @@ def get_public_ip():
 
 
 def vpn_online(ip_original):
-    return get_public_ip() == ip_original
+    return get_public_ip() != ip_original
 
 
 # ---- DATA TRANSFORMATION -----
