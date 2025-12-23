@@ -8,7 +8,8 @@ AUTOSCRAPER_REPETICIONES = 3
 
 IPS_CONOCIDOS = {
     "AR": [],
-    "PE": [],
+    "PE": ["95.173.223.116"],
+    "US": ["72.60.155.196"],
 }
 
 # paths

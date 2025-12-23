@@ -249,6 +249,7 @@ def boletines(self):
             upd[key].append((row["IdMember_FK"], row["DocTipo"], row["DocNum"]))
 
     # Retornar listas únicas
+    print({i: list(set(j)) for i, j in upd.items()})
     return {i: list(set(j)) for i, j in upd.items()}
 
     # DEBUG
