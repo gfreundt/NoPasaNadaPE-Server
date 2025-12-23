@@ -30,9 +30,8 @@ def gather_threads(dash, all_updates):
 
     # # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
     # from src.test.test_data import get_test_data
-
-    # # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
-    # all_updates = get_test_data([0, 0, 0, 0, 0, 1, 0, 0, 0])
+    # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
+    # all_updates = get_test_data([0, 0, 2, 0, 0, 0, 0, 0, 0])
 
     # log change of dashboard status
     dash.log(general_status=("Activo", 1))

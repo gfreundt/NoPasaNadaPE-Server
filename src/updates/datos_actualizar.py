@@ -252,14 +252,14 @@ def boletines(self):
     return {i: list(set(j)) for i, j in upd.items()}
 
     # DEBUG
-    # return {
-    #     "DataMtcBrevetes": [],
-    #     "DataApesegSoats": [],
-    #     "DataMtcRevisionesTecnicas": [],
-    #     "DataSunarpFichas": [],
-    #     "DataSatImpuestos": [],
-    #     "DataSatMultas": [],
-    #     "DataSutranMultas": [],
-    #     "DataMtcRecordsConductores": [(8, "DNI", "10059264")],
-    #     "DataCallaoMultas": [],
-    # }
+    return {
+        "DataMtcBrevetes": [],
+        "DataApesegSoats": [],
+        "DataMtcRevisionesTecnicas": ["GTY111"],
+        "DataSunarpFichas": [],
+        "DataSatImpuestos": [],
+        "DataSatMultas": [],
+        "DataSutranMultas": [],
+        "DataMtcRecordsConductores": [],
+        "DataCallaoMultas": [],
+    }

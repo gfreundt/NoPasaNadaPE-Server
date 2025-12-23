@@ -60,6 +60,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             [13, "DNI", "10805548"],
         ],
         "revtecs": [
+            "GZZ999",
             "D8R344",
             "BYE045",
             "0050PC",

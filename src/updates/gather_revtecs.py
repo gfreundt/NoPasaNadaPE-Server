@@ -124,18 +124,18 @@ def gather(
         except KeyboardInterrupt:
             quit()
 
-        except Exception as e:
-            # devolver registro a la cola para que otro thread lo complete
-            if record_item is not None:
-                queue_update_data.put(record_item)
+        # except Exception as e:
+        #     # devolver registro a la cola para que otro thread lo complete
+        #     if record_item is not None:
+        #         queue_update_data.put(record_item)
 
-            # actualizar dashboard
-            dash.log(
-                card=card,
-                text=f"Crash (Gather): {str(e)[:55]}",
-                status=2,
-            )
-            break
+        #     # actualizar dashboard
+        #     dash.log(
+        #         card=card,
+        #         text=f"Crash (Gather): {str(e)[:55]}",
+        #         status=2,
+        #     )
+        #     break
 
     # sacar worker de lista de activos cerrar driver
     dash.assigned_cards.remove(card)
