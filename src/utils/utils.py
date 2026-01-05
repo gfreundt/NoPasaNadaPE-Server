@@ -25,7 +25,7 @@ def is_master_worker(db):
     if LOCAL:
         return True
     
-    lock_path = "/tmp/dashboard_init.lock"
+    lock_path = os.path.join(NETWORK_PATH,"dashboard_init.lock")
     db._lock_file_handle = open(lock_path, "a")
 
     try:
