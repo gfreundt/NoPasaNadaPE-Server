@@ -234,14 +234,23 @@ class Dashboard:
 
     def db_info(self):
         cursor = self.db.cursor()
+        
+        # obtener info de autorizados
+        cursor.execute("SELECT * FROM InfoMiembrosAutorizados")
+        n = cursor.fetchall()
+        n = [dict(row) for row in n]
+
+        # obtener info de miembros
         cursor.execute("SELECT * FROM InfoMiembros")
         m = cursor.fetchall()
         m = [dict(row) for row in m]
+
+        # obtener info de placas
         cursor.execute("SELECT * FROM InfoPlacas")
         p = cursor.fetchall()
         p = [dict(row) for row in p]
 
-        return jsonify({"miembros": m, "placas": p})
+        return jsonify({"miembros": m, "placas": p, "autorizados": n})
 
     def toggle_config(self):
         """

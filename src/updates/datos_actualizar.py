@@ -70,8 +70,7 @@ def alertas(self):
     cursor.execute(query)
     results = cursor.fetchall()
 
-    # upd = {"soats": [], "revtecs": [], "brevetes": [], "satimps": []}
-    upd = {}
+    upd = {"DataMtcBrevetes": [], "DataApesegSoats": [], "DataMtcRevisionesTecnicas": [], "DataSatImpuestos": []}
 
     for row in results:
         tipo = row[0]
