@@ -22,6 +22,7 @@ from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_
 
 
 def is_master_worker(db):
+    print("LOCAL",LOCAL)
     if LOCAL:
         return True
     
