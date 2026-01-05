@@ -2,7 +2,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
 
     # brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans
     complete = {
-        "brevetes": [
+        "DataMtcBrevetes": [
             [87, "DNI", "10612549"],
             [72, "DNI", "09337563"],
             [109, "DNI", "42933662"],
@@ -18,7 +18,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             [71, "DNI", "06669206"],
             [13, "DNI", "10805548"],
         ],
-        "recvehic": [
+        "DataMtcRecordsConductores": [
             [110, "DNI", "07885907"],
             [117, "DNI", "70367577"],
             [74, "DNI", "43568034"],
@@ -59,7 +59,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             [71, "DNI", "06669206"],
             [13, "DNI", "10805548"],
         ],
-        "revtecs": [
+        "DataMtcRevisionesTecnicas": [
             "GZZ999",
             "D8R344",
             "BYE045",
@@ -88,7 +88,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "CFV251",
             "CJP227",
         ],
-        "satimps": [
+        "DataSatImpuestos": [
             [110, "DNI", "07885907"],
             [117, "DNI", "70367577"],
             [74, "DNI", "43568034"],
@@ -131,7 +131,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             [71, "DNI", "06669206"],
             [13, "DNI", "10805548"],
         ],
-        "satmuls": [
+        "DataSatMultas": [
             "BAH829",
             "BMY249",
             "96128D",
@@ -189,7 +189,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "D2P043",
             "ABE144",
         ],
-        "soats": [
+        "DataApesegSoats": [
             "2603QC",
             "AHN426",
             "BFL411",
@@ -209,7 +209,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "B2Y297",
             "CHO571",
         ],
-        "sunarps": [
+        "DataSunarpFichas": [
             "CRN441",
             "D8R344",
             "B5L097",
@@ -226,7 +226,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "ARD503",
             "AHN426",
         ],
-        "sutrans": [
+        "DataSutranMultas": [
             "BAH829",
             "BMY249",
             "96128D",
@@ -284,7 +284,7 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "D2P043",
             "ABE144",
         ],
-        "calmul": [
+        "DataCallaoMultas": [
             "D8R344",
             "BYE045",
             "0050PC",

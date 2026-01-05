@@ -34,10 +34,12 @@ def gather_threads(dash, all_updates):
 
     dash.scrapers_corriendo = True
 
-    # # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
+    # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
     # from src.test.test_data import get_test_data
     # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
     # all_updates = get_test_data([0, 0, 2, 0, 0, 0, 0, 0, 0])
+
+    print(all_updates)
 
     # log change of dashboard status
     dash.log(general_status=("Activo", 1))
@@ -207,6 +209,8 @@ def gather_threads(dash, all_updates):
         )
 
     for thread_group, pais in zip((vpn_pe_threads, vpn_ar_threads), ("pe", "ar")):
+
+        # print(thread_group, pais)
 
         if not thread_group:
             continue

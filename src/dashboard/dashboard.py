@@ -234,9 +234,9 @@ class Dashboard:
 
     def db_info(self):
         cursor = self.db.cursor()
-        
+
         # obtener info de autorizados
-        cursor.execute("SELECT * FROM InfoMiembrosAutorizados")
+        cursor.execute("SELECT * FROM InfoClientesAutorizados")
         n = cursor.fetchall()
         n = [dict(row) for row in n]
 

@@ -3,11 +3,11 @@ import platform
 
 # administrables
 GATHER_ITERATIONS = 4
-AUTOSCRAPER_REPETICIONES = 3
+AUTOSCRAPER_REPETICIONES = 1
 
 
 IPS_CONOCIDOS = {
-    "AR": ["89.117.41.84", "89.117.41.116", "89.117.41.164"],
+    "AR": ["89.117.41.84", "89.117.41.116", "89.117.41.164","89.117.41.52"],
     "PE": ["95.173.223.116", "95.173.223.114"],
     "US": ["72.60.155.196"],
 }
@@ -23,7 +23,6 @@ if platform.system() == "Linux":
     elif platform.node() == "nopasanada-server":
         NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
     else:
-
         if "-dev" in BASE_DIR:
             NETWORK_PATH = "/var/www/nopasanadape-dev/app"
         else:
@@ -42,6 +41,8 @@ else:
     NETWORK_PATH = os.path.join("/var", "www", "app")
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
+
+LOCAL = ("Salita-TV" in platform.node())
 
 # 3-letter months
 MONTHS_3_LETTERS = (
@@ -107,8 +108,8 @@ HEADLESS = {
     "jnemulta": True,
     "osiptel": True,
     "satmul": True,
-    "recvehic": True,
-    "revtec": True,
+    "recvehic": False,
+    "revtec": False,
     "sunarp": False,
     "sunat": True,
     "sutran": True,

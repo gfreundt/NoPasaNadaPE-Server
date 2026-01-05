@@ -15,13 +15,16 @@ from selenium.webdriver.common.by import By
 import fcntl
 
 
-from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS
+from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS, LOCAL
 from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_API_KEY
 
 # --- GUNICORN ---
 
 
 def is_master_worker(db):
+    if LOCAL:
+        return True
+    
     lock_path = "/tmp/dashboard_init.lock"
     db._lock_file_handle = open(lock_path, "a")
 
@@ -122,36 +125,38 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
 
     vpn_location = "pe-lim" if pais.lower() == "pe" else "ar-bua"
 
-    try:
-        if "/var/www" in NETWORK_PATH:
-            subprocess.run(
-                [
+    cmd = [
                     "/usr/sbin/openvpn",
                     "--config",
                     rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
                     "--daemon",
-                ],
+                ]
+
+    try:
+        subprocess.run(
+                cmd,
                 text=True,
                 check=True,
             )
-        else:
-            subprocess.run(
-                [
-                    "sudo",
-                    "openvpn",
-                    "--config",
-                    rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
-                    "--daemon",
-                ],
-                text=True,
-                check=True,
-            )
+        
 
     except subprocess.CalledProcessError:
         return False
+    
+    if not vpn_online(ip_original):
+
+        try:
+            subprocess.run(["sudo"] + cmd,
+                    text=True,
+                    check=True,
+                )
+        
+
+        except subprocess.CalledProcessError:
+            return False
 
     time.sleep(2)
-    return True  # vpn_online(ip_original)
+    return vpn_online(ip_original)
 
 
 def stop_vpn():
@@ -159,11 +164,11 @@ def stop_vpn():
     Stops all running OpenVPN processes.
     Requires sudo privileges.
     """
-    if "/var/www" in NETWORK_PATH:
+    if not LOCAL:
         subprocess.run(["/usr/bin/pkill", "openvpn"], check=False)
     else:
-        subprocess.run(["sudo", "pkill", "openvpn"], check=False)
-    time.sleep(0.5)
+        subprocess.run(["sudo","pkill", "openvpn"], check=False)
+    time.sleep(1.5)
 
 
 def get_public_ip():
@@ -182,7 +187,8 @@ def get_public_ip():
 
 
 def vpn_online(ip_original):
-    return get_public_ip() != ip_original
+
+    return get_public_ip()[0] != ip_original
 
 
 # ---- DATA TRANSFORMATION -----
