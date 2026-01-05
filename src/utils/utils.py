@@ -143,17 +143,17 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
     except subprocess.CalledProcessError:
         return False
     
-    if not vpn_online(ip_original):
+    # if not vpn_online(ip_original):
 
-        try:
-            subprocess.run(["sudo"] + cmd,
-                    text=True,
-                    check=True,
-                )
+    #     try:
+    #         subprocess.run(["sudo"] + cmd,
+    #                 text=True,
+    #                 check=True,
+    #             )
         
 
-        except subprocess.CalledProcessError:
-            return False
+    #     except subprocess.CalledProcessError:
+    #         return False
 
     time.sleep(2)
     return vpn_online(ip_original)
