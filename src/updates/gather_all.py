@@ -53,7 +53,7 @@ def gather_threads(dash, all_updates):
 
     # records vehiculares
     if all_updates.get("DataMtcRecordsConductores"):
-        vpn_ar_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
@@ -69,7 +69,7 @@ def gather_threads(dash, all_updates):
 
     # brevetes
     if all_updates.get("DataMtcBrevetes"):
-        vpn_ar_threads.append(
+        vpn_pe_threads.append(
             Thread(
                 target=manage_sub_threads,
                 args=(
