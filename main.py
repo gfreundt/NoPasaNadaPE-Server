@@ -4,7 +4,8 @@ from flask import Flask
 
 from src.server import server
 from src.dashboard import dashboard
-from src.utils.constants import NETWORK_PATH, DASHBOARD_URL
+from src.utils.constants import NETWORK_PATH
+from security.keys import DASHBOARD_URL
 from src.utils.utils import get_local_ip, is_master_worker
 
 logging.getLogger("werkzeug").disabled = True

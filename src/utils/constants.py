@@ -39,6 +39,8 @@ elif platform.system() == "Windows":
     )
 else:
     NETWORK_PATH = os.path.join("/var", "www", "app")
+    
+print("Network Path:", NETWORK_PATH)
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
 
@@ -145,8 +147,6 @@ SCRAPER_TIMEOUT = {
     "sutrans": 60,
     "calmul": 90,
 }
-
-DASHBOARD_URL = "cc1c667091b8GWe8JawqlOEkY11af6ff2e"
 
 # aseguradora info
 ASEGURADORAS = {

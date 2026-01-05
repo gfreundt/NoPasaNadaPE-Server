@@ -7,6 +7,8 @@ from datetime import datetime as dt
 
 
 def flujo(self, tipo_mensaje):
+    
+    print("flujo!!", tipo_mensaje)
 
     # intentar una cantidad de veces actualizar el 100% de pendientes
     repetir = 0

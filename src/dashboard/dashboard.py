@@ -11,7 +11,7 @@ from src.updates import gather_all
 from src.updates import datos_actualizar
 from src.comms import generar_mensajes, enviar_correo_mensajes
 from src.utils.utils import get_public_ip, get_local_ip
-from src.utils.constants import DASHBOARD_URL
+from security.keys import DASHBOARD_URL
 
 from pprint import pprint
 

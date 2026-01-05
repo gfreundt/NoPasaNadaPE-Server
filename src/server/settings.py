@@ -193,7 +193,7 @@ def set_server_routes(self):
 def set_dash_routes(self):
     # -------- URL DE INGRESO --------
     self.app.add_url_rule(
-        DASHBOARD_URL,
+        f"/{DASHBOARD_URL}",
         endpoint="dashboard",
         view_func=self.dash.dashboard,
     )
