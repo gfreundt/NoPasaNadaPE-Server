@@ -12,7 +12,6 @@ def main(self):
     solicitud = (request.args.get("solicitud") or "").lower()
     correo = request.args.get("correo")
     payload = request.get_json()
-    print("ppppppp", payload)
 
     if token != INTERNAL_AUTH_TOKEN:
         return jsonify("Error en Token de Autorizacion."), 401
