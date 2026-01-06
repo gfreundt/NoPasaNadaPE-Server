@@ -1,6 +1,7 @@
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -19,16 +20,23 @@ def browser_wrapper(doc_num, webdriver):
 def browser(doc_num, webdriver):
 
     # abrir url
+
     url = "https://licencias.mtc.gob.pe/#/index"
     if webdriver.current_url != url:
-        webdriver.get(url)
+        webdriver.set_page_load_timeout(10)
+        try:
+            webdriver.get(url)
+        except TimeoutException:
+            webdriver.execute_script("window.stop();")
         time.sleep(2)
+
     else:
         webdriver.refresh()
 
     # esperar a que boton de cerrar pop-up se active (max 15 segundos)
     popup_btn, k = [], 0
     while not popup_btn and k < 30:
+
         popup_btn = webdriver.find_elements(
             By.XPATH,
             "/html/body/div/div[2]/div/mat-dialog-container/app-popupanuncio/div/mat-dialog-actions/button",
@@ -41,11 +49,14 @@ def browser(doc_num, webdriver):
         return "No Se Pudo Continuar de Pop-Up de Inicio"
 
     # hacer click en boton
-    popup_btn[0].click()
+    webdriver.execute_script("arguments[0].click();", popup_btn[0])
+    time.sleep(1)
 
     # ingresar documento
     webdriver.find_element(By.ID, "mat-input-0").send_keys(doc_num)
     time.sleep(1)
+
+    time.sleep(20)
 
     # click on "Si, acepto"
     checkbox = webdriver.find_element(By.ID, "mat-checkbox-2-input")
