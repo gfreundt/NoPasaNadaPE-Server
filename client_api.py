@@ -30,7 +30,20 @@ def get_pendientes(url):
         params={
             "token": INTERNAL_AUTH_TOKEN,
             "solicitud": "get_pendientes",
-        },json={}
+        },
+        json={},
+    )
+
+
+def get_faltan(url):
+
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "get_faltan",
+        },
+        json={},
     )
 
 
@@ -134,7 +147,7 @@ def kill_prueba(url, correo):
 
 url = "https://dev.nopasanadape.com"  # DEV
 url = "http://localhost:5000"  # TEST
-url="https://nopasanadape.com"  # PROD
+# url = "https://nopasanadape.com"  # PROD
 args = sys.argv
 
 if len(args) < 2:
@@ -172,4 +185,8 @@ if args[1] == "PEND":
 
 if args[1] == "UPLOAD":
     f = manual_upload(url)
+    pprint(json.loads(f.content.decode()))
+
+if args[1] == "FALTAN":
+    f = get_faltan(url)
     pprint(json.loads(f.content.decode()))
