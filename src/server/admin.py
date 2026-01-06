@@ -65,9 +65,42 @@ def main(self):
         return jsonify(boletines(cursor)), 200
 
     if solicitud == "manual_upload":
-        print(payload)
         do_updates.main(self.db, payload)
         return jsonify("Actualizado."), 200
+
+    if solicitud == "get_faltan":
+        cmd = """   SELECT DocTipo, DocNum, Correo FROM InfoMiembros
+                    WHERE IdMember NOT IN (SELECT IdMember_FK FROM DataMtcBrevetes)"""
+        cursor.execute(cmd)
+        faltan = {"DataMtcBrevetes": [tuple(i) for i in cursor.fetchall()]}
+
+        cmd = """   SELECT DocTipo, DocNum, Correo FROM InfoMiembros
+                    WHERE IdMember NOT IN (SELECT IdMember_FK FROM DataMtcRecordsConductores)"""
+        cursor.execute(cmd)
+        faltan.update(
+            {"DataMtcRecordsConductores": [tuple(i) for i in cursor.fetchall()]}
+        )
+
+        cmd = """   SELECT
+                    T1.DocTipo,
+                    T1.DocNum,
+                    T2.Placa,
+                    T1.Correo
+                FROM
+                    InfoMiembros AS T1  -- T1 is InfoMiembros
+                INNER JOIN
+                    InfoPlacas AS T2    -- T2 is InfoPlacas
+                ON
+                    T1.IdMember = T2.IdMember_FK
+                WHERE
+                    T2.Placa NOT IN (SELECT PlacaValidate FROM DataMtcRevisionesTecnicas)
+                    AND T2.IdMember_FK != 0;"""
+        cursor.execute(cmd)
+        faltan.update(
+            {"DataMtcRevisionesTecnicas": [tuple(i) for i in cursor.fetchall()]}
+        )
+
+        return jsonify(faltan), 200
 
     # 3) fallback for unsupported actions
     return jsonify("Error en solicitud."), 400
