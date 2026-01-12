@@ -237,6 +237,7 @@ def gather_threads(dash, all_updates):
         for thread in thread_group:
             thread.start()
             time.sleep(2 * GATHER_ITERATIONS)
+            print("------", thread)
 
         # se queda en esta seccion hasta que todos los threads hayan terminado
         start_time = time.perf_counter()
@@ -314,6 +315,7 @@ def manage_sub_threads(
         while siguiente_trabajador in dash.assigned_cards:
             siguiente_trabajador += 1
         dash.assigned_cards.append(siguiente_trabajador)
+        print("Workers:", dash.assigned_cards)
 
         # crear subthread
         thread = Thread(

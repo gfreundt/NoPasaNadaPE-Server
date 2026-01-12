@@ -138,8 +138,9 @@ def main(self):
             "DataSunarpFichas": placas,
         }
 
-        thread = threading.Thread(target=run_scraper_bg, args=(self.dash, upd))
-        thread.start()
+        gather_all.gather_threads(self.dash, upd)
+        # thread = threading.Thread(target=run_scraper_bg, args=(self.dash, upd))
+        # thread.start()
 
         return jsonify(upd), 200
 
