@@ -1,5 +1,6 @@
 from flask import request, jsonify
 import uuid
+import threading
 
 from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text
@@ -103,9 +104,16 @@ def main(self):
 
         return jsonify(faltan), 200
 
+    # 2. Define a wrapper function to run in the background
+
     if solicitud == "force_update":
 
-        id_member = payload["id_member"]
+        def run_scraper_bg(dash_instance, update_params):
+            gather_all.gather_threads(dash_instance, update_params)
+
+        # 3. Start the thread
+
+        id_member = payload.get("id_member")
 
         cursor.execute(
             "SELECT DocTipo, DocNum FROM InfoMiembros WHERE IdMember = ?", (id_member,)
@@ -130,7 +138,8 @@ def main(self):
             "DataSunarpFichas": placas,
         }
 
-        gather_all.gather_threads(self.dash, upd)
+        thread = threading.Thread(target=run_scraper_bg, args=(self.dash, upd))
+        thread.start()
 
         return jsonify(upd), 200
 
