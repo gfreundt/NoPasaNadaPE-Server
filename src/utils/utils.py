@@ -24,8 +24,8 @@ from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_
 def is_master_worker(db):
     if LOCAL:
         return True
-    
-    lock_path = os.path.join(NETWORK_PATH,"dashboard_init.lock")
+
+    lock_path = os.path.join(NETWORK_PATH, "dashboard_init.lock")
     db._lock_file_handle = open(lock_path, "a")
 
     try:
@@ -117,6 +117,7 @@ def get_local_ip():
 
 
 def start_vpn(ip_original, pais="pe", con_tipo="udp"):
+    return True
     """
     Starts the OpenVPN connection in daemon mode.
     Requires sudo privileges.
@@ -126,23 +127,22 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
     vpn_location = "pe-lim" if pais.lower() == "pe" else "ar-bua"
 
     cmd = [
-                    "/usr/sbin/openvpn",
-                    "--config",
-                    rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
-                    "--daemon",
-                ]
+        "/usr/sbin/openvpn",
+        "--config",
+        rf"/etc/openvpn/client/{vpn_location}.prod.surfshark.com_{con_tipo.lower()}.ovpn",
+        "--daemon",
+    ]
 
     try:
         subprocess.run(
-                cmd,
-                text=True,
-                check=True,
-            )
-        
+            cmd,
+            text=True,
+            check=True,
+        )
 
     except subprocess.CalledProcessError:
         return False
-    
+
     # if not vpn_online(ip_original):
 
     #     try:
@@ -150,7 +150,6 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
     #                 text=True,
     #                 check=True,
     #             )
-        
 
     #     except subprocess.CalledProcessError:
     #         return False
@@ -160,6 +159,7 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
 
 
 def stop_vpn():
+    return True
     """
     Stops all running OpenVPN processes.
     Requires sudo privileges.
@@ -167,7 +167,7 @@ def stop_vpn():
     if not LOCAL:
         subprocess.run(["/usr/bin/pkill", "openvpn"], check=False)
     else:
-        subprocess.run(["sudo","pkill", "openvpn"], check=False)
+        subprocess.run(["sudo", "pkill", "openvpn"], check=False)
     time.sleep(1.5)
 
 
@@ -187,6 +187,7 @@ def get_public_ip():
 
 
 def vpn_online(ip_original):
+    return True
 
     return get_public_ip()[0] != ip_original
 

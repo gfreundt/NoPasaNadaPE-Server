@@ -2,12 +2,12 @@ import os
 import platform
 
 # administrables
-GATHER_ITERATIONS = 4
+GATHER_ITERATIONS = 1
 AUTOSCRAPER_REPETICIONES = 1
 
 
 IPS_CONOCIDOS = {
-    "AR": ["89.117.41.84", "89.117.41.116", "89.117.41.164","89.117.41.52"],
+    "AR": ["89.117.41.84", "89.117.41.116", "89.117.41.164", "89.117.41.52"],
     "PE": ["95.173.223.116", "95.173.223.114"],
     "US": ["72.60.155.196"],
 }
@@ -39,12 +39,12 @@ elif platform.system() == "Windows":
     )
 else:
     NETWORK_PATH = os.path.join("/var", "www", "app")
-    
+
 print("Network Path:", NETWORK_PATH)
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
 
-LOCAL = ("Salita-TV" in platform.node())
+LOCAL = "Salita-TV" in platform.node()
 
 # 3-letter months
 MONTHS_3_LETTERS = (
