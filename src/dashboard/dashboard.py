@@ -253,7 +253,16 @@ class Dashboard:
         p = cursor.fetchall()
         p = [dict(row) for row in p]
 
-        return jsonify({"miembros": m, "placas": p, "autorizados": n})
+        # obtener mensajes enviados
+        cursor.execute(
+            "SELECT * FROM StatusMensajesEnviados ORDER BY FechaEnvio DESC LIMIT 50"
+        )
+        s = cursor.fetchall()
+        s = [dict(row) for row in p]
+
+        return jsonify(
+            {"miembros": m, "placas": p, "autorizados": n, "mensajes(50)": s}
+        )
 
     def toggle_config(self):
         """
