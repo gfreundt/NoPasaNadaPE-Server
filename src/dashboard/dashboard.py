@@ -258,7 +258,7 @@ class Dashboard:
             "SELECT * FROM StatusMensajesEnviados ORDER BY FechaEnvio DESC LIMIT 50"
         )
         s = cursor.fetchall()
-        s = [dict(row) for row in p]
+        s = [dict(row) for row in s]
 
         return jsonify(
             {"miembros": m, "placas": p, "autorizados": n, "mensajes(50)": s}
