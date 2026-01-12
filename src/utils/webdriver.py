@@ -89,6 +89,8 @@ class ChromeUtils:
         }
 
         # --- SELENIUM SETUP ---
+        self.options.add_argument("--headless=new")
+        self.options.add_argument("--window-size=1920,1080")
         self.options.add_argument("--ignore-certificate-errors")
         self.options.add_argument("--allow-insecure-localhost")
         self.options.add_argument("--allow-running-insecure-content")
