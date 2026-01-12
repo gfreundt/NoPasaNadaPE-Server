@@ -44,7 +44,9 @@ def browser(placa, webdriver):
         time.sleep(0.5)
         webdriver.find_element(By.ID, "texCaptcha").send_keys(captcha_txt)
         time.sleep(0.5)
-        webdriver.find_element(By.ID, "btnBuscar").click()
+        btn = webdriver.find_element(By.ID, "btnBuscar")
+        webdriver.execute_script("arguments[0].click();", btn)
+
         time.sleep(1)
 
         # ver si salio una alerta
@@ -78,7 +80,9 @@ def browser(placa, webdriver):
             response[7] = "VENCIDO"
 
         # proceso completo -- dejar la pagina lista para la siguiente placa
-        webdriver.find_element(By.ID, "btnLimpiar").click()
+        btn = webdriver.find_element(By.ID, "btnLimpiar")
+        webdriver.execute_script("arguments[0].click();", btn)
+
         time.sleep(1)
         return response
 

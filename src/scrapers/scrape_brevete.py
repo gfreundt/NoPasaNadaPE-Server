@@ -22,16 +22,15 @@ def browser(doc_num, webdriver):
     # abrir url
 
     url = "https://licencias.mtc.gob.pe/#/index"
-    if webdriver.current_url != url:
-        webdriver.set_page_load_timeout(25)
-        try:
-            webdriver.get(url)
-        except TimeoutException:
-            webdriver.execute_script("window.stop();")
-        time.sleep(2)
+    webdriver.set_page_load_timeout(25)
+    try:
+        webdriver.get(url)
+    except TimeoutException:
+        webdriver.execute_script("window.stop();")
+    time.sleep(2)
 
-    else:
-        webdriver.refresh()
+    # else:
+    #     webdriver.refresh()
 
     # esperar a que boton de cerrar pop-up se active (max 15 segundos)
     popup_btn, k = [], 0
@@ -66,10 +65,11 @@ def browser(doc_num, webdriver):
         return "@Sin Solucion de Captcha"
 
     # click en Buscar
-    webdriver.find_element(
+    btn = webdriver.find_element(
         By.XPATH,
         "/html/body/app-root/div[2]/app-home/div/mat-card[1]/form/div[5]/div[1]/button",
-    ).click()
+    )
+    webdriver.execute_script("arguments[0].click();", btn)
     time.sleep(3)
 
     # si no hay informacion de usuario retornar blanco
@@ -103,7 +103,6 @@ def browser(doc_num, webdriver):
                 f"mat-input-{pos}",
             ).get_attribute("value")
         )
-
     # next tab (Puntos) - make sure all is populated before tabbing along (with timeout) and wait a little
     timeout = 0
     while not webdriver.find_elements(By.ID, "mat-tab-label-0-0"):
@@ -155,10 +154,11 @@ def evade_captcha(webdriver):
     visible_checkbox = webdriver.find_element(
         By.CSS_SELECTOR, "mat-checkbox .mat-checkbox-inner-container"
     )
+    webdriver.execute_script("arguments[0].click();", visible_checkbox)
 
-    # mueve el mouse y haz click, espera un segundo para que aparezca
-    actions = ActionChains(webdriver)
-    actions.move_to_element(visible_checkbox).click().perform()
+    # # mueve el mouse y haz click, espera un segundo para que aparezca
+    # actions = ActionChains(webdriver)
+    # actions.move_to_element(visible_checkbox).click().perform()
     time.sleep(5)
 
     # extrae el texto de la imagen que se dene elegir
@@ -168,6 +168,7 @@ def evade_captcha(webdriver):
                 (By.XPATH, "//app-captcha-imagenes-popup//p")
             )
         )
+        time.sleep(10)
     except TimeoutError:
         return False
 
@@ -180,7 +181,7 @@ def evade_captcha(webdriver):
             _element_xpath = f"/html/body/div/div[2]/div/mat-dialog-container/app-captcha-imagenes-popup/div/mat-dialog-content/app-captcha-imagenes/div[2]/div[{i}]/img"
             element = webdriver.find_element(By.XPATH, _element_xpath)
             if element.get_attribute("src") == _img_filename:
-                element.click()
+                webdriver.execute_script("arguments[0].click();", element)
                 time.sleep(1)
                 return True
 

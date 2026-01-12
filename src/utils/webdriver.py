@@ -89,17 +89,16 @@ class ChromeUtils:
         }
 
         # --- SELENIUM SETUP ---
-        chrome_options = Options()
-        chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_argument("--allow-insecure-localhost")
-        chrome_options.add_argument("--allow-running-insecure-content")
-        chrome_options.add_argument("--disable-web-security")
-        chrome_options.accept_insecure_certs = True
+        self.options.add_argument("--ignore-certificate-errors")
+        self.options.add_argument("--allow-insecure-localhost")
+        self.options.add_argument("--allow-running-insecure-content")
+        self.options.add_argument("--disable-web-security")
+        self.options.accept_insecure_certs = True
 
         # Initialize the WebDriver
         return sw_webdriver.Chrome(
             service=Service(ChromeDriverManager().install()),
-            options=chrome_options,
+            options=self.options,
             seleniumwire_options=proxy_options,
         )
 

@@ -16,7 +16,7 @@ def gather(
 
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(headless=HEADLESS["brevetes"])
-    webdriver = chromedriver.proxy_driver()
+    # webdriver = chromedriver.proxy_driver()
 
     # iniciar variables para calculo de ETA
     procesados = 0
@@ -49,6 +49,7 @@ def gather(
             )
 
             # enviar registro a scraper
+            webdriver = chromedriver.proxy_driver()
             scraper_response = scrape_brevete.browser_wrapper(
                 doc_num=doc_num, webdriver=webdriver
             )
@@ -72,6 +73,7 @@ def gather(
                         status=2,
                     )
                     time.sleep(10)
+                    webdriver.quit()
                     continue
 
                 # si error no permite reinicio, salir
@@ -88,6 +90,7 @@ def gather(
                     )
                 # texto en dashboard
                 dash.log(action=f"[ BREVETES ] {doc_num}")
+                webdriver.quit()
                 continue
 
             # ajustar formato de fechas al de la base de datos (YYYY-MM-DD)
@@ -115,6 +118,7 @@ def gather(
 
             # texto en dashboard
             dash.log(action=f"[ BREVETES ] {doc_num}")
+            webdriver.quit()
 
         except KeyboardInterrupt:
             quit()
@@ -129,6 +133,7 @@ def gather(
                 status=2,
                 lastUpdate="ERROR: Timeout",
             )
+            webdriver.quit()
             break
 
         except Exception as e:
@@ -142,8 +147,9 @@ def gather(
                 text=f"Crash (Gather): {str(e)[:55]}",
                 status=2,
             )
+            webdriver.quit()
             break
 
     # sacar worker de lista de activos cerrar driver
     dash.assigned_cards.remove(card)
-    webdriver.quit()
+    # webdriver.quit()
