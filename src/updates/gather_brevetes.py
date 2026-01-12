@@ -16,7 +16,7 @@ def gather(
 
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(headless=HEADLESS["brevetes"])
-    webdriver = chromedriver.direct_driver()
+    webdriver = chromedriver.proxy_driver()
 
     # iniciar variables para calculo de ETA
     procesados = 0

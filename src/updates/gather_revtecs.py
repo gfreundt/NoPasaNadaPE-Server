@@ -15,7 +15,7 @@ def gather(
 
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(headless=HEADLESS["revtec"])
-    webdriver = chromedriver.direct_driver()
+    webdriver = chromedriver.proxy_driver_driver()
 
     # iniciar variables para calculo de ETA
     tiempo_inicio = time.perf_counter()

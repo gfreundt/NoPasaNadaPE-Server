@@ -1,10 +1,13 @@
 import os
 import platform
 from selenium import webdriver
+from seleniumwire import webdriver as sw_webdriver
 
 # REMOVED: seleniumwire
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
 import subprocess
 import json
 from security.keys import PROXY_DATACENTER, PROXY_RESIDENTIAL
@@ -67,26 +70,38 @@ class ChromeUtils:
             "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.176 Safari/537.36"
         )
 
-    def proxy_driver(self, residential=False):
-        """
-        Replaces selenium-wire with selenium-interceptor for proxy support.
-        """
-        proxy_url = PROXY_RESIDENTIAL if residential else PROXY_DATACENTER
-        self.options.add_argument("--ignore-certificate-errors")
+    def proxy_driver(self):
+        username = "LcL8ujXtMohd3ODu"
+        password = "Lm4lJIxiyRd9nNCp_country-pe"
+        proxy_url = "geo.iproyal.com"
+        proxy_url_port = "12321"
 
-        # 1. Start a standard driver
-        driver = webdriver.Chrome(service=self.service, options=self.options)
+        proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
 
-        # 2. Wrap it with the Interceptor
-        # This handles proxy authentication via CDP (DevTools Protocol)
-        interceptor = Interceptor(driver)
+        # Configure options for Selenium Wire
+        proxy_options = {
+            "proxy": {
+                "http": proxy,
+                "https": proxy,
+            },
+            "disable_capture": False,
+            "ssl_insecure": True,
+        }
 
-        # This tells the browser to use your proxy for all requests
-        interceptor.set_proxy(proxy_url)
+        # --- SELENIUM SETUP ---
+        chrome_options = Options()
+        chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--allow-insecure-localhost")
+        chrome_options.add_argument("--allow-running-insecure-content")
+        chrome_options.add_argument("--disable-web-security")
+        chrome_options.accept_insecure_certs = True
 
-        # We return the driver. If you need to intercept specific requests,
-        # you can also return the interceptor object.
-        return driver
+        # Initialize the WebDriver
+        return sw_webdriver.Chrome(
+            service=Service(ChromeDriverManager().install()),
+            options=chrome_options,
+            seleniumwire_options=proxy_options,
+        )
 
     def direct_driver(self):
         return webdriver.Chrome(service=self.service, options=self.options)

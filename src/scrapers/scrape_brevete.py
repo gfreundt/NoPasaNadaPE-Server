@@ -23,7 +23,7 @@ def browser(doc_num, webdriver):
 
     url = "https://licencias.mtc.gob.pe/#/index"
     if webdriver.current_url != url:
-        webdriver.set_page_load_timeout(10)
+        webdriver.set_page_load_timeout(25)
         try:
             webdriver.get(url)
         except TimeoutException:
@@ -56,12 +56,9 @@ def browser(doc_num, webdriver):
     webdriver.find_element(By.ID, "mat-input-0").send_keys(doc_num)
     time.sleep(1)
 
-    time.sleep(20)
-
     # click on "Si, acepto"
     checkbox = webdriver.find_element(By.ID, "mat-checkbox-2-input")
     webdriver.execute_script("arguments[0].click();", checkbox)
-    time.sleep(1)
 
     # evadir captcha ("No Soy Un Robot")
     exito = evade_captcha(webdriver)
@@ -162,7 +159,7 @@ def evade_captcha(webdriver):
     # mueve el mouse y haz click, espera un segundo para que aparezca
     actions = ActionChains(webdriver)
     actions.move_to_element(visible_checkbox).click().perform()
-    time.sleep(1)
+    time.sleep(5)
 
     # extrae el texto de la imagen que se dene elegir
     try:
