@@ -89,6 +89,12 @@ class ChromeUtils:
         }
 
         # --- SELENIUM SETUP ---
+
+        self.options.add_argument("--enable-logging")
+        self.options.add_argument("--v=1")  # Verbosity level 1
+        self.options.add_argument(
+            "--log-path=/var/www/nopasanadape/app/chrome_browser.log"
+        )
         self.options.add_argument("--headless=new")
         self.options.add_argument("--window-size=1920,1080")
         self.options.add_argument("--ignore-certificate-errors")
