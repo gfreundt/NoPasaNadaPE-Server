@@ -147,7 +147,6 @@ def gather(
                 text=f"Crash (Gather): {str(e)[:55]}",
                 status=2,
             )
-            webdriver.quit()
             break
 
     # sacar worker de lista de activos cerrar driver
