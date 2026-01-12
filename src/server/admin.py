@@ -4,6 +4,7 @@ import uuid
 from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text
 from src.server import do_updates
+from src.updates import gather_all
 
 
 def main(self):
@@ -102,8 +103,36 @@ def main(self):
 
         return jsonify(faltan), 200
 
-    # 3) fallback for unsupported actions
-    return jsonify("Error en solicitud."), 400
+    if solicitud == "force_update":
+
+        id_member = payload["id_member"]
+
+        cursor.execute(
+            "SELECT DocTipo, DocNum FROM InfoMiembros WHERE IdMember = ?", (id_member,)
+        )
+        data = cursor.fetchone()
+        doc_tipo, doc_num = data["DocTipo"], data["DocNum"]
+
+        cursor.execute(
+            "SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (id_member,)
+        )
+        placas = [i["Placa"] for i in cursor.fetchall()]
+
+        upd = {
+            "DataMtcBrevetes": [(id_member, doc_tipo, doc_num)],
+            "DataApesegSoats": placas,
+            "DataMtcRevisionesTecnicas": placas,
+            "DataSatImpuestos": [(id_member, doc_tipo, doc_num)],
+            "DataSatMultas": placas,
+            "DataSutranMultas": placas,
+            "DataMtcRecordsConductores": [(id_member, doc_tipo, doc_num)],
+            "DataCallaoMultas": placas,
+            "DataSunarpFichas": placas,
+        }
+
+        gather_all.gather_threads(self.dash, upd)
+
+        return jsonify(upd), 200
 
 
 def boletines(cursor):

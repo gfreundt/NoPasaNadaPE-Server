@@ -90,6 +90,7 @@ class Dashboard:
             _ft = f"{dt.now():%Y-%m-%d %H:%M:%S} > {kwargs["action"]}"
             self.log_entries.append(_ft)
             self.data["bottom_left"].append(_ft[:140])
+            self.data["bottom_left"] = self.data["bottom_left"][-40:]
 
         if "card" in kwargs:
             for field in kwargs:
