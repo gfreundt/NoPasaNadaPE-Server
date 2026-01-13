@@ -70,6 +70,14 @@ def main(self):
         do_updates.main(self.db, payload)
         return jsonify("Actualizado."), 200
 
+    if solicitud == "get_sunarp":
+        cmd = """   SELECT Placa FROM InfoPlacas
+                    WHERE LastUpdateSunarpFichas = '2020-01-01'"""
+        cursor.execute(cmd)
+        faltan = {"DataSunarpFichas": [i["Placa"] for i in cursor.fetchall()]}
+
+        return jsonify(faltan), 200
+
     if solicitud == "get_faltan":
         cmd = """   SELECT DocTipo, DocNum, Correo FROM InfoMiembros
                     WHERE IdMember NOT IN (SELECT IdMember_FK FROM DataMtcBrevetes)"""
@@ -143,6 +151,8 @@ def main(self):
         # thread.start()
 
         return jsonify(upd), 200
+
+    return jsonify({}), 400
 
 
 def boletines(cursor):

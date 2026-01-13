@@ -44,13 +44,24 @@ def get_faltan(url):
     )
 
 
-def manual_upload(url):
+def get_sunarp(url):
 
-    target = os.path.join(NETWORK_PATH, "security", f"update_{int(args[2]):05d}.json")
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "get_sunarp",
+        },
+        json={},
+    )
+
+
+def manual_upload(url, filename):
+
+    target = os.path.join(NETWORK_PATH, "security", f"{filename}")
 
     with open(target, "r") as f:
         payload = json.load(f)
-        print(payload)
 
     return requests.post(
         url=url + "/admin",
@@ -154,52 +165,61 @@ def kill_prueba(url, correo):
     )
 
 
-url = "https://dev.nopasanadape.com"  # DEV
-url = "http://localhost:5000"  # TEST
-url = "https://nopasanadape.com"  # PROD
-args = sys.argv
+def main():
+    url = "https://dev.nopasanadape.com"  # DEV
+    url = "http://localhost:5000"  # TEST
+    # url = "https://nopasanadape.com"  # PROD
+    args = sys.argv
 
-if len(args) < 2:
-    print("Incompleto")
-    quit()
+    if len(args) < 2:
+        print("Incompleto")
+        quit()
 
-HEADER = {
-    "Authorization": "Bearer " + EXTERNAL_AUTH_TOKEN_API_V1,
-    "Content-Type": "application/json",
-}
+    HEADER = {
+        "Authorization": "Bearer " + EXTERNAL_AUTH_TOKEN_API_V1,
+        "Content-Type": "application/json",
+    }
 
-if args[1] == "ALTA":
-    f = alta_prueba(url, args[2])
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "ALTA":
+        f = alta_prueba(url, args[2])
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "KILL":
-    f = kill_prueba(url, args[2])
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "KILL":
+        f = kill_prueba(url, args[2])
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "MSG":
-    f = mensajes_enviados_prueba(url)
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "MSG":
+        f = mensajes_enviados_prueba(url)
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "BAJA":
-    f = baja_prueba(url, args[2])
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "BAJA":
+        f = baja_prueba(url, args[2])
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "CLI":
-    f = clientes_autorizados(url)
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "CLI":
+        f = clientes_autorizados(url)
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "PEND":
-    f = get_pendientes(url)
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "PEND":
+        f = get_pendientes(url)
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "UPLOAD":
-    f = manual_upload(url)
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "UPLOAD":
+        f = manual_upload(url)
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "FALTAN":
-    f = get_faltan(url)
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "FALTAN":
+        f = get_faltan(url)
+        pprint(json.loads(f.content.decode()))
 
-if args[1] == "FUERZA":
-    f = force_update(url, args[2])
-    pprint(json.loads(f.content.decode()))
+    if args[1] == "FUERZA":
+        f = force_update(url, args[2])
+        pprint(json.loads(f.content.decode()))
+
+    if args[1] == "SUNARP":
+        f = get_sunarp(url)
+        pprint(json.loads(f.content.decode()))
+
+
+if __name__ == "__main__":
+    main()
