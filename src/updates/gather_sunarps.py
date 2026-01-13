@@ -6,6 +6,7 @@ import time
 from src.scrapers import scrape_sunarp
 from src.utils.constants import HEADLESS
 from src.utils.webdriver import ChromeUtils
+from seleniumbase import SB
 
 
 def gather(
@@ -14,12 +15,12 @@ def gather(
 
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(
-        headless=HEADLESS["sunarp"],
+        headless=False,  # HEADLESS["sunarp"],
         incognito=True,
         window_size=(1920, 1080),
     )
     # webdriver = chromedriver.direct_driver()
-    webdriver = chromedriver.direct_driver()
+    webdriver = chromedriver.proxy_driver()
 
     # iniciar variables para calculo de ETA
     tiempo_inicio = time.perf_counter()
@@ -34,16 +35,16 @@ def gather(
             record_item = queue_update_data.get_nowait()
             placa = record_item
 
-            # ---------- EMERGENCIA > SOLO MIENTRAS DURE CAPTCHA
-            with lock:
-                local_response.append(
-                    {
-                        "Empty": True,
-                        "PlacaValidate": placa,
-                    }
-                )
-                dash.log(action=f"[ SUNARPS ] {placa}")
-                continue
+            # # ---------- EMERGENCIA > SOLO MIENTRAS DURE CAPTCHA
+            # with lock:
+            #     local_response.append(
+            #         {
+            #             "Empty": True,
+            #             "PlacaValidate": placa,
+            #         }
+            #     )
+            #     dash.log(action=f"[ SUNARPS ] {placa}")
+            #     continue
 
         except Empty:
             # log de salida del scraper
@@ -138,23 +139,23 @@ def gather(
                 "%H:%M:%S",
             )
 
-            dash.log(action=f"[ SOATS ] {placa}")
+            dash.log(action=f"[ SUNARPS ] {placa}")
 
         except KeyboardInterrupt:
             quit()
 
-        except Exception as e:
-            # devolver registro a la cola para que otro thread lo complete
-            if record_item is not None:
-                queue_update_data.put(record_item)
+        # except Exception as e:
+        #     # devolver registro a la cola para que otro thread lo complete
+        #     if record_item is not None:
+        #         queue_update_data.put(record_item)
 
-            # actualizar dashboard
-            dash.log(
-                card=card,
-                text=f"Crash (Gather): {str(e)[:55]}",
-                status=2,
-            )
-            break
+        #     # actualizar dashboard
+        #     dash.log(
+        #         card=card,
+        #         text=f"Crash (Gather): {str(e)[:55]}",
+        #         status=2,
+        #     )
+        #     break
 
     # sacar worker de lista de activos cerrar driver
     dash.assigned_cards.remove(card)

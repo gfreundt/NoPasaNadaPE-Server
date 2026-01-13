@@ -8,9 +8,6 @@ import sys
 import random
 
 
-"""Simulacion de API de Maquinarias"""
-
-
 def nuevo_pwd(url, correo):
 
     return requests.post(
@@ -62,6 +59,18 @@ def manual_upload(url):
             "solicitud": "manual_upload",
         },
         json=payload,
+    )
+
+
+def force_update(url, id_member):
+
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "force_update",
+        },
+        json={"id_member": id_member},
     )
 
 
@@ -147,7 +156,7 @@ def kill_prueba(url, correo):
 
 url = "https://dev.nopasanadape.com"  # DEV
 url = "http://localhost:5000"  # TEST
-# url = "https://nopasanadape.com"  # PROD
+url = "https://nopasanadape.com"  # PROD
 args = sys.argv
 
 if len(args) < 2:
@@ -189,4 +198,8 @@ if args[1] == "UPLOAD":
 
 if args[1] == "FALTAN":
     f = get_faltan(url)
+    pprint(json.loads(f.content.decode()))
+
+if args[1] == "FUERZA":
+    f = force_update(url, args[2])
     pprint(json.loads(f.content.decode()))

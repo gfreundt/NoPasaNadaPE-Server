@@ -3,8 +3,9 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time, re
+import time, re, os
 import requests
+from seleniumbase import Driver
 
 from func_timeout import func_set_timeout, exceptions
 from src.utils.constants import SCRAPER_TIMEOUT
@@ -13,9 +14,51 @@ from src.utils.constants import SCRAPER_TIMEOUT
 @func_set_timeout(SCRAPER_TIMEOUT["sunarps"])
 def browser_wrapper(placa, webdriver):
     try:
-        return browser(placa, webdriver)
+        return browser2(placa, webdriver)
     except exceptions.FunctionTimedOut:
         return "Timeout"
+
+
+def browser2(placa, webdriver):
+
+    username = "LcL8ujXtMohd3ODu"
+    password = "Lm4lJIxiyRd9nNCp_country-pe"
+    proxy_url = "geo.iproyal.com"
+    proxy_url_port = "12321"
+
+    proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
+
+    TARGET_URL = "https://consultavehicular.sunarp.gob.pe/consulta-vehicular"
+
+    driver = Driver(uc=True)
+    driver.get(TARGET_URL)
+    driver.sleep(20)
+    return
+
+    with SB(uc=True, proxy=proxy) as sb:
+        print(f"Virtual Display started. DISPLAY ID: {os.environ.get('DISPLAY')}")
+
+        try:
+            # Use CDP Mode to avoid the ERR_PROXY_AUTH_UNSUPPORTED error
+            print("Navigating to target...")
+            sb.activate_cdp_mode(TARGET_URL)
+
+            # Allow time for Cloudflare challenge
+            sb.sleep(8)
+
+            # Look for the Cloudflare checkbox and click it via CDP
+            sb.cdp.click_if_visible('iframe[src*="cloudflare"]')
+
+            sb.wait_for_element("body", timeout=20)
+            print("-" * 40)
+            print(f"SUCCESS! Page Title: {sb.get_page_title()}")
+            print("-" * 40)
+
+            sb.save_screenshot("final_bypass_success.png")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            sb.save_screenshot("debug_error.png")
 
 
 def browser(placa, webdriver):
