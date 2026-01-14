@@ -19,10 +19,10 @@ def alertas(self):
 
     query = f"""
     WITH RecentAlerts AS (
-        SELECT IdMember_FK 
+        SELECT IdMember
         FROM StatusMensajesEnviados
-        WHERE DATE(FechaEnvio) > DATE('now', 'localtime', '-1 day') 
-        AND TipoMensaje = 'Alerta'
+        WHERE FechaEnvio > DATE('now', 'localtime', '-25 hours') 
+        AND TipoMensaje = 'ALERTA'
     )
     -- 1. SOAT
     SELECT 'SOAT' as Tipo, p.IdMember_FK, NULL as DocTipo, NULL as DocNum, s.PlacaValidate as Placa
@@ -70,7 +70,12 @@ def alertas(self):
     cursor.execute(query)
     results = cursor.fetchall()
 
-    upd = {"DataMtcBrevetes": [], "DataApesegSoats": [], "DataMtcRevisionesTecnicas": [], "DataSatImpuestos": []}
+    upd = {
+        "DataMtcBrevetes": [],
+        "DataApesegSoats": [],
+        "DataMtcRevisionesTecnicas": [],
+        "DataSatImpuestos": [],
+    }
 
     for row in results:
         tipo = row[0]
