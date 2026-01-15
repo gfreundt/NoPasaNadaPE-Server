@@ -68,16 +68,22 @@ def scrape(placa):
 
     try:
         with SB(uc=True, headless=False) as sb:
+            print("**1")
             sb.activate_cdp_mode()
             sb.set_window_size(1920, 1080)
+            print("**2")
             sb.open(url)
             sb.sleep(8)
+            print("**3")
             sb.uc_gui_click_captcha()
             sb.sleep(2)
+            print("**4")
             sb.type("#nroPlaca", placa)
             sb.sleep(1)
+            print("**5")
             sb.click("button")
             sb.sleep(5)
+            print("**6")
             return get_vehicle_image_base64(sb)
     except Exception:
         return []
@@ -100,12 +106,15 @@ def get_vehicle_image_base64(sb) -> str:
 def main():
 
     url = "http://localhost:5000"  # TEST
-    # url = "https://nopasanadape.com"  # PROD
+    url = "https://nopasanadape.com"  # PROD
 
     data = get_sunarp(url).json().get("DataSunarpFichas")
-    print(data)
-    gather(data[:3])
+    print(f"Before ({len(data)}):", data)
+    gather(data[:10])
     update(url)
+    data = get_sunarp(url).json().get("DataSunarpFichas")
+    print(f"After ({len(data)}):", data)
 
 
-main()
+if __name__ == "__main__":
+    main()

@@ -101,12 +101,12 @@ def gather(
                 local_response.append(
                     {
                         "PlacaValidate": placa,
-                        "Codigo": _n[0],
-                        "NumeroPapeleta": _n[1],
-                        "FechaInfraccion": _n[2],
-                        "TotalInfraccion": _n[3],
-                        "TotalBeneficio": _n[4],
-                        "ImageBytes": _n[5],
+                        "Codigo": _n[1],
+                        "NumeroPapeleta": _n[2],
+                        "FechaInfraccion": _n[3],
+                        "TotalInfraccion": _n[4],
+                        "TotalBeneficio": _n[5],
+                        "ImageBytes": "",
                         "LastUpdate": dt.now().strftime("%Y-%m-%d"),
                     }
                 )

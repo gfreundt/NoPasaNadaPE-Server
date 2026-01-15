@@ -14,7 +14,9 @@ def main(self):
 
     # extraer toda la data relevante de la base de datos
     cursor = self.db.cursor()
-    servicios = generar_data_servicios(cursor, correo=session["usuario"]["correo"])
+    servicios = generar_data_servicios(
+        cursor, correo=session.get("usuario", {}).get("correo")
+    )
 
     return render_template(
         "ui-maquinarias-mi-cuenta.html",
@@ -47,7 +49,8 @@ def generar_data_servicios(cursor, correo):
                 FechaHasta,
                 CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
                 LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
+                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias",
+                Numero
                 FROM
                 DataMtcBrevetes
                 WHERE
@@ -174,7 +177,7 @@ def generar_data_servicios(cursor, correo):
 
     # datos de usuario
     cmd = f"""  SELECT
-                NombreCompleto
+                NombreCompleto, DocTipo, DocNum
                 FROM
                 InfoMiembros
                 WHERE
@@ -183,7 +186,19 @@ def generar_data_servicios(cursor, correo):
             """
     cursor.execute(cmd)
     u = cursor.fetchone()
-    usuario.update({"nombre": u["NombreCompleto"]})
+
+    cmd = f""" SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member} """
+    cursor.execute(cmd)
+    placas = [i["Placa"] for i in cursor.fetchall()]
+
+    usuario.update(
+        {
+            "nombre": u["NombreCompleto"],
+            "doc_tipo": u["DocTipo"],
+            "doc_num": u["DocNum"],
+            "placas": placas,
+        }
+    )
 
     hay_vencimientos = any([len(vencimientos[i]) for i in vencimientos])
     hay_multas = any([len(multas[i]) for i in multas])
