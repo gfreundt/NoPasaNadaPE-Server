@@ -112,7 +112,7 @@ class ChromeUtils:
             seleniumwire_options=proxy_options,
         )
 
-    def proxy_driver(self):
+    def proxy_driver1(self):
         username = "LcL8ujXtMohd3ODu"
         password = "Lm4lJIxiyRd9nNCp_country-pe"
         proxy_url = "geo.iproyal.com"
