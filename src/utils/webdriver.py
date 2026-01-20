@@ -19,7 +19,7 @@ class ChromeUtils:
     def __init__(self, **kwargs):
         parameters = {
             "incognito": True,
-            "headless": False,
+            "headless": True,
             "window_size": False,
             "load_profile": False,
             "no_driver_update": False,
@@ -90,8 +90,10 @@ class ChromeUtils:
 
         # --- SELENIUM SETUP ---
         chrome_options = Options()
-        self.options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--allow-insecure-localhost")
         chrome_options.add_argument("--allow-running-insecure-content")
