@@ -78,6 +78,47 @@ class ChromeUtils:
         proxy_url_port = "11201"
         proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
 
+        proxy_options = {
+            "proxy": {"http": proxy, "https": proxy},
+            "disable_capture": False,
+            "ssl_insecure": True,
+        }
+
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--remote-debugging-port=0")
+
+        # Keep cert flags only if you truly need them
+        chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--allow-insecure-localhost")
+
+        # Critical: unique profile per instance
+        # user_data_dir = tempfile.mkdtemp(prefix="chrome-profile-")
+        # chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
+
+        # Ensure HOME writable under systemd/gunicorn
+        os.environ.setdefault("HOME", "/tmp")
+        os.environ.setdefault("TMPDIR", "/tmp")
+
+        # Use the system chromedriver
+        service = Service("/usr/local/bin/chromedriver")  # adjust if needed
+
+        return sw_webdriver.Chrome(
+            service=service,
+            options=chrome_options,
+            seleniumwire_options=proxy_options,
+        )
+
+    def proxy_driver(self):
+        username = "LcL8ujXtMohd3ODu"
+        password = "Lm4lJIxiyRd9nNCp_country-pe"
+        proxy_url = "geo.iproyal.com"
+        proxy_url_port = "11201"
+        proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
+
         # Configure options for Selenium Wire
         proxy_options = {
             "proxy": {
