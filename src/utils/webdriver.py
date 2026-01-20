@@ -92,10 +92,7 @@ class ChromeUtils:
         chrome_options = Options()
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--headless=new")
-<<<<<<< HEAD
         chrome_options.add_argument("--no-sandbox")
-=======
->>>>>>> 3413bf6cf9d28ab542058544af0666d015ea9216
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--allow-insecure-localhost")
