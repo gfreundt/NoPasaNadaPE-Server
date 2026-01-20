@@ -17,10 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 if platform.system() == "Linux":
     CHROMEDRIVER_PATH = r"/usr/local/bin/chromedriver"
-    if platform.node() == "power":
-        NETWORK_PATH = os.path.join("/mnt", "gce")
-        NETWORK_PATH = os.path.join("/home", "gfreundt", "NoPasaNadaPE-Server")
-    elif platform.node() == "nopasanada-server":
+    if platform.node() == "nopasanada-server":
         NETWORK_PATH = os.path.join("/home", "nopasanadape", "NoPasaNadaPE-Server")
     else:
         if "-dev" in BASE_DIR:
