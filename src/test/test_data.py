@@ -3,9 +3,6 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
     # brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans
     complete = {
         "DataMtcBrevetes": [
-            [87, "DNI", "10612549"],
-            [72, "DNI", "09337563"],
-            [109, "DNI", "42933662"],
             [79, "DNI", "09878584"],
             [80, "DNI", "09376240"],
             [116, "DNI", "45471033"],
@@ -17,6 +14,9 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             [76, "DNI", "70744630"],
             [71, "DNI", "06669206"],
             [13, "DNI", "10805548"],
+            [87, "DNI", "10612549"],
+            [72, "DNI", "09337563"],
+            [109, "DNI", "42933662"],
         ],
         "DataMtcRecordsConductores": [
             [110, "DNI", "07885907"],
