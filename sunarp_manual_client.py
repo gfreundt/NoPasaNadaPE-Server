@@ -1,6 +1,7 @@
 from datetime import datetime as dt, timedelta as td
-import os
+import os, sys
 import json
+from tqdm import tqdm
 
 # local imports
 from src.utils.utils import NETWORK_PATH
@@ -66,26 +67,46 @@ def update(url):
 def scrape(placa):
     url = "https://consultavehicular.sunarp.gob.pe/consulta-vehicular"
 
+    # Initialize the progress bar with the total number of steps (6)
+    pbar = tqdm(total=6, desc=f"Scraping {placa}", unit="step")
+
     try:
         with SB(uc=True, headless=False) as sb:
-            print("**1")
+            # Step 1: Activate CDP
             sb.activate_cdp_mode()
             sb.set_window_size(1920, 1080)
-            print("**2")
+            pbar.update(1)
+
+            # Step 2: Open URL
             sb.open(url)
-            sb.sleep(8)
-            print("**3")
+            sb.sleep(6)
+            pbar.update(1)
+
+            # Step 3: Click Captcha
             sb.uc_gui_click_captcha()
             sb.sleep(2)
-            print("**4")
+            pbar.update(1)
+
+            # Step 4: Type Placa
             sb.type("#nroPlaca", placa)
             sb.sleep(1)
-            print("**5")
+            pbar.update(1)
+
+            # Step 5: Click Submit
             sb.click("button")
             sb.sleep(5)
-            print("**6")
-            return get_vehicle_image_base64(sb)
-    except Exception:
+            pbar.update(1)
+
+            # Step 6: Finalize/Image Extraction
+            result = get_vehicle_image_base64(sb)
+            pbar.update(1)
+
+            pbar.close()  # Close bar on success
+            return result
+
+    except Exception as e:
+        pbar.set_description(f"Error on {placa}")
+        pbar.close()  # Close bar on failure
         return []
 
 
@@ -105,12 +126,17 @@ def get_vehicle_image_base64(sb) -> str:
 
 def main():
 
+    if len(sys.argv) > 1:
+        n = int(sys.argv[1])
+    else:
+        n = 2  # default number of placas to process
+
     url = "http://localhost:5000"  # TEST
     url = "https://nopasanadape.com"  # PROD
 
     data = get_sunarp(url).json().get("DataSunarpFichas")
     print(f"Before ({len(data)}):", data)
-    gather(data[:10])
+    gather(data[:n])
     update(url)
     data = get_sunarp(url).json().get("DataSunarpFichas")
     print(f"After ({len(data)}):", data)
