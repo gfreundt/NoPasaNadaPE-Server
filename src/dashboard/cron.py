@@ -1,7 +1,7 @@
 import schedule
 import threading
 import time
-from src.dashboard import auto_scraper, update_kpis
+from src.dashboard import auto_scraper, update_kpis, resumen_diario
 
 
 def run_scheduler_loop(self):
@@ -15,6 +15,7 @@ def run_scheduler_loop(self):
     schedule.every(15).minutes.do(update_kpis.main, self)
     schedule.every(20).minutes.do(auto_scraper.main, self, "boletines")
     schedule.every(4).hours.do(auto_scraper.main, self, "alertas")
+    schedule.every().day.at('07:05').do(resumen_diario.main, self)
 
     while True:
         schedule.run_pending()
