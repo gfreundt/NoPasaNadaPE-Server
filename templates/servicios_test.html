@@ -113,140 +113,170 @@ Mi Cuenta | No Pasa Nada PE
             </tbody>
         </table>
 
-        {% if payload.vencimientos.boton_detalle %}
-        <div class="modal fade"
-            id="vencimientosDetalleModal"
-            tabindex="-1"
-            aria-hidden="true"
-            data-bs-backdrop="static"
-            data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">{{ payload.vencimientos.modal.title }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        {% if payload.vencimientos.modal.subtitle %}
-                            <p class="text-secondary mb-3">{{ payload.vencimientos.modal.subtitle }}</p>
-                        {% endif %}
-
-                        {% if payload.vencimientos.modal.items %}
-                            <div class="list-group">
-                                {% for item in payload.vencimientos.modal.items %}
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="me-3">
-                                                <div class="fw-bold">{{ item.title }}</div>
-                                                {% if item.subtitle %}
-                                                    <div class="small text-secondary">{{ item.subtitle }}</div>
-                                                {% endif %}
-                                            </div>
-
-                                            {% if item.badge %}
-                                                <span class="badge {{ item.badge.class }}">{{ item.badge.text }}</span>
-                                            {% endif %}
-                                        </div>
-
-                                        {% if item.rows %}
-                                            <div class="mt-2">
-                                                {% for r in item.rows %}
-                                                    <div class="d-flex justify-content-between small py-1 border-top">
-                                                        <span class="text-secondary">{{ r.k }}</span>
-                                                        <span class="fw-medium">{{ r.v }}</span>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <p class="text-secondary mb-0">{{ payload.vencimientos.modal.empty_text }}</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary fw-bold" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        {% endif %}
 
 
-        <div class="py-3"></div>
+        <div class="w-100 mb-3 mt-5" style="max-width: 700px;">
 
-        <h3 class="fw-bold fs-4 mb-3 text-center">Multas</h3>
+            <h3 class="fw-bold fs-4 mb-3 text-center">Mantenimientos</h3>
 
-        {% if payload.multas.mostrar_tabla %}
-            <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            {% if payload.mantenimientos %}
+
+            <table class="table table-bordered table-striped text-center align-middle mb-0"
+                style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col">Servicio</th>
-                        <th scope="col">Fecha</th>
-                        <th scope="col">Falta | Infracción</th>
-                        <th scope="col">Detalle</th>
+                        <th scope="col">Placa</th>
+                        <th scope="col">Mantenimientos</th>
                         <th scope="col">Última Revisión</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    {% for row in payload.multas.rows %}
+                    {% for row in payload.mantenimientos %}
                         <tr>
                             <td class="fw-medium">
-                                {{ row.servicio }}
+                                {{ row.placa }}
                                 {% if row.subtitulo %}
                                     <br>
                                     <span class="small text-muted">{{ row.subtitulo }}</span>
                                 {% endif %}
                             </td>
 
-                            <td>{{ row.fecha }}</td>
+                            <td class="p-0">
+                                {% if row.actividades %}
 
-                            <td>
-                                {% if row.falta %}
-                                    <span class="fw-bold">{{ row.falta }}</span>
+                                    <div class="p-2">
+                                        <table class="table table-sm table-borderless text-center align-middle mb-0">
+                                            <thead>
+                                                <tr class="border-bottom">
+                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Status</th>
+                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Kilometraje</th>
+                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Fecha</th>
+                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Detalle</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {% for actividad in row.actividades %}
+                                                    <tr class="border-bottom">
+                                                        <td class="fw-medium py-2">
+                                                            {{ actividad.status }}
+                                                        </td>
+
+                                                        <td class="py-2">
+                                                            <span class="{{ actividad.km_class }}">{{ actividad.km }}</span>
+                                                        </td>
+
+                                                        <td class="py-2">
+                                                            <span>{{ actividad.fecha }}</span>
+                                                        </td>
+
+                                                        <td class="py-2">
+                                                            {% if actividad.boton_detalle %}
+                                                                <button type="button"
+                                                                        class="btn btn-link p-0"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#vencimientosDetalleModal"
+                                                                        aria-label="Ver detalles">
+                                                                    <i class="bi bi-info-circle-fill" style="font-size: 1.2rem;"></i>
+                                                                </button>
+                                                            {% else %}
+                                                                <span class="text-secondary">—</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
                                 {% else %}
-                                    N/A
+                                    <div class="p-3 text-secondary">No hay mantenimientos registrados.</div>
                                 {% endif %}
                             </td>
 
                             <td>
-                                <span class="{{ row.detalle_class }}">{{ row.detalle_titulo }}</span>
-                                {% if row.detalle_subtitulo %}
-                                    <br>
-                                    <span class="small text-secondary">{{ row.detalle_subtitulo }}</span>
-                                {% endif %}
-                            </td>
-
-                            <td>
-                                <div class="d-flex flex-column justify-content-center">
-                                    <span>{{ row.ultima_actualizacion }}</span>
-                                    {% if row.ultima_rev_info %}
-                                        <span class="small text-secondary">{{ row.ultima_rev_info }}</span>
-                                    {% endif %}
-                                </div>
+                                <span class="{{ row.ultima_revision_class }}">{{ row.ultima_revision }}</span>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
+            {% endif %}
+        </div>
+
+
+
+
+        <div class="py-3"></div>
+
+        <h3 class="fw-bold fs-4 mb-3 text-center">Multas</h3>
+
+        {% if payload.multas.existentes %}
+
+            <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Servicio</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Falta</th>
+                        <th scope="col">Detalle</th>
+                        <th scope="col">Última Revisión</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for row in payload.multas.existentes %}
+                        <tr>
+                            <td class="fw-medium">
+                            {{ row.titulo }}
+                            {% if row.subtitulo %}
+                                <br>
+                                <span class="small text-muted">{{ row.subtitulo }}</span>
+                            {% endif %}
+                        </td>
+
+                            <td>{{ row.fecha }}</td>
+
+                            <td>
+                                <span class="fw-bold">{{ row.falta }}</span>
+                            </td>
+
+                            <td>
+                                <span class="{{ row.detalle_class }}">{{ row.situacion.titulo }}</span>
+                                {% if row.situacion.subtitulo %}
+                                    <br>
+                                    <span class="small text-secondary">{{ row.situacion.subtitulo }}</span>
+                                {% endif %}
+                                
+                            </td>
+
+                            <td>
+                            <div class="d-flex flex-column justify-content-center">
+                                <span>{{ row.ultima_actualizacion.fecha }}</span>
+                            </div>
+                            <div class="d-flex flex-column justify-content-center">
+                                <span>{{ row.ultima_actualizacion.dias_desde }}</span>
+                            </div>
+                        </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
         {% endif %}
 
         {% for aviso in payload.multas.avisos %}
             <div class="text-center p-2 border rounded-3 mb-2 bg-white">
-                <p class="mb-0 fw-bold {{ aviso.class }}" style="font-size: 0.9rem;">{{ aviso.text }}</p>
-                {% if aviso.subtext %}
-                    <p class="small text-secondary mb-0" style="font-size: 0.7rem;">{{ aviso.subtext }}</p>
-                {% endif %}
+                <p class="mb-0 fw-bold {{ aviso.class }}" style="font-size: 0.9rem;">{{ aviso.texto }}</p>
+                <p class="mb-0 small text-secondary" style="font-size: 0.7rem;">{{ aviso.fecha }}</p>
             </div>
         {% endfor %}
 
-        <h3 class="fw-bold fs-4 mb-3 mt-3 text-center">Descargas</h3>
+
+
+        <h3 class="fw-bold fs-4 mb-3 mt-5 text-center">Descargas</h3>
 
         <div class="p-3 border rounded-3 mb-4 text-center" style="box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <div class="row">
@@ -258,11 +288,12 @@ Mi Cuenta | No Pasa Nada PE
 
                     <div class="d-flex flex-row justify-content-center align-items-end">
                         {% if payload.descargas.soats.disponible %}
-                            {% for item in payload.descargas.soats.detalles.items %}
+                            {% for item in payload.descargas.soats.detalles %}
                                 <a href="{{ item.url }}" class="text-decoration-none text-reset">
                                     <div class="d-flex flex-column align-items-center me-2 flex-shrink-0" style="margin-right: 15px !important;">
-                                        <i class="bi bi-file-earmark-arrow-down-fill text-success" style="font-size: 1.8rem;"></i>
-                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.label }}</span>
+                                        <i class="bi bi-file-earmark-arrow-down-fill text-primary" style="font-size: 1.8rem;"></i>
+                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.placa }}</span>
+                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.fecha }}</span>
                                     </div>
                                 </a>
                             {% endfor %}
@@ -278,17 +309,18 @@ Mi Cuenta | No Pasa Nada PE
                     </div>
 
                     <div class="d-flex flex-row justify-content-center align-items-end">
-                        {% if payload.descargas.sunarp.disponible %}
-                            {% for item in payload.descargas.sunarp.detalles.items %}
+                        {% if payload.descargas.sunarps.disponible %}
+                            {% for item in payload.descargas.sunarps.detalles %}
                                 <a href="{{ item.url }}" class="text-decoration-none text-reset">
                                     <div class="d-flex flex-column align-items-center me-2 flex-shrink-0" style="margin-right: 15px !important;">
                                         <i class="bi bi-file-earmark-arrow-down-fill text-primary" style="font-size: 1.8rem;"></i>
-                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.label }}</span>
+                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.placa }}</span>
+                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.fecha }}</span>
                                     </div>
                                 </a>
                             {% endfor %}
                         {% else %}
-                            <p class="small text-secondary mb-0 text-center w-100">{{ payload.descargas.sunarp.detalles }}</p>
+                            <p class="small text-secondary mb-0 text-center w-100">{{ payload.descargas.sunarps.detalles }}</p>
                         {% endif %}
                     </div>
                 </div>
@@ -299,14 +331,13 @@ Mi Cuenta | No Pasa Nada PE
                     </div>
 
                     <div class="d-flex flex-row justify-content-center align-items-end">
-                        {% if payload.descargas.sunarp.disponible %}
-                            {% for item in payload.descargas.recvehic.detalles.items %}
+                        {% if payload.descargas.recvehic.disponible %}
+                            {% for item in payload.descargas.recvehic.detalles %}
                                 <a href="{{ item.url }}" class="text-decoration-none text-reset">
                                     <div class="d-flex flex-column align-items-center me-2 flex-shrink-0" style="margin-right: 15px !important;">
-                                        <i class="bi bi-person-fill-lock text-info" style="font-size: 1.8rem;"></i>
-                                        {% if item.label %}
-                                            <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.label }}</span>
-                                        {% endif %}
+                                        <i class="bi bi-file-earmark-arrow-down-fill text-primary" style="font-size: 1.8rem;"></i>
+                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.doc }}</span>
+                                        <span class="small fw-medium" style="font-size: 0.7rem;">{{ item.fecha }}</span>
                                     </div>
                                 </a>
                             {% endfor %}
@@ -321,20 +352,18 @@ Mi Cuenta | No Pasa Nada PE
 
         <div class="d-flex flex-row mt-5 justify-content-between" style="gap: 15px;">
             <a href="{{ payload.metadata.urls.mi_perfil }}"
-               class="btn btn-primary fw-bold"
-               style="width: calc(50% - 7.5px); height: 52px; font-size: 1.2rem; border-radius: 10px; background: rgb(35, 131, 226); border-color: rgb(35, 131, 226); box-shadow: 0 2px 4px rgba(0,0,0,0.18);">
+            class="btn btn-primary fw-bold d-flex align-items-center justify-content-center"
+            style="width: calc(50% - 7.5px); height: 52px; font-size: 1.2rem; border-radius: 10px; background: rgb(35, 131, 226); border-color: rgb(35, 131, 226); box-shadow: 0 2px 4px rgba(0,0,0,0.18);">
                 Mi perfil
             </a>
 
             <a href="{{ payload.metadata.urls.logout }}"
-               class="btn btn-danger fw-bold"
-               style="width: calc(50% - 7.5px); height: 52px; font-size: 1.2rem; border-radius: 10px; background: rgb(220, 53, 69); border-color: rgb(220, 53, 69); box-shadow: 0 2px 4px rgba(0,0,0,0.18);">
+            class="btn btn-danger fw-bold d-flex align-items-center justify-content-center"
+            style="width: calc(50% - 7.5px); height: 52px; font-size: 1.2rem; border-radius: 10px; background: rgb(220, 53, 69); border-color: rgb(220, 53, 69); box-shadow: 0 2px 4px rgba(0,0,0,0.18);">
                 Salir
             </a>
         </div>
 
-    </div>
-</div>
 
 
 

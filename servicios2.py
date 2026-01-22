@@ -203,8 +203,91 @@ def generar_data_servicios(correo):
                 "boton_detalle": satimp["FechaHasta"] is not None,
             }
         )
+    # -------- MANTENIMIENTOS -------- #
+
+    mantenimientos = [
+        {
+            "placa": "ABC123",
+            "actividades": [
+                {
+                    "status": "Realizado",
+                    "km": "5,000 km",
+                    "fecha": date_to_user_format("2024-09-15"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Realizado",
+                    "km": "10,000 km",
+                    "fecha": date_to_user_format("2025-06-12"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "15,000 km",
+                    "fecha": date_to_user_format("2026-09-15"),
+                    "boton_detalle": False,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "25,000 km",
+                    "fecha": date_to_user_format("2027-06-12"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "50,000 km",
+                    "fecha": date_to_user_format("2028-07-10"),
+                    "boton_detalle": True,
+                },
+            ],
+            "ultima_revision": date_to_user_format("2026-01-15"),
+        },
+        {
+            "placa": "JKL456",
+            "actividades": [],
+            "ultima_revision": date_to_user_format("2026-01-15"),
+        },
+        {
+            "placa": "XYZ999",
+            "actividades": [
+                {
+                    "status": "Realizado",
+                    "km": "5,000 km",
+                    "fecha": date_to_user_format("2024-09-15"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Realizado",
+                    "km": "10,000 km",
+                    "fecha": date_to_user_format("2025-06-12"),
+                    "boton_detalle": False,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "15,000 km",
+                    "fecha": date_to_user_format("2026-09-15"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "25,000 km",
+                    "fecha": date_to_user_format("2027-06-12"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "50,000 km",
+                    "fecha": date_to_user_format("2028-07-10"),
+                    "boton_detalle": False,
+                },
+            ],
+            "ultima_revision": date_to_user_format("2026-01-15"),
+        },
+    ]
 
     # -------- MULTAS -------- #
+
+    existentes = []
 
     # SAT Multas
     cursor.execute(
@@ -221,11 +304,11 @@ def generar_data_servicios(correo):
         (id_miembro,),
     )
 
-    satmuls = []
     for satmul in cursor.fetchall():
-        satmuls.append(
+        existentes.append(
             {
-                "subtitulo": satmul["PlacaValidate"],
+                "titulo": "SAT Lima",
+                "subtitulo": f"Placa: {satmul["PlacaValidate"]}",
                 "fecha": date_to_user_format(satmul["FechaEmision"]),
                 "falta": satmul["Falta"],
                 "situacion": {
@@ -257,11 +340,11 @@ def generar_data_servicios(correo):
         (id_miembro,),
     )
 
-    sutrans = []
     for sutran in cursor.fetchall():
-        sutrans.append(
+        existentes.append(
             {
-                "subtitulo": sutran["PlacaValidate"],
+                "titulo": "SUTRAN",
+                "subtitulo": f"Placa: {sutran["PlacaValidate"]}",
                 "fecha": date_to_user_format(sutran["FechaDoc"]),
                 "falta": sutran["CodigoInfrac"],
                 "situacion": {
@@ -293,16 +376,16 @@ def generar_data_servicios(correo):
         (id_miembro,),
     )
 
-    calmuls = []
     for calmul in cursor.fetchall():
-        calmuls.append(
+        existentes.append(
             {
-                "subtitulo": calmul["PlacaValidate"],
+                "titulo": "Municipalidad del Callao",
+                "subtitulo": f"Placa: {calmul["PlacaValidate"]}",
                 "fecha": date_to_user_format(calmul["FechaInfraccion"]),
                 "falta": calmul["Codigo"],
                 "situacion": {
                     "titulo": f"Total: S/{calmul["TotalInfraccion"]}",
-                    "subtitulo": f"Con Dcto: S/{calmul["TotalBeneficio"]}",
+                    "subtitulo": f"Descontada: S/{calmul["TotalBeneficio"]}",
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(calmul["LastUpdate"]),
@@ -316,14 +399,30 @@ def generar_data_servicios(correo):
 
     # Agregar avisos que no se encontraron multas
     avisos = []
-    if not satmuls:
-        avisos.append("No se encontraron multas SAT Lima.")
-    if not sutrans:
-        avisos.append("No se encontraron multas SUTRAN.")
-    if not calmuls:
-        avisos.append("No se encontraron multas Municipalidad del Callao.")
-
+    if not [i for i in existentes if i["titulo"] == "Multa SAT Lima"]:
+        avisos.append(
+            {
+                "texto": "No se encontraron multas SAT Lima.",
+                "fecha": f"Actualizado: {date_to_user_format(ultimas_actualizaciones_miembro['satimps'])}",
+            }
+        )
+    if not [i for i in existentes if i["titulo"] == "Multa SUTRAN"]:
+        avisos.append(
+            {
+                "texto": "No se encontraron multas SUTRAN.",
+                "fecha": f"Actualizado: TBD",
+            }
+        )
+    if not [i for i in existentes if i["titulo"] == "Multa Municipalidad del Callao"]:
+        avisos.append(
+            {
+                "texto": "No se encontraron multas Municipalidad del Callao.",
+                "fecha": f"Actualizado: TBD",
+            }
+        )
     # -------- DESCARGAS -------- #
+
+    descargas = {}
 
     cursor.execute(
         """ SELECT
@@ -345,10 +444,20 @@ def generar_data_servicios(correo):
         for i in cursor.fetchall()
     ]
 
-    descargas_soat = (
-        {"disponible": True, "detalles": soat}
-        if soat
-        else {"disponible": False, "detalles": "No Hay Certificados Disponibles."}
+    descargas.update(
+        {
+            "soats": (
+                {
+                    "disponible": True,
+                    "detalles": soat,
+                }
+                if soat
+                else {
+                    "disponible": False,
+                    "detalles": "No Hay Certificados SOAT Disponibles.",
+                }
+            )
+        }
     )
 
     cursor.execute(
@@ -369,30 +478,57 @@ def generar_data_servicios(correo):
         {"placa": i["PlacaValidate"], "fecha": date_to_user_format(i["lastUpdate"])}
         for i in cursor.fetchall()
     ]
-    descargas_sunarp = (
-        {"disponible": True, "detalles": sunarp}
-        if sunarp
-        else {"disponible": False, "detalles": "No Hay Fichas Registrales Disponibles."}
+    descargas.update(
+        {
+            "sunarps": (
+                {
+                    "disponible": True,
+                    "detalles": sunarp,
+                }
+                if sunarp
+                else {
+                    "disponible": False,
+                    "detalles": "No Hay Fichas Registrales Disponibles.",
+                }
+            )
+        }
     )
 
     cursor.execute(
         """ SELECT
-            lastUpdate
-            FROM
-            DataMtcRecordsConductores
-            WHERE IdMember_FK = ?
-            AND ImageBytes IS NOT NULL
+            a.LastUpdate,
+            b.DocTipo,
+            b.DocNum
+            FROM DataMtcRecordsConductores a
+            JOIN InfoMiembros b
+            ON b.IdMember = a.IdMember_FK
+            WHERE a.IdMember_FK = ?
+            AND a.ImageBytes IS NOT NULL
         """,
         (id_miembro,),
     )
 
     recvehic = [
-        {"fecha": date_to_user_format(i["lastUpdate"])} for i in cursor.fetchall()
+        {
+            "doc": f"{i['DocTipo']} {i['DocNum']}",
+            "fecha": date_to_user_format(i["LastUpdate"]),
+        }
+        for i in cursor.fetchall()
     ]
-    descargas_recvehic = (
-        {"disponible": True, "detalles": recvehic}
-        if recvehic
-        else {"disponible": False, "detalles": "No Hay Récords Disponibles."}
+    descargas.update(
+        {
+            "recvehic": (
+                {
+                    "disponible": True,
+                    "detalles": recvehic,
+                }
+                if recvehic
+                else {
+                    "disponible": False,
+                    "detalles": "No Hay Récords Vehiculares Disponibles.",
+                }
+            )
+        }
     )
 
     # -------- METADATA -------- #
@@ -404,17 +540,12 @@ def generar_data_servicios(correo):
     payload = {
         "encabezado": encabezado,
         "vencimientos": vencimientos,
+        "mantenimientos": mantenimientos,
         "multas": {
-            "satmuls": satmuls,
-            "sutrans": sutrans,
-            "calmul": calmuls,
+            "existentes": existentes,
             "avisos": avisos,
         },
-        "descargas": {
-            "soats": descargas_soat,
-            "sunarp": descargas_sunarp,
-            "recvehic": descargas_recvehic,
-        },
+        "descargas": descargas,
         "metadata": metadata,
     }
 
