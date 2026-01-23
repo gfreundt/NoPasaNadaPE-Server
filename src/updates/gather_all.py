@@ -35,10 +35,12 @@ def gather_threads(dash, all_updates):
     dash.scrapers_corriendo = True
 
     # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
-    # from src.test.test_data import get_test_data
-    # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
-    # all_updates = get_test_data([0, 0, 2, 0, 0, 0, 0, 0, 0])
+    from src.test.test_data import get_test_data
 
+    # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
+    all_updates = get_test_data([0, 0, 0, 0, 0, 3, 0, 0, 0])
+
+    print("------------ ALL UPDATES ------------")
     print(all_updates)
 
     # log change of dashboard status
@@ -388,6 +390,9 @@ def manage_sub_threads(
             {update_key: {"status": "INACTIVO", "eta": "", "threads_activos": ""}}
         )
     full_response.update({update_key: local_response})
+
+    print("------------- FULL RESPONSE ---------------")
+    print(full_response)
 
 
 def update_local_gather_file(full_response):
