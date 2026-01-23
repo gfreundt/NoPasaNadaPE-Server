@@ -115,7 +115,7 @@ def generar_data_servicios(correo):
             plazos
             | {
                 "titulo": "Licencia de Conducir",
-                "subtitulo": licencia["Numero"],
+                "subtitulo": f"Numero: {licencia["Numero"]}",
                 "boton_detalle": licencia["FechaHasta"] is not None,
             }
         )
@@ -192,8 +192,10 @@ def generar_data_servicios(correo):
         # ajustar estado a particularidad de este servicio
         if not satimp["Codigo"]:
             plazos["estado"] = "Sin Registros"
+            plazos["estado_bg"] = STATUS_BG["info"]
         elif not satimp["FechaHasta"]:
             plazos["estado"] = "Sin Pagos Pendientes"
+            plazos["estado_bg"] = STATUS_BG["ok"]
 
         vencimientos.append(
             plazos
@@ -562,12 +564,19 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
     if fecha_vigencia:
         # calcular dias restantes para vencimiento (si hay fecha) y determinar estado
         dias_v = (dt.strptime(fecha_vigencia, "%Y-%m-%d") - dt.now()).days + 1
-        estado = (
-            "Vencido" if dias_v < 0 else "Por Vencer" if dias_v <= 30 else "Vigente"
-        )
+        if dias_v < 0:
+            estado = "Vencido"
+            estado_bg = STATUS_BG["peligro"]
+        elif dias_v <= 30:
+            estado = "Por Vencer"
+            estado_bg = STATUS_BG["advertencia"]
+        else:
+            estado = "Vigente"
+            estado_bg = STATUS_BG["ok"]
 
         return {
             "estado": estado,
+            "estado_bg": estado_bg,
             "vigencia": {
                 "fecha": (
                     date_to_user_format(fecha_vigencia) if fecha_vigencia else "N/A"
@@ -580,7 +589,7 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
             },
             "ultima_actualizacion": {
                 "fecha": date_to_user_format(fecha_actualizacion),
-                "dias_desde": f"hace {dias_a:,} {'día' if dias_v == 1 else 'días'}",
+                "dias_desde": f"hace {dias_a:,} {'día' if dias_a == 1 else 'días'}",
             },
         }
 
@@ -588,6 +597,7 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
 
         return {
             "estado": "No Disponible",
+            "estado_bg": STATUS_BG["info"],
             "vigencia": {
                 "fecha": "N/A",
                 "dias_restantes": "",
@@ -600,4 +610,18 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
 
 
 if __name__ == "__main__":
+
+    STATUS_BG = {
+        "ok": "#d1e7dd",
+        "advertencia": "#fff3cd",
+        "peligro": "#f8d7da",
+        "info": "#cff4fc",
+    }
+
+    colores = {
+        "ok": "text-success",
+        "advertencia": "text-warning",
+        "peligro": "text-danger",
+        "info": "text-primary",
+    }
     app.run(debug=True)

@@ -1,12 +1,16 @@
 {% extends "ui-pagina-base-maquinarias.html" %}
 
 {% block title %}
-Mi Cuenta | No Pasa Nada PE
+    Mi Cuenta | No Pasa Nada PE
 {% endblock %}
 
 {% block content %}
 <div class="d-flex flex-column align-items-center" style="font-family: 'Inter', sans-serif; font-weight: 700;">
 
+    
+    <!--========== ENCABEZADO ===========-->
+
+    <!-- Logos -->
     <div class="d-flex justify-content-center pt-5 pb-3 align-items-center">
         <img src="/static/images/logo-nopasanadape-transparente-negro.png"
              alt="No Pasa Nada PE Logo"
@@ -21,22 +25,24 @@ Mi Cuenta | No Pasa Nada PE
              class="ms-2">
     </div>
 
+    <!-- Titulo y Datos de Usuario -->
     <div class="text-center mb-3" style="max-width: 700px;">
-        <h1 class="fw-bold mb-0" style="font-size: 2rem;">Estado de Servicios</h1>
 
+        <h1 class="fw-bold mb-0" style="font-size: 2rem;">Estado de Servicios</h1>
         <h2 class="fs-5 fw-normal text-secondary mb-1">
             Bienvenido, {{ payload.encabezado.nombre }}
         </h2>
 
         <div class="fs-6 text-secondary d-flex justify-content-center align-items-center gap-2 flex-wrap">
-            <span>{{ payload.encabezado.tipo_documento }}</span>:
-
+            <span>
+                {{ payload.encabezado.tipo_documento }}
+            </span>
+            :
             <span class="badge bg-primary">
                 {{ payload.encabezado.numero_documento }}
             </span>
 
             <span class="mx-1">|</span>
-
             <span><strong>PLACAS:</strong></span>
 
             {% for placa in payload.encabezado.placas %}
@@ -49,55 +55,81 @@ Mi Cuenta | No Pasa Nada PE
         </div>
     </div>
 
+    
+    <!--========== VENCIMIENTOS ===========-->
     <div class="w-100 mb-5 mt-3" style="max-width: 700px;">
 
-        <h3 class="fw-bold fs-4 mb-3 text-center">Vencimientos</h3>
+        <!-- Titulo -->
+        <h3 class="fw-bold fs-4 mb-3 text-center">
+            Vencimientos
+        </h3>
 
-        <table class="table table-bordered table-striped text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <!-- Tabla Principal -->
+        <table class="table text-center align-middle" style="box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-collapse: separate; border-spacing: 0 4px;">
             <thead class="table-dark">
                 <tr>
                     <th scope="col">Servicio</th>
                     <th scope="col">Estado</th>
                     <th scope="col">Vigencia</th>
-                    <th scope="col">Última Revisión</th>
+                    <th scope="col">Actualizado</th>
                     <th scope="col">Detalles</th>
                 </tr>
             </thead>
 
             <tbody>
                 {% for row in payload.vencimientos %}
-                    <tr>
-                        <td class="fw-medium">
-                            {{ row.titulo }}
+                    <tr> 
+                        <!-- Columna 1: Título y subtítulo -->
+                        <td style="background-color: {{ row.estado_bg }};">
+                            <!-- Primera fila: negro y bold -->
+                            <span class="fw-bold text-dark">
+                                {{ row.titulo }}
+                            </span>
+
                             {% if row.subtitulo %}
                                 <br>
-                                <span class="small text-muted">{{ row.subtitulo }}</span>
+                                <!-- Segunda fila: gris oscuro y más pequeña -->
+                                <span class="text-secondary" style="font-size: 0.85rem;">
+                                    {{ row.subtitulo }}
+                                </span>
                             {% endif %}
                         </td>
 
-                        <td>
-                            <span class="{{ row.estado_class }}">{{ row.estado }}</span>
+                        <!-- Columna 2: Estado (color viene del backend) -->
+                        <td style="background-color: {{ row.estado_bg }};">
+                            <span>
+                                {{ row.estado }}
+                            </span>
                         </td>
 
-                        <td>
-                            <div class="d-flex flex-column justify-content-center">
-                                <span>{{ row.vigencia.fecha }}</span>
-                            </div>
-                            <div class="d-flex flex-column justify-content-center">
-                                <span>{{ row.vigencia.dias_restantes }}</span>
-                            </div>
+                        <!-- Columna 3: Vigencia -->
+                        <td style="background-color: {{ row.estado_bg }};">
+                            <!-- Primera fila: igual que columna 1 -->
+                            <span class="fw-bold text-dark">
+                                {{ row.vigencia.fecha }}
+                            </span>
+                            <br>
+                            <!-- Segunda fila: igual que columna 1 -->
+                            <span class="text-secondary" style="font-size: 0.85rem;">
+                                {{ row.vigencia.dias_restantes }}
+                            </span>
                         </td>
 
-                        <td>
-                            <div class="d-flex flex-column justify-content-center">
-                                <span>{{ row.ultima_actualizacion.fecha }}</span>
-                            </div>
-                            <div class="d-flex flex-column justify-content-center">
-                                <span>{{ row.ultima_actualizacion.dias_desde }}</span>
-                            </div>
+                        <!-- Columna 4: Última actualización -->
+                        <td style="background-color: {{ row.estado_bg }};">
+                            <!-- Primera fila -->
+                            <span class="fw-bold text-dark">
+                                {{ row.ultima_actualizacion.fecha }}
+                            </span>
+                            <br>
+                            <!-- Segunda fila -->
+                            <span class="text-secondary" style="font-size: 0.85rem;">
+                                {{ row.ultima_actualizacion.dias_desde }}
+                            </span>
                         </td>
 
-                        <td>
+                        <!-- Columna 5: Botón detalle -->
+                        <td style="background-color: {{ row.estado_bg }};">
                             {% if row.boton_detalle %}
                                 <button type="button"
                                         class="btn btn-link p-0"
@@ -106,6 +138,8 @@ Mi Cuenta | No Pasa Nada PE
                                         aria-label="Ver detalles">
                                     <i class="bi bi-info-circle-fill" style="font-size: 1.2rem;"></i>
                                 </button>
+                            {% else %}
+                                <span class="text-secondary">—</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -114,13 +148,16 @@ Mi Cuenta | No Pasa Nada PE
         </table>
 
 
-
+        <!--========== MANTENIMIENTOS ===========-->
         <div class="w-100 mb-3 mt-5" style="max-width: 700px;">
 
-            <h3 class="fw-bold fs-4 mb-3 text-center">Mantenimientos</h3>
+            <!-- Titulo -->
+            <h3 class="fw-bold fs-4 mb-3 text-center">
+                Mantenimientos
+            </h3>
 
+            <!-- Tabla Principal -->
             {% if payload.mantenimientos %}
-
             <table class="table table-bordered table-striped text-center align-middle mb-0"
                 style="box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                 <thead class="table-dark">
@@ -130,10 +167,12 @@ Mi Cuenta | No Pasa Nada PE
                         <th scope="col">Última Revisión</th>
                     </tr>
                 </thead>
-
+                
+                
                 <tbody>
                     {% for row in payload.mantenimientos %}
                         <tr>
+                             <!-- Titulo y subtitulo -->
                             <td class="fw-medium">
                                 {{ row.placa }}
                                 {% if row.subtitulo %}
@@ -142,9 +181,9 @@ Mi Cuenta | No Pasa Nada PE
                                 {% endif %}
                             </td>
 
+                            <!-- Tabla Interior -->
                             <td class="p-0">
                                 {% if row.actividades %}
-
                                     <div class="p-2">
                                         <table class="table table-sm table-borderless text-center align-middle mb-0">
                                             <thead>
@@ -159,18 +198,22 @@ Mi Cuenta | No Pasa Nada PE
                                             <tbody>
                                                 {% for actividad in row.actividades %}
                                                     <tr class="border-bottom">
+                                                        <!-- Status -->
                                                         <td class="fw-medium py-2">
                                                             {{ actividad.status }}
                                                         </td>
 
+                                                        <!-- Kilometraje -->
                                                         <td class="py-2">
                                                             <span class="{{ actividad.km_class }}">{{ actividad.km }}</span>
                                                         </td>
 
+                                                        <!-- Fecha -->
                                                         <td class="py-2">
                                                             <span>{{ actividad.fecha }}</span>
                                                         </td>
 
+                                                        <!-- Boton de Detalle -->
                                                         <td class="py-2">
                                                             {% if actividad.boton_detalle %}
                                                                 <button type="button"
@@ -195,6 +238,7 @@ Mi Cuenta | No Pasa Nada PE
                                 {% endif %}
                             </td>
 
+                            <!-- Actualizado -->
                             <td>
                                 <span class="{{ row.ultima_revision_class }}">{{ row.ultima_revision }}</span>
                             </td>
@@ -202,16 +246,17 @@ Mi Cuenta | No Pasa Nada PE
                     {% endfor %}
                 </tbody>
             </table>
-
             {% endif %}
         </div>
 
 
-
-
+        
+        <!--========== MULTAS ===========-->
         <div class="py-3"></div>
 
-        <h3 class="fw-bold fs-4 mb-3 text-center">Multas</h3>
+        <h3 class="fw-bold fs-4 mb-3 text-center">
+            Multas
+        </h3>
 
         {% if payload.multas.existentes %}
 
@@ -274,7 +319,8 @@ Mi Cuenta | No Pasa Nada PE
             </div>
         {% endfor %}
 
-
+        
+        <!--========== DESCARGAS ===========-->
 
         <h3 class="fw-bold fs-4 mb-3 mt-5 text-center">Descargas</h3>
 
@@ -350,6 +396,9 @@ Mi Cuenta | No Pasa Nada PE
             </div>
         </div>
 
+        
+        <!--========== BOTONES DE NAVEGACION ===========-->
+
         <div class="d-flex flex-row mt-5 justify-content-between" style="gap: 15px;">
             <a href="{{ payload.metadata.urls.mi_perfil }}"
             class="btn btn-primary fw-bold d-flex align-items-center justify-content-center"
@@ -363,8 +412,5 @@ Mi Cuenta | No Pasa Nada PE
                 Salir
             </a>
         </div>
-
-
-
 
 {% endblock %}
