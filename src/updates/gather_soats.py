@@ -24,7 +24,7 @@ def gather(
         incognito=True,
         window_size=(1920, 1080),
     )
-    webdriver = chromedriver.direct_driver()
+    webdriver = chromedriver.proxy_driver()
 
     # iniciar variables para calculo de ETA
     tiempo_inicio = time.perf_counter()
