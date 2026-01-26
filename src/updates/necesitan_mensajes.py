@@ -20,7 +20,7 @@ def alertas(db_cursor):
             -- Get IDs of members who already received an alert in the last 25 hours
             SELECT IdMember
             FROM StatusMensajesEnviados
-            WHERE FechaEnvio > DATETIME('now', 'localtime', '-25 hours') 
+            WHERE DATE(FechaEnvio) = DATE('now', 'localtime') 
             AND TipoMensaje = 'ALERTA'
         ),
         Alerts AS (

@@ -1,7 +1,7 @@
 # datos_actualizar.py
 from src.updates import configuracion_plazos
 
-ULTIMA_ACTUALIZACION_HORAS = 48
+ULTIMA_ACTUALIZACION_HORAS = 23
 
 
 def alertas(self):
@@ -19,11 +19,12 @@ def alertas(self):
 
     query = f"""
     WITH RecentAlerts AS (
-        SELECT IdMember
-        FROM StatusMensajesEnviados
-        WHERE FechaEnvio > DATE('now', 'localtime', '-25 hours') 
-        AND TipoMensaje = 'ALERTA'
+    SELECT IdMember
+    FROM StatusMensajesEnviados
+    WHERE DATE(FechaEnvio) = DATE('now', 'localtime') 
+    AND TipoMensaje = 'ALERTA'
     )
+    
     -- 1. SOAT
     SELECT 'SOAT' as Tipo, p.IdMember_FK, NULL as DocTipo, NULL as DocNum, s.PlacaValidate as Placa
     FROM DataApesegSoats s

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, redirect, request, url_for
+from flask import render_template, jsonify, redirect, request, url_for
 import threading
 import logging
 from copy import deepcopy as copy
@@ -16,7 +16,8 @@ from security.keys import DASHBOARD_URL
 from pprint import pprint
 
 
-logging.getLogger("werkzeug").disabled = True
+# logging.getLogger("werkzeug").disabled = True
+logger = logging.getLogger(__name__)
 
 
 class Dashboard:
@@ -31,6 +32,7 @@ class Dashboard:
 
         # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
         if self.master:
+            logger.info("Iniciando cron en worker master")
             print(f" > DASHBOARD: http://{get_local_ip()}:5000/{DASHBOARD_URL}")
             cron.main(self)
 
@@ -140,27 +142,32 @@ class Dashboard:
 
     # -------- ACCIONES DE BOTONES ----------
     def datos_alerta(self):
+        logger.info("Solicitud de actualización de datos de alertas recibida.")
         # solicitar actualizacion a servidor
         self.actualizar_datos_alertas = datos_actualizar.alertas(self)
         return redirect(url_for("dashboard"))
 
     def datos_boletin(self):
+        logger.info("Solicitud de actualización de datos de boletines recibida.")
         # solicitar actualizacion a servidor
         self.actualizar_datos_boletines = datos_actualizar.boletines(self)
         return redirect(url_for("dashboard"))
 
     def actualizar_alertas(self):
+        logger.info("Iniciando actualización de datos de alertas.")
         # logica general de scrapers
         all_updates = self.actualizar_datos_alertas
         tamano_actualizacion = gather_all.gather_threads(
             dash=self, all_updates=all_updates
         )
         self.log(
-            action=f"[ ACTUALIZACION ALERTAS ] Tamaño: {tamano_actualizacion} kB",
+            action=f"[ ACT ALERTAS ] Tamaño: {tamano_actualizacion} kB",
         )
+        logger.info(f"[ ACT ALERTAS ] Tamaño: {tamano_actualizacion} kB")
         return redirect(url_for("dashboard"))
 
     def actualizar_boletines(self):
+        logger.info("Iniciando actualización de datos de boletines.")
         # logica general de scrapers
         all_updates = self.actualizar_datos_boletines
         tamano_actualizacion = gather_all.gather_threads(
@@ -170,9 +177,11 @@ class Dashboard:
         self.log(
             action=f"[ ACT BOLETINES ] Data: {tamano_actualizacion} kB",
         )
+        logger.info(f"[ ACT BOLETINES ] Data: {tamano_actualizacion} kB")
         return redirect(url_for("dashboard"))
 
     def generar_alertas(self):
+        logger.info("Generando alertas pendientes.")
         # genera todas las alertas que tocan y las guarda en "alertas_pendientes.json"
         mensajes = generar_mensajes.alertas(db=self.db)
         if len(mensajes) > 0:
@@ -182,6 +191,7 @@ class Dashboard:
         return redirect(url_for("dashboard"))
 
     def generar_boletines(self):
+        logger.info("Generando boletines pendientes.")
         # genera todos los boletines que tocan y los guarda en "boletines_pendientes.json"
         mensajes = generar_mensajes.boletines(db=self.db)
         if len(mensajes) > 0:
@@ -191,6 +201,7 @@ class Dashboard:
         return redirect(url_for("dashboard"))
 
     def enviar_mensajes(self):
+        logger.info("Enviando mensajes pendientes.")
         # envia todos los mensajes pendientes en "alertas_pendientes.json" y "boletines_pendientes.json"
         mensajes = enviar_correo_mensajes.send(db=self.db)
         if mensajes["ALERTA"] != 0 or mensajes["BOLETIN"] != 0:
@@ -226,7 +237,7 @@ class Dashboard:
         return redirect("/")
 
     def db_vacuum(self):
-
+        logger.info("Iniciando VACUUM de la base de datos.")
         return redirect("/")
 
     def hacer_tests(self):
@@ -237,6 +248,8 @@ class Dashboard:
         return redirect("/")
 
     def db_info(self):
+        logger.info("Solicitud de información de la base de datos recibida.")
+
         cursor = self.db.cursor()
 
         # obtener info de autorizados

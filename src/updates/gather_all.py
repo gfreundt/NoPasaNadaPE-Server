@@ -35,10 +35,10 @@ def gather_threads(dash, all_updates):
     dash.scrapers_corriendo = True
 
     # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
-    # from src.test.test_data import get_test_data
+    from src.test.test_data import get_test_data
 
     # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
-    # all_updates = get_test_data([0, 0, 0, 0, 0, 3, 0, 0, 0])
+    all_updates = get_test_data([0, 0, 0, 0, 0, 3, 0, 0, 0])
 
     print("------------ ALL UPDATES ------------")
     print(all_updates)
