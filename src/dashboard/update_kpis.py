@@ -1,5 +1,4 @@
 import requests
-import time
 
 # from google.cloud import billingbudgets_v1
 from security.keys import (
@@ -25,7 +24,7 @@ def get_truecaptcha():
     try:
         url = rf"https://api.apiTruecaptcha.org/one/hello?method=get_all_user_data&userid=gabfre%40gmail.com&apikey={TRUECAPTCHA_API_KEY}"
         r = requests.get(url, timeout=5)
-        return f'✅ USD {r.json()["data"]["get_user_info"][4]["value"]:.2f}'
+        return f"✅ USD {r.json()['data']['get_user_info'][4]['value']:.2f}"
     except Exception:
         return "❓ N/A"
 
@@ -36,27 +35,26 @@ def get_zeptomail():
 
 def get_brightdata():
     return 0
-    BALANCE_URL = "https://api.brightdata.com/balance"
-    headers = {
-        "Authorization": f"Bearer {BRIGHT_DATA_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    try:
-        response = requests.get(BALANCE_URL, headers=headers, timeout=5)
-        if response.status_code == 200:
-            balance_data = response.json()
-            balance = balance_data.get("balance")
-            if balance:
-                return f"✅ USD {balance}"
+    # BALANCE_URL = "https://api.brightdata.com/balance"
+    # headers = {
+    #     "Authorization": f"Bearer {BRIGHT_DATA_API_KEY}",
+    #     "Content-Type": "application/json",
+    # }
+    # try:
+    #     response = requests.get(BALANCE_URL, headers=headers, timeout=5)
+    #     if response.status_code == 200:
+    #         balance_data = response.json()
+    #         balance = balance_data.get("balance")
+    #         if balance:
+    #             return f"✅ USD {balance}"
 
-        return "❓ N/A"
+    #     return "❓ N/A"
 
-    except requests.exceptions.RequestException:
-        return "❓ N/A"
+    # except requests.exceptions.RequestException:
+    #     return "❓ N/A"
 
 
 def get_googlecloud():
-
     return "❓ N/A"
 
     # client = billingbudgets_v1.BudgetServiceClient()
@@ -78,7 +76,6 @@ def get_googlecloud():
 
 
 def get_2captcha():
-
     URL = f"https://2captcha.com/res.php?key={TWOCAPTCHA_API_KEY}&action=getbalance"
 
     try:

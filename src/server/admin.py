@@ -1,14 +1,20 @@
+import os
+import logging
 from flask import request, jsonify
 import uuid
-import threading
+
 
 from security.keys import INTERNAL_AUTH_TOKEN
-from src.utils.utils import hash_text
+from src.utils.utils import hash_text, NETWORK_PATH
 from src.server import do_updates
 from src.updates import gather_all
 
 
+logger = logging.getLogger(__name__)
+
+
 def main(self):
+    logger.info("Endpoint: admin accesado")
 
     token = request.args.get("token")
     solicitud = (request.args.get("solicitud") or "").lower()
@@ -16,12 +22,14 @@ def main(self):
     payload = request.get_json()
 
     if token != INTERNAL_AUTH_TOKEN:
+        logger.warning("Acceso no autorizado. Error en Token de Autorizacion.")
         return jsonify("Error en Token de Autorizacion."), 401
 
     cursor = self.db.cursor()
     conn = self.db.conn
 
     if solicitud == "nuevo_password":
+        logger.info(f"Generando nuevo password para: {correo}")
 
         # generate 6-char alphanumeric password
         nuevo_password = uuid.uuid4().hex[:6]
@@ -29,18 +37,19 @@ def main(self):
 
         # update database
         cmd = """
-            UPDATE InfoMiembros
-            SET NextLoginAllowed = NULL,
-                CountFailedLogins = 0,
-                Password = ?
-            WHERE Correo = ?
-        """
+                UPDATE InfoMiembros
+                SET NextLoginAllowed = NULL,
+                    CountFailedLogins = 0,
+                    Password = ?
+                WHERE Correo = ?
+                """
         cursor.execute(cmd, (nuevo_password_hash, correo))
         conn.commit()
 
         return jsonify(f"Nuevo Password: {nuevo_password}"), 200
 
     if solicitud == "kill":
+        logger.info(f"Eliminando usuario y datos asociados (KILL): {correo}")
 
         # borra placas asociadas con correo / usuario
         cmd = "UPDATE InfoPlacas SET IdMember_FK = 0 WHERE IdMember_FK IN (SELECT IdMember FROM Infomiembros WHERE Correo = ?)"
@@ -58,27 +67,38 @@ def main(self):
         return jsonify(f"Kill: {correo}"), 200
 
     if solicitud == "vacuum":
-
         # ajusta el tamano de la base de datos (proceso pesado)
+        logger.info("Iniciando VACUUM de la base de datos.")
         cursor.execute("VACUUM")
         conn.commit()
 
+    if solicitud == "get_logger":
+        logger.info("Generando logs del sistema.")
+        n = payload.get("limit", 500)
+        with open(os.path.join(NETWORK_PATH, "app.log"), "r") as f:
+            logs = f.readlines()[-n:]
+        return jsonify(logs), 200
+
     if solicitud == "get_pendientes":
+        logger.info("Generando lista de pendientes para boletines.")
         return jsonify(boletines(cursor)), 200
 
     if solicitud == "manual_upload":
+        logger.info("Upload manual iniciado.")
         do_updates.main(self.db, payload)
         return jsonify("Actualizado."), 200
 
     if solicitud == "get_sunarp":
+        logger.info("Generando lista de pendientes para SUNARP.")
         cmd = """   SELECT Placa FROM InfoPlacas
                     WHERE LastUpdateSunarpFichas = '2020-01-01'"""
         cursor.execute(cmd)
         faltan = {"DataSunarpFichas": [i["Placa"] for i in cursor.fetchall()]}
-
         return jsonify(faltan), 200
 
     if solicitud == "get_faltan":
+        # deprecated
+        logger.info("Generando lista de faltantes para MTC.")
         cmd = """   SELECT DocTipo, DocNum, Correo FROM InfoMiembros
                     WHERE IdMember NOT IN (SELECT IdMember_FK FROM DataMtcBrevetes)"""
         cursor.execute(cmd)
@@ -112,16 +132,11 @@ def main(self):
 
         return jsonify(faltan), 200
 
-    # 2. Define a wrapper function to run in the background
-
     if solicitud == "force_update":
-
-        def run_scraper_bg(dash_instance, update_params):
-            gather_all.gather_threads(dash_instance, update_params)
-
-        # 3. Start the thread
-
         id_member = payload.get("id_member")
+        logger.info(
+            f"Iniciando actualización forzada desde Admin. ID Member: {id_member}"
+        )
 
         cursor.execute(
             "SELECT DocTipo, DocNum FROM InfoMiembros WHERE IdMember = ?", (id_member,)
@@ -147,15 +162,14 @@ def main(self):
         }
 
         gather_all.gather_threads(self.dash, upd)
-        # thread = threading.Thread(target=run_scraper_bg, args=(self.dash, upd))
-        # thread.start()
-
         return jsonify(upd), 200
 
+    # solicitud no reconocida
+    logger.warning("Solicitud no reconocida.")
     return jsonify({}), 400
 
 
-def boletines(cursor):
+def boletineds(cursor):
     """
     Genera requerimientos de actualización para boletines.
     """

@@ -5,12 +5,12 @@ import json
 import atexit
 import queue
 from threading import Thread, Lock
+import logging
+
+# local imports
 from src.server import do_updates
 from src.utils.constants import NETWORK_PATH, GATHER_ITERATIONS
 from src.utils.utils import start_vpn, stop_vpn, get_public_ip
-
-
-# local imports
 from src.updates import (
     gather_brevetes,
     gather_revtecs,
@@ -23,25 +23,23 @@ from src.updates import (
     gather_calmul,
 )
 
-# TODO: find a jnemultas with actual multas
+logger = logging.getLogger(__name__)
 
 
 def gather_threads(dash, all_updates):
-
     if dash.scrapers_corriendo:
+        logger.info("Scrapers corriendo. No iniciado.")
         dash.log(action="[ SCRAPERS ] No activado. Otra instancia corriendo.")
         return
 
     dash.scrapers_corriendo = True
 
     # TESTING: brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, calmul
-    from src.test.test_data import get_test_data
-
+    # from src.test.test_data import get_test_data
     # all_updates = get_test_data([3, 3, 3, 3, 3, 3, 3, 0, 3])
-    all_updates = get_test_data([0, 0, 0, 0, 0, 3, 0, 0, 0])
+    # all_updates = get_test_data([0, 0, 0, 0, 0, 3, 0, 0, 0])
 
-    print("------------ ALL UPDATES ------------")
-    print(all_updates)
+    logger.info(all_updates)
 
     # log change of dashboard status
     dash.log(general_status=("Activo", 1))
@@ -66,6 +64,7 @@ def gather_threads(dash, all_updates):
                     gather_recvehic,
                     "DataMtcRecordsConductores",
                 ),
+                name="DataMtcRecordsConductoresThread",
             )
         )
 
@@ -82,6 +81,7 @@ def gather_threads(dash, all_updates):
                     gather_brevetes,
                     "DataMtcBrevetes",
                 ),
+                name="DataMtcBrevetesThread",
             )
         )
 
@@ -98,6 +98,7 @@ def gather_threads(dash, all_updates):
                     gather_satmuls,
                     "DataSatMultas",
                 ),
+                name="DataSatMultasThread",
             )
         )
 
@@ -114,6 +115,7 @@ def gather_threads(dash, all_updates):
                     gather_revtecs,
                     "DataMtcRevisionesTecnicas",
                 ),
+                name="DataMtcRevisionesTecnicasThread",
             )
         )
 
@@ -130,6 +132,7 @@ def gather_threads(dash, all_updates):
                     gather_sutrans,
                     "DataSutranMultas",
                 ),
+                name="DataSutranMultasThread",
             )
         )
 
@@ -144,6 +147,7 @@ def gather_threads(dash, all_updates):
                     all_updates["DataSatImpuestos"],
                     full_response,
                 ),
+                name="DataSatImpuestosThread",
             )
         )
 
@@ -160,6 +164,7 @@ def gather_threads(dash, all_updates):
                     gather_sunarps,
                     "DataSunarpFichas",
                 ),
+                name="DataSunarpFichasThread",
             )
         )
 
@@ -171,28 +176,30 @@ def gather_threads(dash, all_updates):
                 args=(
                     dash,
                     lock,
-                    all_updates["DataApesegSoats"][:12],
+                    all_updates["DataApesegSoats"],
                     full_response,
                     gather_soats,
                     "DataApesegSoats",
                 ),
+                name="DataApesegSoatsThread",
             )
         )
 
-    if all_updates.get("DataApesegSoats") and len(all_updates["DataApesegSoats"]) > 12:
-        vpn_ar_threads.append(
-            Thread(
-                target=manage_sub_threads,
-                args=(
-                    dash,
-                    lock,
-                    all_updates["DataApesegSoats"][12:24],
-                    full_response,
-                    gather_soats,
-                    "DataApesegSoats",
-                ),
-            )
-        )
+    # if all_updates.get("DataApesegSoats") and len(all_updates["DataApesegSoats"]) > 12:
+    #     vpn_ar_threads.append(
+    #         Thread(
+    #             target=manage_sub_threads,
+    #             args=(
+    #                 dash,
+    #                 lock,
+    #                 all_updates["DataApesegSoats"][12:24],
+    #                 full_response,
+    #                 gather_soats,
+    #                 "DataApesegSoats",
+    #             ),
+    #             name="DataApesegSoatsThread",
+    #         )
+    #     )
 
     # callao multas
     if all_updates.get("DataCallaoMultas"):
@@ -207,13 +214,11 @@ def gather_threads(dash, all_updates):
                     gather_calmul,
                     "DataCallaoMultas",
                 ),
+                name="DataCallaoMultasThread",
             )
         )
 
     for thread_group, pais in zip((vpn_pe_threads, vpn_ar_threads), ("pe", "ar")):
-
-        # print(thread_group, pais)
-
         if not thread_group:
             continue
 
@@ -237,14 +242,14 @@ def gather_threads(dash, all_updates):
 
         # iniciar threads con intervalos para que subthreads puedan iniciar sin generar conflictos
         for thread in thread_group:
+            logger.info(f"Iniciando thread {thread.name}")
             thread.start()
             time.sleep(2 * GATHER_ITERATIONS)
-            print("------", thread)
 
         # se queda en esta seccion hasta que todos los threads hayan terminado
         start_time = time.perf_counter()
         while any(t.is_alive() for t in thread_group):
-
+            logger.info("Esperando fin de todos los threads ...")
             time.sleep(10)
 
             # grabar cada 90 segundos lo que este en memoria de respuestas
@@ -265,6 +270,8 @@ def gather_threads(dash, all_updates):
         stop_vpn()
         time.sleep(5)
 
+    logger.info(f"Todos los threads finalizados. Resultado: {full_response}")
+
     # actualiza el archivo local que guarda la data de actualizaciones (solo debug)
     dash.scrapers_corriendo = False
     update_local_gather_file(full_response)
@@ -274,7 +281,7 @@ def gather_threads(dash, all_updates):
     do_updates.main(db=dash.db, data=full_response)
 
     # devuelve dato del tamaño de los datos actualizados en Kb (solo referencia)
-    return f"{len(json.dumps(full_response).encode("utf-8")) / 1024:1f}"
+    return f"{len(json.dumps(full_response).encode('utf-8')) / 1024:1f}"
 
 
 def manage_sub_threads(
@@ -285,7 +292,6 @@ def manage_sub_threads(
     target_func,
     update_key,
 ):
-
     # create variable that accumulates all sub-thread responses
     local_response = []
     full_response[update_key] = local_response
@@ -311,13 +317,13 @@ def manage_sub_threads(
 
     # abre un maximo de scrapers paralelos del mismo servicio (no mayor a la cantidad de datos a actualizar)
     for i in range(min(GATHER_ITERATIONS, len(update_data))):
-
+        logger.info(f"Iniciando sub-thread {target_func}-{i}")
         # asignar siguiente trabajador disponible
         siguiente_trabajador = 0
         while siguiente_trabajador in dash.assigned_cards:
             siguiente_trabajador += 1
         dash.assigned_cards.append(siguiente_trabajador)
-        print("Workers:", dash.assigned_cards)
+        logger.info(f"Asignado trabajador: {siguiente_trabajador}")
 
         # crear subthread
         thread = Thread(
@@ -342,14 +348,7 @@ def manage_sub_threads(
     # wait for all active threads to finish, in the meantime perfom updates every n seconds
     active_threads = 1
     while active_threads > 0:
-
         active_threads = sum(1 for thread in threads if thread.is_alive())
-
-        # grabar lo que se tiene en memoria hasta el momento en un archivo cada 90 segundos
-        if time.perf_counter() - start_time1 > 90:
-            start_time1 = time.perf_counter()
-            with lock:
-                update_local_gather_file(full_response)
 
         # actualizar status de scrapers cada segundo
         if time.perf_counter() - start_time2 > 1:
@@ -390,9 +389,6 @@ def manage_sub_threads(
             {update_key: {"status": "INACTIVO", "eta": "", "threads_activos": ""}}
         )
     full_response.update({update_key: local_response})
-
-    print("------------- FULL RESPONSE ---------------")
-    print(full_response)
 
 
 def update_local_gather_file(full_response):

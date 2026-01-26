@@ -2,6 +2,7 @@ from datetime import datetime as dt, timedelta as td
 import time
 from queue import Empty
 from func_timeout import exceptions
+import logging
 
 # local imports
 from src.utils.utils import date_to_db_format
@@ -9,32 +10,35 @@ from src.scrapers import scrape_brevete
 from src.utils.webdriver import ChromeUtils
 from src.utils.constants import HEADLESS
 
+logger = logging.getLogger(__name__)
+
 
 def gather(
     dash, queue_update_data, local_response, total_original, lock, card, subthread
 ):
-
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils()
-    # webdriver = chromedriver.proxy_driver()
 
     # iniciar variables para calculo de ETA
     procesados = 0
 
     # iterar hasta vaciar la cola compartida con otras instancias del scraper
     while True:
-
         # intentar extraer siguiente registro de cola compartida
         try:
             record_item = queue_update_data.get_nowait()
             id_member, doc_tipo, doc_num = record_item
+            logger.info(
+                f"Brevetes: Obtenido de cola: {doc_tipo} {doc_num} (ID: {id_member})"
+            )
         except Empty:
+            logger.info("Brevetes: Fin de cola.")
             dash.log(
                 card=card,
                 status=3,
                 title=f"Brevetes-{subthread} [PROCESADOS: {procesados}]",
                 text="Inactivo",
-                lastUpdate=f"Fin: {dt.strftime(dt.now(),"%H:%M:%S")}",
+                lastUpdate=f"Fin: {dt.strftime(dt.now(), '%H:%M:%S')}",
             )
             break
 
@@ -43,12 +47,15 @@ def gather(
             # actualizar dashboard con registro en proceso
             dash.log(
                 card=card,
-                title=f"Brevetes-{subthread} [Pendientes: {total_original-procesados}]",
+                title=f"Brevetes-{subthread} [Pendientes: {total_original - procesados}]",
                 text=f"Procesando: {doc_tipo} {doc_num}",
                 status=1,
             )
 
             # enviar registro a scraper
+            logger.info(
+                f"Brevetes ({doc_tipo} {doc_num} (ID: {id_member})): Iniciando scraper"
+            )
             webdriver = chromedriver.proxy_driver()
             scraper_response = scrape_brevete.browser_wrapper(
                 doc_num=doc_num, webdriver=webdriver
@@ -56,6 +63,9 @@ def gather(
 
             # si respuesta es texto, hubo un error -- regresar
             if isinstance(scraper_response, str):
+                logger.warning(
+                    f"Brevetes ({doc_tipo} {doc_num} (ID: {id_member})): {scraper_response}"
+                )
                 dash.log(
                     card=card,
                     status=2,
@@ -67,6 +77,9 @@ def gather(
 
                 # si error permite reinicio ("@") esperar 10 segundos y empezar otra vez
                 if "@" in scraper_response:
+                    logger.info(
+                        f"Brevetes ({doc_tipo} {doc_num} (ID: {id_member})): Reiniciando en 10 segundos."
+                    )
                     dash.log(
                         card=card,
                         text="Reinicio en 10 segundos",
@@ -97,20 +110,23 @@ def gather(
             _n = date_to_db_format(data=scraper_response)
 
             # agregar registo a acumulador de respuestas (compartido con otros scrapers)
-            local_response.append(
-                {
-                    "IdMember_FK": id_member,
-                    "Clase": _n[0],
-                    "Numero": _n[1],
-                    "Tipo": _n[2],
-                    "FechaExp": _n[3],
-                    "Restricciones": _n[4],
-                    "FechaHasta": _n[5],
-                    "Centro": _n[6],
-                    "Puntos": _n[7],
-                    "Record": _n[8],
-                    "LastUpdate": dt.now().strftime("%Y-%m-%d"),
-                }
+
+            respuesta = {
+                "IdMember_FK": id_member,
+                "Clase": _n[0],
+                "Numero": _n[1],
+                "Tipo": _n[2],
+                "FechaExp": _n[3],
+                "Restricciones": _n[4],
+                "FechaHasta": _n[5],
+                "Centro": _n[6],
+                "Puntos": _n[7],
+                "Record": _n[8],
+                "LastUpdate": dt.now().strftime("%Y-%m-%d"),
+            }
+            local_response.append(respuesta)
+            logger.info(
+                f"Brevetes ({doc_tipo} {doc_num} (ID: {id_member})): {respuesta}"
             )
 
             # calcular ETA aproximado
@@ -124,6 +140,9 @@ def gather(
             quit()
 
         except exceptions.FunctionTimedOut:
+            logger.warning(
+                f"Brevetes ({doc_tipo} {doc_num} (ID: {id_member})): Timeout"
+            )
             # devolver registro a la cola para que otro thread lo complete
             if record_item is not None:
                 queue_update_data.put(record_item)
@@ -137,6 +156,9 @@ def gather(
             break
 
         except Exception as e:
+            logger.error(
+                f"Brevetes ({doc_tipo} {doc_num} (ID: {id_member})): Crash: {e}"
+            )
             # devolver registro a la cola para que otro thread lo complete
             if record_item is not None:
                 queue_update_data.put(record_item)
@@ -151,4 +173,4 @@ def gather(
 
     # sacar worker de lista de activos cerrar driver
     dash.assigned_cards.remove(card)
-    # webdriver.quit()
+    webdriver.quit()

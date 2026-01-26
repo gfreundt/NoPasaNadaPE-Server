@@ -12,10 +12,11 @@ from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
 from jinja2 import Environment, ext
 import uuid
+import logging
+
 
 # Local imports
 from src.server import settings, updater, api, admin
-from src.dashboard import dashboard
 from src.ui.maquinarias import (
     login as maq_login,
     registro as maq_registro,
@@ -27,6 +28,7 @@ from src.ui.maquinarias import (
 from src.utils.constants import DB_NETWORK_PATH
 from src.comms import enviar_correo_inmediato
 
+logger = logging.getLogger(__name__)
 
 # ============================================================
 #                      DATABASE LAYER
@@ -147,14 +149,13 @@ class Server:
         return redirect(url_for("maquinarias"))
 
     def descargar_archivo(self, tipo, id):
-
         # seguridad: evitar navegacion directa a url
         if session.get("etapa") != "validado":
             return redirect(url_for("maquinarias"))
 
         # 1. Retrieve the base64/byte string from the database
         cursor = self.db.cursor()
-        cmd = f"SELECT ImageBytes FROM {tipo} WHERE {'IdMember_FK' if "Records" in tipo else 'PlacaValidate'} = ?"
+        cmd = f"SELECT ImageBytes FROM {tipo} WHERE {'IdMember_FK' if 'Records' in tipo else 'PlacaValidate'} = ?"
         cursor.execute(cmd, (id,))
         base64_string = cursor.fetchone()
 
@@ -315,7 +316,6 @@ class Server:
             return redirect(url_for("maquinarias"))
 
     def terminar_login_terceros(self, correo, nombre, proveedor):
-
         cursor = self.db.cursor()
 
         # revisar si miembro activo -- si no, popup advirtiendo y regresa

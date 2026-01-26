@@ -1,3 +1,4 @@
+from seleniumbase import Driver, sb_cdp
 import time
 from seleniumwire import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -15,12 +16,48 @@ def force_https_interceptor(request):
         request.url = request.url.replace("http://", "https://", 1)
 
 
+def test2():
+    username = "LcL8ujXtMohd3ODu"
+    password = "Lm4lJIxiyRd9nNCp_country-pe"
+    proxy_url = "geo.iproyal.com"
+    proxy_url_port = "11201"
+
+    proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
+    proxy = f"geo.iproyal.com:11201:LcL8ujXtMohd3ODu:Lm4lJIxiyRd9nNCp_country-pe"
+    # proxies = {"http": proxy, "https": proxy}
+
+    url = "https://licencias.mtc.gob.pe/#/index"
+    url = "https://ipv4.icanhazip.com/"
+
+    sb = sb_cdp.Chrome(
+        url,
+        proxy=proxy,
+        
+    )
+
+    c = sb.get_page_source()
+
+    print(c)
+
+    time.sleep(20)
+
+    return
+
+    return Driver(
+        uc=False,
+        proxy=proxy,
+        incognito=True,
+        headless=False,
+        window_size="1920,1080",
+    )
+
+
 def test():
     # --- PROXY CREDENTIALS (Using your provided values) ---
     username = "LcL8ujXtMohd3ODu"
     password = "Lm4lJIxiyRd9nNCp_country-pe"
     proxy_url = "geo.iproyal.com"
-    proxy_url_port = "12321"
+    proxy_url_port = "11201"
 
     PAGE_LOAD_TIMEOUT = 30
 
@@ -90,6 +127,8 @@ def test():
     except Exception as e:
         print(f"\nAn unexpected error occurred during page load: {e}")
         return
+    
+    time.sleep(30)
 
     # --- START SCRAPING (Runs regardless of whether it timed out or fully loaded) ---
     try:
@@ -139,5 +178,4 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
-    time.sleep(300)
+    driver = test()

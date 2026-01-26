@@ -10,11 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 def flujo(self, tipo_mensaje):
-
     # intentar una cantidad de veces actualizar el 100% de pendientes
     repetir = 0
     while True:
-
         # solicitar alertas/boletines pendientes para enviar a actualizar
         if tipo_mensaje == "alertas":
             pendientes = datos_actualizar.alertas(self)
@@ -54,7 +52,6 @@ def enviar_notificacion(mensaje):
 
 
 def main(self, tipo_mensaje):
-
     logger.info(f"Empezando Autoscaper: {tipo_mensaje}")
 
     # no activar si el switch de autoscraper esta apagado

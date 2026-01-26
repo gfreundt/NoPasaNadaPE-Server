@@ -1,12 +1,16 @@
 import schedule
 import threading
 import time
+import logging
+
 from src.dashboard import auto_scraper, update_kpis, resumen_diario
 from src.utils import mantenimiento
 
 
-def run_scheduler_loop(self):
+logger = logging.getLogger(__name__)
 
+
+def run_scheduler_loop(self):
     # activar al iniciar
     update_kpis.main(self)
     auto_scraper.main(self, "boletines")
@@ -19,7 +23,9 @@ def run_scheduler_loop(self):
     schedule.every().hour.do(mantenimiento.cada_hora, self)
 
     # una vez al dia
-    schedule.every().day.at('07:05').do(resumen_diario.main, self)
+    schedule.every().day.at("07:05").do(resumen_diario.main, self)
+
+    logger.info(f"Cron scheduler iniciado. Tareas programadas: {schedule.get_jobs()}.")
 
     while True:
         schedule.run_pending()

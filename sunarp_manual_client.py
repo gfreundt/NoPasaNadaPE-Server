@@ -1,5 +1,6 @@
-from datetime import datetime as dt, timedelta as td
-import os, sys
+from datetime import datetime as dt
+import os
+import sys
 import json
 from tqdm import tqdm
 import requests
@@ -222,9 +223,8 @@ def main():
     if len(sys.argv) > 1:
         n = int(sys.argv[1])
     else:
-        n = 2  # default number of placas to process
+        n = 3  # default number of placas to process
 
-    url = "http://localhost:5000"  # TEST
     url = "https://nopasanadape.com"  # PROD
 
     data = get_sunarp(url).json().get("DataSunarpFichas")

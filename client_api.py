@@ -9,7 +9,6 @@ import random
 
 
 def nuevo_pwd(url, correo):
-
     return requests.post(
         url=url + "/admin",
         params={
@@ -21,7 +20,6 @@ def nuevo_pwd(url, correo):
 
 
 def get_pendientes(url):
-
     return requests.post(
         url=url + "/admin",
         params={
@@ -33,7 +31,6 @@ def get_pendientes(url):
 
 
 def get_faltan(url):
-
     return requests.post(
         url=url + "/admin",
         params={
@@ -44,8 +41,18 @@ def get_faltan(url):
     )
 
 
-def get_sunarp(url):
+def get_logger(url):
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "get_logger",
+        },
+        json={"limit": 1000},
+    )
 
+
+def get_sunarp(url):
     return requests.post(
         url=url + "/admin",
         params={
@@ -57,7 +64,6 @@ def get_sunarp(url):
 
 
 def manual_upload(url, filename):
-
     target = os.path.join(NETWORK_PATH, "security", f"{filename}")
 
     with open(target, "r") as f:
@@ -74,7 +80,6 @@ def manual_upload(url, filename):
 
 
 def force_update(url, id_member):
-
     return requests.post(
         url=url + "/admin",
         params={
@@ -86,7 +91,6 @@ def force_update(url, id_member):
 
 
 def alta_prueba(url, correo):
-
     clientes = [
         {
             "celular": "",
@@ -110,7 +114,6 @@ def alta_prueba(url, correo):
 
 
 def baja_prueba(url, correo):
-
     clientes = [
         {
             "correo": correo,
@@ -129,7 +132,6 @@ def baja_prueba(url, correo):
 
 
 def mensajes_enviados_prueba(url):
-
     return requests.post(
         url=url + "/api/v1",
         headers=HEADER,
@@ -142,7 +144,6 @@ def mensajes_enviados_prueba(url):
 
 
 def clientes_autorizados(url):
-
     return requests.post(
         url=url + "/api/v1",
         headers=HEADER,
@@ -154,7 +155,6 @@ def clientes_autorizados(url):
 
 
 def kill_prueba(url, correo):
-
     return requests.post(
         url=url + "/admin",
         params={
@@ -174,11 +174,6 @@ def main():
     if len(args) < 2:
         print("Incompleto")
         quit()
-
-    HEADER = {
-        "Authorization": "Bearer " + EXTERNAL_AUTH_TOKEN_API_V1,
-        "Content-Type": "application/json",
-    }
 
     if args[1] == "ALTA":
         f = alta_prueba(url, args[2])
@@ -222,4 +217,8 @@ def main():
 
 
 if __name__ == "__main__":
+    HEADER = {
+        "Authorization": "Bearer " + EXTERNAL_AUTH_TOKEN_API_V1,
+        "Content-Type": "application/json",
+    }
     main()
