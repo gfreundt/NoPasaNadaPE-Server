@@ -92,7 +92,7 @@ class ChromeUtils:
         }
 
         chrome_options = Options()
-        # chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=2560,1440")
@@ -111,7 +111,10 @@ class ChromeUtils:
         os.environ.setdefault("TMPDIR", "/tmp")
 
         # Use the system chromedriver
-        service = Service("/usr/local/bin/chromedriver")  # adjust if needed
+        service = Service(
+            executable_path="/usr/bin/chromedriver",  # adjust if needed
+            log_output="/tmp/chromedriver.log",
+        )
 
         return sw_webdriver.Chrome(
             service=service,
