@@ -393,10 +393,13 @@ def generar_data_servicios(cursor, correo):
     # Agregar avisos que no se encontraron multas
     avisos = []
     if not [i for i in existentes if i["titulo"] == "Multa SAT Lima"]:
+        fecha = calculo_plazos(None, ultimas_actualizaciones_miembro["satimps"])[
+            "ultima_actualizacion"
+        ]
         avisos.append(
             {
                 "texto": "No se encontraron multas SAT Lima.",
-                "fecha": f"Actualizado: {date_to_user_format(ultimas_actualizaciones_miembro['satimps'])}",
+                "fecha": f"Actualizado: {fecha['fecha']} ({fecha['dias_desde']})",
             }
         )
     if not [i for i in existentes if i["titulo"] == "Multa SUTRAN"]:
@@ -435,7 +438,7 @@ def generar_data_servicios(cursor, correo):
     soat = [
         {
             "placa": i["PlacaValidate"],
-            "fecha": date_to_user_format(i["lastUpdate"]),
+            "fecha": f"({date_to_user_format(i['LastUpdate'])})",
             "url": f"/descargar_archivo/DataApesegSoats/{i['PlacaValidate']}",
         }
         for i in cursor.fetchall()
@@ -474,7 +477,7 @@ def generar_data_servicios(cursor, correo):
     sunarp = [
         {
             "placa": i["PlacaValidate"],
-            "fecha": date_to_user_format(i["lastUpdate"]),
+            "fecha": f"({date_to_user_format(i['LastUpdate'])})",
             "url": f"/descargar_archivo/DataSunarpFichas/{i['PlacaValidate']}",
         }
         for i in cursor.fetchall()
@@ -512,7 +515,7 @@ def generar_data_servicios(cursor, correo):
     recvehic = [
         {
             "doc": f"{i['DocTipo']} {i['DocNum']}",
-            "fecha": date_to_user_format(i["LastUpdate"]),
+            "fecha": f"({date_to_user_format(i['LastUpdate'])})",
             "url": f"/descargar_archivo/DataMtcRecordsConductores/{id_miembro}",
         }
         for i in cursor.fetchall()
@@ -571,7 +574,10 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
         fecha_actualizacion = "Pendiente Actualización"
         dias_desde = "N/A"
     else:
-        dias_desde = f"hace {dias_a:,} {'día' if dias_a == 1 else 'días'}"
+        if dias_a > 0:
+            dias_desde = f"hace {dias_a:,} {'día' if dias_a == 1 else 'días'}"
+        else:
+            dias_desde = "hoy"
 
     if fecha_vigencia:
         # calcular dias restantes para vencimiento (si hay fecha) y determinar estado

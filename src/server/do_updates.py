@@ -1,16 +1,18 @@
 from datetime import datetime as dt
+import logging
+
 from src.utils.constants import SQL_TABLES
+
+logger = logging.getLogger(__name__)
 
 
 def main(db, data):
-
     cursor = db.cursor()
     conn = db.conn
 
     today = dt.now().strftime("%Y-%m-%d")
 
     for table, rows in data.items():
-
         if table not in SQL_TABLES:
             continue
 
@@ -41,10 +43,11 @@ def main(db, data):
 
         # Delete old records + update timestamp
         for key in keys:
+            logger.info(f"Eliminado: de {table}: registro {info_fk} = {key}")
             cursor.execute(f"DELETE FROM {table} WHERE {info_fk} = ?", (key,))
             if table_type in ("DOC", "PLACA"):
-
                 field = f"LastUpdate{table[4:]}"
+                logger.info(f"Actualizando {info_table}: {field} para {info_id} = {key}")
                 cursor.execute(
                     f"UPDATE {info_table} SET {field} = ? WHERE {info_id} = ?",
                     (today, key),
@@ -59,6 +62,7 @@ def main(db, data):
             vals = list(record.values())
             placeholders = ", ".join("?" for _ in vals)
 
+            logger.debug(f"Actualizando {table}: {}")
             sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders})"
             cursor.execute(sql, vals)
 

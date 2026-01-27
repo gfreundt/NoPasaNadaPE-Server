@@ -6,6 +6,10 @@ from copy import deepcopy as copy
 from queue import Empty
 from PIL import Image, ImageDraw, ImageFont
 import time
+import logging
+from pprint import pformat
+from func_timeout import exceptions
+
 
 # local imports
 from src.utils.utils import date_to_db_format
@@ -13,11 +17,12 @@ from src.scrapers import scrape_soat as scraper
 from src.utils.constants import ASEGURADORAS, NETWORK_PATH, HEADLESS
 from src.utils.webdriver import ChromeUtils
 
+logger = logging.getLogger(__name__)
+
 
 def gather(
     dash, queue_update_data, local_response, total_original, lock, card, subthread
 ):
-
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(
         headless=HEADLESS["soat"],
@@ -37,15 +42,16 @@ def gather(
         try:
             record_item = queue_update_data.get_nowait()
             placa = record_item
+            logger.info(f"SOATS: Obtenido de cola: {placa}")
 
         except Empty:
-            # log de salida del scraper
+            logger.info("SOATS: Fin de cola.")
             dash.log(
                 card=card,
                 status=3,
                 title=f"SOATS-{subthread} [PROCESADOS: {procesados}]",
                 text="Inactivo",
-                lastUpdate=f"Fin: {dt.strftime(dt.now(),"%H:%M:%S")}",
+                lastUpdate=f"Fin: {dt.strftime(dt.now(), '%H:%M:%S')}",
             )
             break
 
@@ -60,6 +66,7 @@ def gather(
             )
 
             # aumentar contador de usos del mismo IP y mandar a scraper
+            logger.info(f"SOATS ({placa}): Iniciando scraper")
             scraper_response = scraper.browser_wrapper(placa=placa, webdriver=webdriver)
             procesados += 1
 
@@ -76,6 +83,7 @@ def gather(
 
                 # si error permite reinicio ("@") esperar 10 segundos y empezar otra vez
                 if "@" in scraper_response:
+                    logger.info(f"SOATS ({placa}): Reinicio en 10 segundos")
                     dash.log(
                         card=card,
                         text="Reinicio en 10 segundos",
@@ -102,23 +110,23 @@ def gather(
             # placa si tiene resultados
             _n = date_to_db_format(data=scraper_response)
             with lock:
-                local_response.append(
-                    {
-                        "IdPlaca_FK": 999,
-                        "Aseguradora": _n[0],
-                        "FechaInicio": _n[2],
-                        "FechaHasta": _n[3],
-                        "PlacaValidate": _n[4],
-                        "Certificado": _n[5],
-                        "Uso": _n[6],
-                        "Clase": _n[7],
-                        "Vigencia": _n[1],
-                        "Tipo": _n[8],
-                        "FechaVenta": _n[9],
-                        "ImageBytes": create_certificate(data=copy(_n)),
-                        "LastUpdate": dt.now().strftime("%Y-%m-%d"),
-                    }
-                )
+                respuesta = {
+                    "IdPlaca_FK": 999,
+                    "Aseguradora": _n[0],
+                    "FechaInicio": _n[2],
+                    "FechaHasta": _n[3],
+                    "PlacaValidate": _n[4],
+                    "Certificado": _n[5],
+                    "Uso": _n[6],
+                    "Clase": _n[7],
+                    "Vigencia": _n[1],
+                    "Tipo": _n[8],
+                    "FechaVenta": _n[9],
+                    "ImageBytes": create_certificate(data=copy(_n)),
+                    "LastUpdate": dt.now().strftime("%Y-%m-%d"),
+                }
+                local_response.append(respuesta)
+                logger.info(f"SOATS ({placa}): {respuesta}")
 
             # calcular ETA aproximado
             duracion_promedio = (time.perf_counter() - tiempo_inicio) / procesados
@@ -133,18 +141,34 @@ def gather(
         except KeyboardInterrupt:
             quit()
 
-        # except Exception as e:
-        #     # devolver registro a la cola para que otro thread lo complete
-        #     if record_item is not None:
-        #         queue_update_data.put(record_item)
+        except exceptions.FunctionTimedOut:
+            logger.warning(f"SOATS ({placa}): Timeout")
 
-        #     # actualizar dashboard
-        #     dash.log(
-        #         card=card,
-        #         text=f"Crash (Gather): {str(e)[:55]}",
-        #         status=2,
-        #     )
-        #     break
+            # devolver registro a la cola para que otro thread lo complete
+            if record_item is not None:
+                queue_update_data.put(record_item)
+
+            dash.log(
+                card=card,
+                status=2,
+                lastUpdate="ERROR: Timeout",
+            )
+            webdriver.quit()
+            break
+
+        except Exception as e:
+            logger.error(f"SOATS ({placa}): Crash: {str(e)}")
+            # devolver registro a la cola para que otro thread lo complete
+            if record_item is not None:
+                queue_update_data.put(record_item)
+
+            # actualizar dashboard
+            dash.log(
+                card=card,
+                text=f"Crash (Gather): {str(e)[:55]}",
+                status=2,
+            )
+            break
 
     # sacar worker de lista de activos cerrar driver
     dash.assigned_cards.remove(card)
@@ -152,7 +176,6 @@ def gather(
 
 
 def create_certificate(data):
-
     # load fonts
     _resources = os.path.join(NETWORK_PATH, "static", "fonts")
     font_small = ImageFont.truetype(os.path.join(_resources, "seguisym.ttf"), 30)

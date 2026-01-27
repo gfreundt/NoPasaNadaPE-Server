@@ -1,8 +1,9 @@
 import os
-import logging
 from flask import request, jsonify
 import uuid
 import threading
+import logging
+from pprint import pformat
 
 
 from security.keys import INTERNAL_AUTH_TOKEN
@@ -79,10 +80,6 @@ def main(self):
         with open(os.path.join(NETWORK_PATH, "app.log"), "r") as f:
             logs = f.readlines()[-n:]
         return jsonify(logs), 200
-
-    if solicitud == "get_pendientes":
-        logger.info("Generando lista de pendientes para boletines.")
-        return jsonify(boletines(cursor)), 200
 
     if solicitud == "manual_upload":
         logger.info("Upload manual iniciado.")
@@ -169,12 +166,14 @@ def main(self):
             "DataSunarpFichas": placas,
         }
 
+        logger.info(f"Datos a actualizar (forzado): \n{pformat(upd)}")
+
         thread = threading.Thread(
             target=gather_all.gather_threads, args=(self.dash, upd)
         )
         thread.start()
 
-        return jsonify(f"Lanzado Actualizadion de {data['NombreCompleto']}"), 200
+        return jsonify(f"Lanzado Actualizacion de {data['NombreCompleto']}"), 200
 
     # solicitud no reconocida
     logger.warning("Solicitud no reconocida.")
