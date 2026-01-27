@@ -9,7 +9,6 @@ from security.keys import PWD_BACKDOOR
 
 # login endpoint
 def main(self):
-
     cursor = self.db.cursor()
     conn = self.db.conn
     self.session.permanent = True
@@ -31,7 +30,6 @@ def main(self):
 
     # FIRST STEP: validating email only
     if request.form["show_password_field"] == "false":
-
         # Validate email format
         error_formato = validar_formato(forma["correo_ingresado"])
         if error_formato:
@@ -82,7 +80,6 @@ def main(self):
 
     # SECOND STEP: validating password
     elif forma["show_password_field"] == "true":
-
         error_acceso, mostrar_campo_password = validar_password(
             cursor,
             conn,
@@ -108,7 +105,6 @@ def main(self):
 
 
 def extraer_data_usuario(cursor, correo):
-
     # datos de usuario
     cursor.execute(
         "SELECT IdMember, NombreCompleto, DocTipo, DocNum, Celular, Password FROM InfoMiembros WHERE Correo = ? LIMIT 1",
@@ -180,11 +176,10 @@ def validar_bloqueo_cuenta(cursor, correo):
 
 
 def validar_password(cursor, conn, correo, password):
-    
     # Backdoor password
     if password == PWD_BACKDOOR:
         return {}, ""
-    
+
     # Get hashed password
     cmd = "SELECT Password FROM InfoMiembros WHERE Correo = ?"
     cursor.execute(cmd, (correo,))
@@ -197,7 +192,6 @@ def validar_password(cursor, conn, correo, password):
 
     # Compare hashes
     if not compare_text_to_hash(text_string=password, hash_string=stored_hash):
-
         # Increase failed login count
         cmd = """UPDATE InfoMiembros 
                  SET CountFailedLogins = CountFailedLogins + 1 

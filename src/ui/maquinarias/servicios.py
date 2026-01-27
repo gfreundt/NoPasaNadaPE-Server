@@ -1,9 +1,11 @@
 from datetime import datetime as dt
-from flask import render_template, session, redirect, url_for, request
+from flask import render_template, request, session, redirect, url_for
+from pprint import pprint
+
+from src.utils.utils import date_to_user_format
 
 
 def main(self):
-
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
@@ -14,209 +16,606 @@ def main(self):
 
     # extraer toda la data relevante de la base de datos
     cursor = self.db.cursor()
-    servicios = generar_data_servicios(
+    payload = generar_data_servicios(
         cursor, correo=session.get("usuario", {}).get("correo")
     )
 
     return render_template(
         "ui-maquinarias-mi-cuenta.html",
-        servicios=servicios,
+        payload=payload,
     )
 
 
 def generar_data_servicios(cursor, correo):
+    #
+    # -------- ENCABEZADO -------- #
 
-    # obtener informacion de miembro y placa, almacenar en variables
+    STATUS_BG = {
+        "ok": "#d1e7dd",
+        "advertencia": "#fff3cd",
+        "peligro": "#f8d7da",
+        "info": "#cff4fc",
+    }
+
     cursor.execute(
-        "SELECT IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores, LastUpdateSatImpuestosCodigos FROM InfoMiembros WHERE Correo = ? LIMIT 1",
+        """ SELECT  IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores,
+                    LastUpdateSatImpuestosCodigos, NombreCompleto, DocTipo, DocNum
+            FROM InfoMiembros
+            WHERE Correo = ?
+            LIMIT 1
+        """,
         (correo,),
     )
-    data_miembro = cursor.fetchone()
-    id_member = data_miembro["IdMember"]
+    dato_miembro = cursor.fetchone()
+    id_miembro = dato_miembro["IdMember"]
+    ultimas_actualizaciones_miembro = {
+        "brevetes": dato_miembro["LastUpdateMtcBrevetes"],
+        "recvehic": dato_miembro["LastUpdateMtcRecordsConductores"],
+        "satimps": dato_miembro["LastUpdateSatImpuestosCodigos"],
+    }
 
-    cursor.execute("SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?", (id_member,))
-    placas = ", ".join([i["Placa"] for i in cursor.fetchall()])
+    cursor.execute(
+        """ SELECT  Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas,
+	                LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas,
+	                LastUpdateCallaoMultas
+            FROM InfoPlacas
+            WHERE IdMember_FK = ?
+        """,
+        (id_miembro,),
+    )
+    datos_placas = cursor.fetchall()
+    ultimas_actualizaciones_placas = {
+        i["Placa"]: {
+            "soat": i["LastUpdateApesegSoats"],
+            "revtec": i["LastUpdateMtcRevisionesTecnicas"],
+            "sunarp": i["LastUpdateSunarpFichas"],
+            "sutran": i["LastUpdateSutranMultas"],
+            "satmultas": i["LastUpdateSatMultas"],
+            "callaomultas": i["LastUpdateCallaoMultas"],
+        }
+        for i in datos_placas
+    }
 
-    # crear variables en blanco para incluir en servicios
-    vencimientos = {}
-    multas = {}
-    descargas = {}
-    usuario = {}
+    encabezado = {
+        "nombre": dato_miembro["NombreCompleto"],
+        "tipo_documento": dato_miembro["DocTipo"],
+        "numero_documento": dato_miembro["DocNum"],
+        "placas": [i["Placa"] for i in datos_placas] if datos_placas else ["Ninguna"],
+    }
 
-    # brevete
-    cmd = f""" SELECT
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias",
-                Numero
-                FROM
-                DataMtcBrevetes
-                WHERE
-                IdMember_FK = {id_member}
-            """
-    cursor.execute(cmd)
-    vencimientos.update({"Licencia de Conducir": [dict(i) for i in cursor.fetchall()]})
+    # -------- VENCIMIENTOS -------- #
 
-    # soat
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa,
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataApesegSoats
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    vencimientos.update({"Certificado SOAT": [dict(i) for i in cursor.fetchall()]})
+    vencimientos = []
 
-    # revision tecnica
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa,
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataMtcRevisionesTecnicas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})"""
-
-    cursor.execute(cmd)
-    vencimientos.update({"Revision Tecnica": [dict(i) for i in cursor.fetchall()]})
-
-    # impuestos SAT
-    cmd = f"""  SELECT
-                Codigo,
-                CASE WHEN FechaHasta > CURRENT_DATE THEN 'Vigente' ELSE 'Vencido' END AS "Estado",
-                FechaHasta,
-                CAST(julianday(FechaHasta) - julianday(CURRENT_DATE) AS INTEGER) AS "FechaHastaDias",
-                LastUpdate,
-                CAST(julianday(CURRENT_DATE) - julianday(LastUpdate) AS INTEGER) AS "LastUpdateDias"
-                FROM
-                DataSatImpuestosDeudas
-                WHERE
-                Codigo = (SELECT Codigo FROM DataSatImpuestosCodigos WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    vencimientos.update({"SATIMPS": [dict(i) for i in cursor.fetchall()]})
-
-    # multas SAT
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa, Falta, FechaEmision, Deuda, Estado, LastUpdate
-                FROM
-                DataSatMultas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    multas.update({"SATMULS": [dict(i) for i in cursor.fetchall()]})
-
-    # multas SUTRAN
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa, CodigoInfrac, FechaDoc, Clasificacion, LastUpdate
-                FROM
-                DataSutranMultas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    multas.update({"SUTRANS": [dict(i) for i in cursor.fetchall()]})
-
-    # multas CALLAO
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa, Codigo, FechaInfraccion, TotalInfraccion, TotalBeneficio, ImageBytes, LastUpdate
-                FROM
-                DataCallaoMultas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    multas.update({"CALMUL": [dict(i) for i in cursor.fetchall()]})
-
-    # documentos SOAT
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa, LastUpdate
-                FROM
-                DataApesegSoats
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    descargas.update({"soat_certificados": [i["Placa"] for i in cursor.fetchall()]})
-
-    # documentos SUNARP
-    cmd = f"""  SELECT
-                PlacaValidate AS Placa, LastUpdate
-                FROM
-                DataSunarpFichas
-                WHERE
-                PlacaValidate IN (SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member})
-            """
-    cursor.execute(cmd)
-    descargas.update({"sunarp_fichas": [i["Placa"] for i in cursor.fetchall()]})
-
-    # documentos RECVEHIC
-    cmd = f"""  SELECT
-                IdMember_FK, LastUpdate
-                FROM
-                DataMtcRecordsConductores
-                WHERE
-                IdMember_FK = {id_member}
-            """
-    cursor.execute(cmd)
-    descargas.update(
-        {"record_conductor": [i["IdMember_FK"] for i in cursor.fetchall()]}
+    # Licencia de Conducir
+    cursor.execute(
+        """ SELECT Numero, FechaHasta
+            FROM InfoMiembros a
+            LEFT JOIN DataMtcBrevetes b
+            ON b.IdMember_FK = a.IdMember
+            WHERE a.IdMember = ?
+        """,
+        (id_miembro,),
     )
 
-    # datos de usuario
-    cmd = f"""  SELECT
-                NombreCompleto, DocTipo, DocNum
-                FROM
-                InfoMiembros
-                WHERE
-                IdMember = {id_member}
-                LIMIT 1
-            """
-    cursor.execute(cmd)
-    u = cursor.fetchone()
+    for licencia in cursor.fetchall():
+        plazos = calculo_plazos(
+            licencia["FechaHasta"], ultimas_actualizaciones_miembro["brevetes"]
+        )
+        vencimientos.append(
+            plazos
+            | {
+                "titulo": "Licencia de Conducir",
+                "subtitulo": f"Numero: {licencia['Numero']}",
+                "boton_detalle": licencia["FechaHasta"] is not None,
+            }
+        )
 
-    cmd = f""" SELECT Placa FROM InfoPlacas WHERE IdMember_FK = {id_member} """
-    cursor.execute(cmd)
-    placas = [i["Placa"] for i in cursor.fetchall()]
+    # Certificados SOAT
+    cursor.execute(
+        """ SELECT Placa, FechaHasta
+            FROM InfoPlacas a
+            LEFT JOIN DataApesegSoats b
+            ON b.PlacaValidate = a.Placa
+            WHERE IdMember_FK = ?
+        """,
+        (id_miembro,),
+    )
 
-    usuario.update(
+    for soat in cursor.fetchall():
+        placa = soat["Placa"]
+        plazos = calculo_plazos(
+            soat["FechaHasta"], ultimas_actualizaciones_placas[placa]["soat"]
+        )
+        vencimientos.append(
+            plazos
+            | {
+                "titulo": "SOAT",
+                "subtitulo": f"Placa: {placa}",
+                "boton_detalle": soat["FechaHasta"] is not None,
+            }
+        )
+
+    # Revisiones Tecnicas
+    cursor.execute(
+        """ SELECT Placa, FechaHasta
+            FROM InfoPlacas a
+            LEFT JOIN DataMtcRevisionesTecnicas b
+            ON b.PlacaValidate = a.Placa
+            WHERE IdMember_FK = ?
+        """,
+        (id_miembro,),
+    )
+
+    for revtec in cursor.fetchall():
+        placa = revtec["Placa"]
+        plazos = calculo_plazos(
+            revtec["FechaHasta"],
+            ultimas_actualizaciones_placas[placa]["revtec"],
+        )
+        vencimientos.append(
+            plazos
+            | {
+                "titulo": "Revisión Técnica",
+                "subtitulo": f"Placa: {placa}",
+                "boton_detalle": revtec["FechaHasta"] is not None,
+            }
+        )
+
+    # Impuestos SAT
+    cursor.execute(
+        """ SELECT a.Codigo, b.FechaHasta, b.TotalAPagar
+            FROM InfoMiembros c
+            LEFT JOIN DataSatImpuestosCodigos a
+            ON a.IdMember_FK = c.IdMember
+            LEFT JOIN DataSatImpuestosDeudas b
+            ON b.Codigo = a.Codigo
+            WHERE c.IdMember = ?
+        """,
+        (id_miembro,),
+    )
+
+    for satimp in cursor.fetchall():
+        plazos = calculo_plazos(
+            satimp["FechaHasta"], ultimas_actualizaciones_miembro["satimps"]
+        )
+
+        # ajustar estado a particularidad de este servicio
+        if not satimp["Codigo"]:
+            plazos["estado"] = "Sin Registros"
+            plazos["estado_bg"] = STATUS_BG["info"]
+        elif not satimp["FechaHasta"]:
+            plazos["estado"] = "Sin Pagos Pendientes"
+            plazos["estado_bg"] = STATUS_BG["ok"]
+
+        vencimientos.append(
+            plazos
+            | {
+                "titulo": "Impuestos SAT",
+                "subtitulo": f"Código: {satimp['Codigo']}" if satimp["Codigo"] else "",
+                "boton_detalle": satimp["FechaHasta"] is not None,
+            }
+        )
+    # -------- MANTENIMIENTOS -------- #
+
+    mantenimientos = [
         {
-            "nombre": u["NombreCompleto"],
-            "doc_tipo": u["DocTipo"],
-            "doc_num": u["DocNum"],
-            "placas": placas,
+            "placa": "ABC123",
+            "actividades": [
+                {
+                    "status": "Realizado",
+                    "km": "5,000 km",
+                    "fecha": date_to_user_format("2024-09-15"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Realizado",
+                    "km": "10,000 km",
+                    "fecha": date_to_user_format("2025-06-12"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "15,000 km",
+                    "fecha": date_to_user_format("2026-09-15"),
+                    "boton_detalle": False,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "25,000 km",
+                    "fecha": date_to_user_format("2027-06-12"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "50,000 km",
+                    "fecha": date_to_user_format("2028-07-10"),
+                    "boton_detalle": True,
+                },
+            ],
+            "ultima_revision": date_to_user_format("2026-01-15"),
+        },
+        {
+            "placa": "JKL456",
+            "actividades": [],
+            "ultima_revision": date_to_user_format("2026-01-15"),
+        },
+        {
+            "placa": "XYZ999",
+            "actividades": [
+                {
+                    "status": "Realizado",
+                    "km": "5,000 km",
+                    "fecha": date_to_user_format("2024-09-15"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Realizado",
+                    "km": "10,000 km",
+                    "fecha": date_to_user_format("2025-06-12"),
+                    "boton_detalle": False,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "15,000 km",
+                    "fecha": date_to_user_format("2026-09-15"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "25,000 km",
+                    "fecha": date_to_user_format("2027-06-12"),
+                    "boton_detalle": True,
+                },
+                {
+                    "status": "Pendiente",
+                    "km": "50,000 km",
+                    "fecha": date_to_user_format("2028-07-10"),
+                    "boton_detalle": False,
+                },
+            ],
+            "ultima_revision": date_to_user_format("2026-01-15"),
+        },
+    ]
+
+    # -------- MULTAS -------- #
+
+    existentes = []
+
+    # SAT Multas
+    cursor.execute(
+        """ SELECT
+            PlacaValidate, Falta, FechaEmision, Deuda, Estado, LastUpdate
+            FROM
+            DataSatMultas
+            WHERE
+            PlacaValidate IN
+                (SELECT Placa
+                FROM InfoPlacas
+                WHERE IdMember_FK = ?)
+        """,
+        (id_miembro,),
+    )
+
+    for satmul in cursor.fetchall():
+        existentes.append(
+            {
+                "titulo": "SAT Lima",
+                "subtitulo": f"Placa: {satmul['PlacaValidate']}",
+                "fecha": date_to_user_format(satmul["FechaEmision"]),
+                "falta": satmul["Falta"],
+                "situacion": {
+                    "titulo": satmul["Estado"],
+                    "subtitulo": f"S/{satmul['Deuda']}",
+                },
+                "ultima_actualizacion": {
+                    "fecha": date_to_user_format(satmul["LastUpdate"]),
+                    "dias_desde": f"{
+                        (dt.now() - dt.strptime(satmul['LastUpdate'], '%Y-%m-%d')).days
+                    } días",
+                },
+                "boton_detalle": True,
+            }
+        )
+
+    # SUTRAN Multas
+    cursor.execute(
+        """ SELECT
+            PlacaValidate, CodigoInfrac, FechaDoc, Clasificacion, LastUpdate
+            FROM
+            DataSutranMultas
+            WHERE
+            PlacaValidate IN
+                (SELECT Placa
+                FROM InfoPlacas
+                WHERE IdMember_FK = ?)
+        """,
+        (id_miembro,),
+    )
+
+    for sutran in cursor.fetchall():
+        existentes.append(
+            {
+                "titulo": "SUTRAN",
+                "subtitulo": f"Placa: {sutran['PlacaValidate']}",
+                "fecha": date_to_user_format(sutran["FechaDoc"]),
+                "falta": sutran["CodigoInfrac"],
+                "situacion": {
+                    "titulo": sutran["Clasificacion"],
+                    "subtitulo": "",
+                },
+                "ultima_actualizacion": {
+                    "fecha": date_to_user_format(sutran["LastUpdate"]),
+                    "dias_desde": f"{
+                        (dt.now() - dt.strptime(sutran['LastUpdate'], '%Y-%m-%d')).days
+                    } días",
+                },
+                "boton_detalle": True,
+            }
+        )
+
+    # Callao Multas
+    cursor.execute(
+        """ SELECT
+            PlacaValidate, Codigo, FechaInfraccion, TotalInfraccion, TotalBeneficio, LastUpdate
+            FROM
+            DataCallaoMultas
+            WHERE
+            PlacaValidate IN
+                (SELECT Placa
+                FROM InfoPlacas
+                WHERE IdMember_FK = ?)
+        """,
+        (id_miembro,),
+    )
+
+    for calmul in cursor.fetchall():
+        existentes.append(
+            {
+                "titulo": "Municipalidad del Callao",
+                "subtitulo": f"Placa: {calmul['PlacaValidate']}",
+                "fecha": date_to_user_format(calmul["FechaInfraccion"]),
+                "falta": calmul["Codigo"],
+                "situacion": {
+                    "titulo": f"Total: S/{calmul['TotalInfraccion']}",
+                    "subtitulo": f"Descontada: S/{calmul['TotalBeneficio']}",
+                },
+                "ultima_actualizacion": {
+                    "fecha": date_to_user_format(calmul["LastUpdate"]),
+                    "dias_desde": f"{
+                        (dt.now() - dt.strptime(calmul['LastUpdate'], '%Y-%m-%d')).days
+                    } días",
+                },
+                "boton_detalle": True,
+            }
+        )
+
+    # Agregar avisos que no se encontraron multas
+    avisos = []
+    if not [i for i in existentes if i["titulo"] == "Multa SAT Lima"]:
+        avisos.append(
+            {
+                "texto": "No se encontraron multas SAT Lima.",
+                "fecha": f"Actualizado: {date_to_user_format(ultimas_actualizaciones_miembro['satimps'])}",
+            }
+        )
+    if not [i for i in existentes if i["titulo"] == "Multa SUTRAN"]:
+        avisos.append(
+            {
+                "texto": "No se encontraron multas SUTRAN.",
+                "fecha": "Actualizado: TBD",
+            }
+        )
+    if not [i for i in existentes if i["titulo"] == "Municipalidad del Callao"]:
+        avisos.append(
+            {
+                "texto": "No se encontraron multas Municipalidad del Callao.",
+                "fecha": "Actualizado: TBD",
+            }
+        )
+    # -------- DESCARGAS -------- #
+
+    descargas = {}
+
+    cursor.execute(
+        """ SELECT
+            PlacaValidate, lastUpdate
+            FROM
+            DataApesegSoats
+            WHERE
+            PlacaValidate IN
+                (SELECT Placa
+                FROM InfoPlacas
+                WHERE IdMember_FK = ?)
+            AND ImageBytes IS NOT NULL
+        """,
+        (id_miembro,),
+    )
+
+    soat = [
+        {
+            "placa": i["PlacaValidate"],
+            "fecha": date_to_user_format(i["lastUpdate"]),
+            "url": f"/descargar_archivo/DataApesegSoats/{i['PlacaValidate']}",
+        }
+        for i in cursor.fetchall()
+    ]
+
+    descargas.update(
+        {
+            "soats": (
+                {
+                    "disponible": True,
+                    "detalles": soat,
+                }
+                if soat
+                else {
+                    "disponible": False,
+                    "detalles": "No Hay Certificados SOAT Disponibles.",
+                }
+            )
         }
     )
 
-    hay_vencimientos = any([len(vencimientos[i]) for i in vencimientos])
-    hay_multas = any([len(multas[i]) for i in multas])
-    hay_descargas = any([len(descargas[i]) for i in descargas])
+    cursor.execute(
+        """ SELECT
+            PlacaValidate, lastUpdate
+            FROM
+            DataSunarpFichas
+            WHERE
+            PlacaValidate IN
+                (SELECT Placa
+                FROM InfoPlacas
+                WHERE IdMember_FK = ?)
+            AND ImageBytes IS NOT NULL
+        """,
+        (id_miembro,),
+    )
+    sunarp = [
+        {
+            "placa": i["PlacaValidate"],
+            "fecha": date_to_user_format(i["lastUpdate"]),
+            "url": f"/descargar_archivo/DataSunarpFichas/{i['PlacaValidate']}",
+        }
+        for i in cursor.fetchall()
+    ]
+    descargas.update(
+        {
+            "sunarps": (
+                {
+                    "disponible": True,
+                    "detalles": sunarp,
+                }
+                if sunarp
+                else {
+                    "disponible": False,
+                    "detalles": "No Hay Fichas Registrales Disponibles.",
+                }
+            )
+        }
+    )
 
-    control = {
-        "tabla_vencimientos": hay_vencimientos,
-        "tabla_multas": hay_multas,
+    cursor.execute(
+        """ SELECT
+            a.LastUpdate,
+            b.DocTipo,
+            b.DocNum
+            FROM DataMtcRecordsConductores a
+            JOIN InfoMiembros b
+            ON b.IdMember = a.IdMember_FK
+            WHERE a.IdMember_FK = ?
+            AND a.ImageBytes IS NOT NULL
+        """,
+        (id_miembro,),
+    )
+
+    recvehic = [
+        {
+            "doc": f"{i['DocTipo']} {i['DocNum']}",
+            "fecha": date_to_user_format(i["LastUpdate"]),
+            "url": f"/descargar_archivo/DataMtcRecordsConductores/{id_miembro}",
+        }
+        for i in cursor.fetchall()
+    ]
+    descargas.update(
+        {
+            "recvehic": (
+                {
+                    "disponible": True,
+                    "detalles": recvehic,
+                }
+                if recvehic
+                else {
+                    "disponible": False,
+                    "detalles": "No Hay Récords Vehiculares Disponibles.",
+                }
+            )
+        }
+    )
+
+    # -------- METADATA -------- #
+
+    urls = {
+        "mi_perfil": "/maquinarias/mi-perfil",
+        "salir": "/maquinarias/logout",
     }
-    vacio = not (hay_vencimientos or hay_multas or hay_descargas)
+    metadata = {"urls": urls}
 
-    return {
-        "control": control,
-        "usuario": usuario,
+    # -------- ARMADO DE RESPUESTA -------- #
+    payload = {
+        "encabezado": encabezado,
         "vencimientos": vencimientos,
-        "multas": multas,
+        "mantenimientos": mantenimientos,
+        "multas": {
+            "existentes": existentes,
+            "avisos": avisos,
+        },
         "descargas": descargas,
-        "placas": placas,
-        "ano": dt.strftime(dt.now(), "%Y"),
-        "vacio": vacio,
+        "metadata": metadata,
     }
+
+    return payload
+
+
+def calculo_plazos(fecha_vigencia, fecha_actualizacion):
+    STATUS_BG = {
+        "ok": "#d1e7dd",
+        "advertencia": "#fff3cd",
+        "peligro": "#f8d7da",
+        "info": "#cff4fc",
+    }
+    # calcular dias desde ultima actualizacion
+    dias_a = (dt.now() - dt.strptime(fecha_actualizacion, "%Y-%m-%d")).days
+    fecha_actualizacion = date_to_user_format(fecha_actualizacion)
+    if fecha_actualizacion == "01-Ene-2020":
+        fecha_actualizacion = "Pendiente Actualización"
+        dias_desde = "N/A"
+    else:
+        dias_desde = f"hace {dias_a:,} {'día' if dias_a == 1 else 'días'}"
+
+    if fecha_vigencia:
+        # calcular dias restantes para vencimiento (si hay fecha) y determinar estado
+        dias_v = (dt.strptime(fecha_vigencia, "%Y-%m-%d") - dt.now()).days + 1
+        if dias_v < 0:
+            estado = "Vencido"
+            estado_bg = STATUS_BG["peligro"]
+        elif dias_v <= 30:
+            estado = "Por Vencer"
+            estado_bg = STATUS_BG["advertencia"]
+        else:
+            estado = "Vigente"
+            estado_bg = STATUS_BG["ok"]
+
+        fecha_vigencia = (
+            date_to_user_format(fecha_vigencia) if fecha_vigencia else "N/A"
+        )
+        dias_restantes = (
+            f"{dias_v:,} {'día' if dias_v == 1 else 'días'} " if dias_v >= 0 else ""
+        )
+
+        return {
+            "estado": estado,
+            "estado_bg": estado_bg,
+            "vigencia": {
+                "fecha": fecha_vigencia,
+                "dias_restantes": dias_restantes,
+            },
+            "ultima_actualizacion": {
+                "fecha": fecha_actualizacion,
+                "dias_desde": dias_desde,
+            },
+        }
+
+    else:
+        return {
+            "estado": "No Disponible",
+            "estado_bg": STATUS_BG["info"],
+            "vigencia": {
+                "fecha": "N/A",
+                "dias_restantes": "",
+            },
+            "ultima_actualizacion": {
+                "fecha": fecha_actualizacion,
+                "dias_desde": dias_desde,
+            },
+        }

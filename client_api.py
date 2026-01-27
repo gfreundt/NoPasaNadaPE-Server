@@ -215,6 +215,10 @@ def main():
         f = get_sunarp(url)
         pprint(json.loads(f.content.decode()))
 
+    if args[1] == "LOG":
+        f = get_logger(url)
+        pprint(json.loads(f.content.decode()))
+
 
 if __name__ == "__main__":
     HEADER = {

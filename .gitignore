@@ -10,3 +10,4 @@ __pycache__/
 .dashboard_init.lock
 dashboard_state.json
 dashboard_init.lock
+app.log

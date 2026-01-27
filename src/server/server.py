@@ -20,9 +20,9 @@ from src.ui.maquinarias import (
     login as maq_login,
     registro as maq_registro,
     perfil as maq_mi_perfil,
-    servicios as maq_mis_servicios,
     eliminar as maq_eliminar_registro,
     recuperar as maq_recuperar,
+    servicios as maq_mis_servicios,
 )
 from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
 from src.comms import enviar_correo_inmediato
