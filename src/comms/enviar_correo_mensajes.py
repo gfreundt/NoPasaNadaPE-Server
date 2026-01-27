@@ -1,10 +1,14 @@
 import os
 from datetime import datetime as dt
 import json
+import logging
+
 from src.utils.email import Email
 from src.utils.constants import NETWORK_PATH
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 
+
+logger = logging.getLogger(__name__)
 
 def send(db):
 
@@ -52,6 +56,7 @@ def send(db):
             }
 
             # armar correos en bulk
+            logger.info(f"Solicitud enviar correo a {mensaje['to']}. Subject: {mensaje['subject']}")
             resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=False)
             rpta.append(1 if resp_zeptomail else 0)
 

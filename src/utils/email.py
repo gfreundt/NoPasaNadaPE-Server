@@ -3,8 +3,10 @@ from email.message import EmailMessage
 from email.utils import formataddr
 import requests
 from datetime import datetime as dt
+import logging
 from pprint import pprint
 
+logger = logging.getLogger(__name__)
 
 class Email:
 
@@ -53,6 +55,7 @@ class Email:
                     server.starttls()  # Secure the connection
                     server.login(self.from_account[1], self.password)
                     server.send_message(msg)
+                    logger.info(f"Email sent to {email['to']}")
                     return True
             except Exception:
                 return False
