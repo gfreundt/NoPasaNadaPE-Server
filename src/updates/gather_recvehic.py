@@ -2,17 +2,19 @@ from datetime import datetime as dt, timedelta as td
 from queue import Empty
 import time
 from func_timeout import exceptions
+import logging
 
 # local imports
 from src.scrapers import scrape_recvehic
 from src.utils.webdriver import ChromeUtils
 from src.utils.constants import HEADLESS
 
+logger = logging.getLogger(__name__)
+
 
 def gather(
     dash, queue_update_data, local_response, total_original, lock, card, subthread
 ):
-
     # construir webdriver con parametros especificos
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(
@@ -29,18 +31,19 @@ def gather(
 
     # iterar hasta vaciar la cola compartida con otras instancias del scraper
     while True:
-
         # intentar extraer siguiente registro de cola compartida
         try:
             record_item = queue_update_data.get_nowait()
             id_member, doc_tipo, doc_num = record_item
+            logger.info(f"Record Vehicular: Obtenido de cola: {doc_tipo} {doc_num}")
         except Empty:
+            logger.info("Record Vehicular: Fin de cola.")
             dash.log(
                 card=card,
                 title=f"Record Vehicular-{subthread} [PROCESADOS: {procesados}]",
                 status=3,
                 text="Inactivo",
-                lastUpdate=f"Fin: {dt.strftime(dt.now(),"%H:%M:%S")}",
+                lastUpdate=f"Fin: {dt.strftime(dt.now(), '%H:%M:%S')}",
             )
             break
 
@@ -49,13 +52,14 @@ def gather(
             # registrar inicio en dashboard
             dash.log(
                 card=card,
-                title=f"Record Vehicular-{subthread} [Pendientes: {total_original-procesados}]",
+                title=f"Record Vehicular-{subthread} [Pendientes: {total_original - procesados}]",
                 status=1,
                 text=f"Procesando: {doc_tipo} {doc_num}",
                 lastUpdate=f"ETA: {eta}",
             )
 
             # enviar registro a scraper
+            logger.info(f"RecVehic ({doc_tipo} {doc_num}): Iniciando scraper")
             scraper_response = scrape_recvehic.browser_wrapper(
                 doc_num=doc_num, webdriver=webdriver, lock=lock
             )
@@ -74,6 +78,9 @@ def gather(
 
                 # si error permite reinicio ("@") esperar 10 segundos y empezar otra vez
                 if "@" in scraper_response:
+                    logger.info(
+                        f"RecVehic ({doc_tipo} {doc_num}): Reiniciando en 10 segundos."
+                    )
                     dash.log(
                         card=card,
                         text="Reinicio en 10 segundos",
@@ -87,6 +94,7 @@ def gather(
 
             # respuesta es en blanco
             if not scraper_response:
+                logger.info(f"RecVehic ({doc_tipo} {doc_num}): Sin datos encontrados.")
                 with lock:
                     local_response.append(
                         {
@@ -99,13 +107,14 @@ def gather(
 
             # contruir respuesta
             with lock:
-                local_response.append(
-                    {
-                        "IdMember_FK": id_member,
-                        "ImageBytes": scraper_response,
-                        "LastUpdate": dt.now().strftime("%Y-%m-%d"),
-                    }
-                )
+                respuesta = {
+                    "IdMember_FK": id_member,
+                    "ImageBytes": scraper_response,
+                    "LastUpdate": dt.now().strftime("%Y-%m-%d"),
+                }
+                logger.info(f"RecVehic ({doc_tipo} {doc_num}): Imagen obtenida.")
+
+                local_response.append(respuesta)
 
             # calcular ETA aproximado
             duracion_promedio = (time.perf_counter() - tiempo_inicio) / procesados

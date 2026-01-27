@@ -2,6 +2,7 @@ from datetime import datetime as dt
 import time
 from queue import Empty
 from func_timeout import exceptions
+import logging
 
 # local imports
 from src.utils.utils import date_to_db_format
@@ -9,11 +10,12 @@ from src.scrapers import scrape_calmul
 from src.utils.webdriver import ChromeUtils
 from src.utils.constants import HEADLESS
 
+logger = logging.getLogger(__name__)
+
 
 def gather(
     dash, queue_update_data, local_response, total_original, lock, card, subthread
 ):
-
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils(headless=HEADLESS["calmul"])
     webdriver = chromedriver.direct_driver()
@@ -23,18 +25,19 @@ def gather(
 
     # iterar hasta vaciar la cola compartida con otras instancias del scraper
     while True:
-
         # intentar extraer siguiente registro de cola compartida
         try:
             record_item = queue_update_data.get_nowait()
             placa = record_item
+            logger.info(f"Multas Callao: Obtenido de cola: {placa}")
         except Empty:
+            logger.info("Multas Callao: Fin de cola.")
             dash.log(
                 card=card,
                 status=3,
                 title=f"Multas Callao-{subthread} [PROCESADOS: {procesados}]",
                 text="Inactivo",
-                lastUpdate=f"Fin: {dt.strftime(dt.now(),"%H:%M:%S")}",
+                lastUpdate=f"Fin: {dt.strftime(dt.now(), '%H:%M:%S')}",
             )
             break
 
@@ -43,20 +46,20 @@ def gather(
             # actualizar dashboard con registro en proceso
             dash.log(
                 card=card,
-                title=f"Multas Callao-{subthread} [Pendientes: {total_original-procesados}]",
+                title=f"Multas Callao-{subthread} [Pendientes: {total_original - procesados}]",
                 text=f"Procesando: {placa}",
                 status=1,
             )
 
             # enviar registro a scraper
+            logger.info(f"Multas Callao ({placa}): Iniciando scraper")
             scraper_response = scrape_calmul.browser_wrapper(
                 placa=placa, webdriver=webdriver
             )
 
-            print("-------------", scraper_response)
-
             # si respuesta es texto, hubo un error -- regresar
             if isinstance(scraper_response, str):
+                logger.warning(f"Multas Callao ({placa}): {scraper_response}")
                 dash.log(
                     card=card,
                     status=2,
@@ -68,6 +71,7 @@ def gather(
 
                 # si error permite reinicio ("@") esperar 10 segundos y empezar otra vez
                 if "@" in scraper_response:
+                    logger.info(f"Multas Callao ({placa}): Reiniciando en 10 segundos.")
                     dash.log(
                         card=card,
                         text="Reinicio en 10 segundos",
@@ -93,7 +97,6 @@ def gather(
                 continue
 
             for response in scraper_response:
-
                 # ajustar formato de fechas al de la base de datos (YYYY-MM-DD)
                 _n = date_to_db_format(data=response)
 

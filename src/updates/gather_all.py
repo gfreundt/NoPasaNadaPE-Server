@@ -1,3 +1,4 @@
+from pprint import pformat
 import time
 from datetime import datetime as dt, timedelta as td
 import os
@@ -6,6 +7,7 @@ import atexit
 import queue
 from threading import Thread, Lock
 import logging
+from pprint import pformat
 
 # local imports
 from src.server import do_updates
@@ -218,59 +220,78 @@ def gather_threads(dash, all_updates):
             )
         )
 
-    for thread_group, pais in zip((vpn_pe_threads, vpn_ar_threads), ("pe", "ar")):
-        if not thread_group:
-            continue
+    vpn_threads = vpn_pe_threads + vpn_ar_threads
 
-        # inicia la VPN en el pais que corresponde
-        exito = start_vpn(dash.ip_original, pais)
-        if not exito:
-            dash.log(action="Failed VPN")
-            return 0
+    if not vpn_threads:
+        logger.info("No hay datos para actualizar.")
+        dash.log(action="[ SCRAPERS ] No hay datos para actualizar.")
+        dash.scrapers_corriendo = False
+        return "0"
 
+    # inicia la VPN en el pais que corresponde
+    exito = start_vpn(dash.ip_original, pais="pe")
+    if not exito:
+        dash.log(action="Failed VPN")
+        return "0"
+    else:
         ip, pa = get_public_ip()
         dash.log(action="Nuevo IP: " + f"{ip} [{pa}]")
 
-        with lock:
-            dash.data["scrapers_kpis"].update(
-                {
-                    "extra": {
-                        "status": f"ACTIVO VPN: {pais}",
-                    }
+    # for thread_group, pais in zip((vpn_pe_threads, vpn_ar_threads), ("pe", "ar")):
+    #     if not thread_group:
+    #         continue
+
+    #     # inicia la VPN en el pais que corresponde
+    #     exito = start_vpn(dash.ip_original, pais)
+    #     if not exito:
+    #         dash.log(action="Failed VPN")
+    #         return 0
+
+    #     ip, pa = get_public_ip()
+    #     dash.log(action="Nuevo IP: " + f"{ip} [{pa}]")
+
+    #     with lock:
+    #         dash.data["scrapers_kpis"].update(
+    #             {
+    #                 "extra": {
+    #                     "status": f"ACTIVO VPN: {pais}",
+    #                 }
+    #             }
+    #         )
+
+    # iniciar threads con intervalos para que subthreads inicien sin generar conflictos
+    for thread in vpn_threads:
+        logger.info(f"Iniciando thread {thread.name}")
+        thread.start()
+        time.sleep(2 * GATHER_ITERATIONS)
+
+    # se queda en esta seccion hasta que todos los threads hayan terminado
+    start_time = time.perf_counter()
+    while any(t.is_alive() for t in vpn_threads):
+        logger.debug("Esperando fin de todos los threads ...")
+        time.sleep(10)
+
+        # grabar cada 90 segundos lo que este en memoria de respuestas
+        if time.perf_counter() - start_time > 90:
+            update_local_gather_file(full_response)
+            start_time = time.perf_counter()
+
+    with lock:
+        dash.data["scrapers_kpis"].update(
+            {
+                "extra": {
+                    "status": "INACTIVO",
                 }
-            )
+            }
+        )
 
-        # iniciar threads con intervalos para que subthreads puedan iniciar sin generar conflictos
-        for thread in thread_group:
-            logger.info(f"Iniciando thread {thread.name}")
-            thread.start()
-            time.sleep(2 * GATHER_ITERATIONS)
+    # detiene la VPN
+    stop_vpn()
+    time.sleep(5)
 
-        # se queda en esta seccion hasta que todos los threads hayan terminado
-        start_time = time.perf_counter()
-        while any(t.is_alive() for t in thread_group):
-            logger.info("Esperando fin de todos los threads ...")
-            time.sleep(10)
-
-            # grabar cada 90 segundos lo que este en memoria de respuestas
-            if time.perf_counter() - start_time > 90:
-                update_local_gather_file(full_response)
-                start_time = time.perf_counter()
-
-        with lock:
-            dash.data["scrapers_kpis"].update(
-                {
-                    "extra": {
-                        "status": "INACTIVO",
-                    }
-                }
-            )
-
-        # detiene la VPN
-        stop_vpn()
-        time.sleep(5)
-
-    logger.info(f"Todos los threads finalizados. Resultado: {full_response}")
+    logger.info(
+        f"Todos los threads finalizados. Resultado: {pformat({i: len(j) for i, j in full_response.items()})}"
+    )
 
     # actualiza el archivo local que guarda la data de actualizaciones (solo debug)
     dash.scrapers_corriendo = False
@@ -317,7 +338,7 @@ def manage_sub_threads(
 
     # abre un maximo de scrapers paralelos del mismo servicio (no mayor a la cantidad de datos a actualizar)
     for i in range(min(GATHER_ITERATIONS, len(update_data))):
-        logger.info(f"Iniciando sub-thread {target_func}-{i}")
+        logger.info(f"Iniciando sub-thread {update_key}-{i}")
         # asignar siguiente trabajador disponible
         siguiente_trabajador = 0
         while siguiente_trabajador in dash.assigned_cards:

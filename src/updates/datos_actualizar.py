@@ -1,5 +1,8 @@
-# datos_actualizar.py
+import logging
+from pprint import pformat
 from src.updates import configuracion_plazos
+
+logger = logging.getLogger(__name__)
 
 ULTIMA_ACTUALIZACION_HORAS = 23
 
@@ -96,7 +99,9 @@ def alertas(self):
         total += len(val)
     self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
 
-    return {k: list(set(v)) for k, v in upd.items()}
+    data = {k: list(set(v)) for k, v in upd.items()}
+    logger.info(f"Datos a actualizar (Alertas):\n {pformat(data)}")
+    return data
 
 
 def boletines(self):
@@ -236,8 +241,6 @@ def boletines(self):
         "DataCallaoMultas": [],
     }
 
-    #    "DataSunarpFichas": [],
-
     cursor.execute(query)
 
     for row in cursor.fetchall():
@@ -254,22 +257,6 @@ def boletines(self):
             upd[key].append((row["IdMember_FK"], row["DocTipo"], row["DocNum"]))
 
     # Retornar listas únicas
-    print({i: list(set(j)) for i, j in upd.items()})
-    return {i: list(set(j)) for i, j in upd.items()}
-
-    # alternativa si siguen los None
-    return {i: list(set(val for val in j if val is not None)) for i, j in upd.items()}
-
-    # DEBUG
-    return {
-        "DataMtcBrevetes": [],
-        "DataApesegSoats": [],
-        "DataMtcRevisionesTecnicas": ["GTY111"],
-        "DataSatImpuestos": [],
-        "DataSatMultas": [],
-        "DataSutranMultas": [],
-        "DataMtcRecordsConductores": [],
-        "DataCallaoMultas": [],
-    }
-
-    # "DataSunarpFichas": [],
+    datos = {i: list(set(j)) for i, j in upd.items()}
+    logger.info(f"Datos a actualizar (Boletines):\n {pformat(datos)}")
+    return datos

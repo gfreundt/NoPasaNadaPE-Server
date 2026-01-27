@@ -50,8 +50,11 @@ def set_up_logger():
         )
         logger.addHandler(handler)
 
-    # reducir logging de Flask
-    logging.getLogger("werkzeug").setLevel(logging.ERROR)
+    # reducir logging de apps de terceros
+    logging.getLogger("werkzeug").setLevel(logging.ERROR)  # Flask server
+    logging.getLogger("seleniumwire").setLevel(logging.WARNING)  # Selenium Wire
+
+    logger.info("---------------------- Logger configurado ------------------------")
 
 
 # Gunicorn punto de entrada

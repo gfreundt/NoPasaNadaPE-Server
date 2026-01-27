@@ -8,8 +8,8 @@ from pprint import pprint
 
 logger = logging.getLogger(__name__)
 
-class Email:
 
+class Email:
     def __init__(self, cursor, conn, from_account, token):
         self.from_account = from_account
         self.token = token
@@ -17,7 +17,6 @@ class Email:
         self.conn = conn
 
     def send_email(self, emails):
-
         # if user sends single email, change format to list
         if type(emails) is not list:
             emails = [emails]
@@ -61,7 +60,6 @@ class Email:
                 return False
 
     def send_zeptomail(self, email, simulation=False):
-
         url = "https://api.zeptomail.com/v1.1/email"
 
         payload = {
@@ -89,6 +87,7 @@ class Email:
         }
 
         if not simulation:
+            logger.info(f"REAL: Envío correo a {email['to_address']}")
 
             respuesta = requests.request(
                 "POST", url, json=payload, headers=headers
@@ -102,14 +101,13 @@ class Email:
             self.registrar_envio_bd(email, response_request_id, response_message)
 
         else:
-
+            logger.info(f"SIMULACION: Envío correo a {email['to_address']}")
             response_message = "OK"
 
         # responder True si ok con la progrmacion de envio del mensaje
         return response_message == "OK"
 
     def registrar_envio_bd(self, mensaje, response_request_id, response_message):
-
         cmd = """
                     INSERT INTO StatusMensajesEnviados
                     (IdMember, TipoMensaje, DireccionCorreo, Bcc, Subject, FechaCreacion, FechaEnvio, HashCode, RespuestaId, RespuestaMensaje)

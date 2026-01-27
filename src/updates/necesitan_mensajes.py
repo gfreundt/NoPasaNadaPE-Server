@@ -97,7 +97,6 @@ def alertas(db_cursor):
     else:
         results = []
 
-    print("@@@@@@@@", results)
     return results
 
 

@@ -9,14 +9,17 @@ import json
 import requests
 import subprocess
 import time
+import logging
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from PIL import Image, ImageDraw, ImageFont
 from selenium.webdriver.common.by import By
 import fcntl
 
-
 from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS, LOCAL
 from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_API_KEY
+
+
+logger = logging.getLogger(__name__)
 
 # --- GUNICORN ---
 
@@ -49,7 +52,6 @@ def date_to_db_format(data):
     new_record_dates_fixed = []
 
     for data_item in data:
-
         # test to determine if format is date we can change to db format
         try:
             if re.fullmatch(pattern, data_item):
@@ -113,19 +115,21 @@ def date_to_user_format(fecha):
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 1))  # connect() for UDP doesn't send packets
-    return s.getsockname()[0]
+    local_ip = s.getsockname()[0]
+    logger.info(f"IP Interno Detectado: {local_ip}")
+    return local_ip
 
 
 def start_vpn(ip_original, pais="pe", con_tipo="udp"):
-    return True
     """
     Starts the OpenVPN connection in daemon mode.
     Requires sudo privileges.
     Returns process successful (True/False)
     """
 
-    vpn_location = "pe-lim" if pais.lower() == "pe" else "ar-bua"
+    logger.info("Starting VPN connection...")
 
+    vpn_location = "pe-lim" if pais.lower() == "pe" else "ar-bua"
     cmd = [
         "/usr/sbin/openvpn",
         "--config",
@@ -139,36 +143,31 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
             text=True,
             check=True,
         )
+        logger.info(f"VPN iniciado. Nuevo IP asignado: {get_public_ip()[0]}")
+        time.sleep(2)
+        return True
 
     except subprocess.CalledProcessError:
+        logger.error("Error iniciando VPN.")
         return False
-
-    # if not vpn_online(ip_original):
-
-    #     try:
-    #         subprocess.run(["sudo"] + cmd,
-    #                 text=True,
-    #                 check=True,
-    #             )
-
-    #     except subprocess.CalledProcessError:
-    #         return False
-
-    time.sleep(2)
-    return vpn_online(ip_original)
 
 
 def stop_vpn():
-    return True
     """
     Stops all running OpenVPN processes.
     Requires sudo privileges.
     """
-    if not LOCAL:
-        subprocess.run(["/usr/bin/pkill", "openvpn"], check=False)
-    else:
-        subprocess.run(["sudo", "pkill", "openvpn"], check=False)
-    time.sleep(1.5)
+    try:
+        if not LOCAL:
+            subprocess.run(["/usr/bin/pkill", "openvpn"], check=False)
+        else:
+            subprocess.run(["sudo", "pkill", "openvpn"], check=False)
+        time.sleep(1.5)
+        logger.info("VPN detenido.")
+        return True
+    except Exception as e:
+        logger.error(f"Error stopping VPN: {e}")
+        return False
 
 
 def get_public_ip():
@@ -205,7 +204,6 @@ def base64_to_image(base64_string, output_path):
 
 
 def hash_text(text_string):
-
     # plain text to bytes
     text_bytes = text_string.encode("utf-8")
 
@@ -218,7 +216,6 @@ def hash_text(text_string):
 
 
 def compare_text_to_hash(text_string, hash_string):
-
     # convert strings to bytes
     text_bytes = text_string.encode("utf-8")
     hash_bytes = hash_string.strip().encode("utf-8")
@@ -231,7 +228,6 @@ def compare_text_to_hash(text_string, hash_string):
 
 
 def send_pushbullet(title, message=""):
-
     # do not accept blank title
     if not title:
         return False

@@ -10,10 +10,9 @@ from authlib.integrations.flask_client import OAuth
 from authlib.common.security import generate_token
 from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
-from jinja2 import Environment, ext
 import uuid
 import logging
-
+import warnings
 
 # Local imports
 from src.server import settings, updater, api, admin
@@ -25,10 +24,11 @@ from src.ui.maquinarias import (
     eliminar as maq_eliminar_registro,
     recuperar as maq_recuperar,
 )
-from src.utils.constants import DB_NETWORK_PATH
+from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
 from src.comms import enviar_correo_inmediato
 
 logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore", message="pkg_resources*", category=UserWarning)
 
 # ============================================================
 #                      DATABASE LAYER
@@ -112,6 +112,9 @@ class Server:
 
         # limpiar registros huerfanos en InfoPlacas con respecto a InfoMiembros
         self.limpiar_huerfanos()
+
+        print("> Network Path:", NETWORK_PATH)
+        logger.info(f"Network Path: {NETWORK_PATH}")
 
     # ======================================================
     #                   DATABASE OPERATIONS

@@ -10,8 +10,8 @@ from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 logger = logging.getLogger(__name__)
 
-def send(db):
 
+def send(db):
     cursor = db.cursor()
     conn = db.conn
 
@@ -26,7 +26,6 @@ def send(db):
     # procesar contenido de cada archivo de pendientes por separado
     respuesta = []
     for pendiente in ("boletines_pendientes.json", "alertas_pendientes.json"):
-
         if "boletines" in pendiente:
             tipo_mensaje = "BOLETIN"
         elif "alertas" in pendiente:
@@ -41,7 +40,6 @@ def send(db):
         # iterar sobre todos los mensajes pendientes dentro del archivo
         rpta = []
         for mensaje in data:
-
             # transformar data de mensaje pendiente a formato esperado
             formato_zeptomail = {
                 "id_member": mensaje["idMember"],
@@ -56,8 +54,10 @@ def send(db):
             }
 
             # armar correos en bulk
-            logger.info(f"Solicitud enviar correo a {mensaje['to']}. Subject: {mensaje['subject']}")
-            resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=False)
+            logger.info(
+                f"Solicitud enviar correo a {mensaje['to']}. Subject: {mensaje['subject']}"
+            )
+            resp_zeptomail = email.send_zeptomail(formato_zeptomail, simulation=True)
             rpta.append(1 if resp_zeptomail else 0)
 
             # actualiza base de datos indicando que siguiente mensaje es en un mes
@@ -70,10 +70,9 @@ def send(db):
 
         # proceso solo si hubieron mensajes que enviar
         if data:
-
             # cambiar nombre de archivo de "pendientes" a "enviados" y agregar fecha
             nuevo_nombre = pendiente.replace(
-                "pendientes", f"enviados-{dt.strftime(dt.now(),"%Y-%m-%d %H:%M:%S")}"
+                "pendientes", f"enviados-{dt.strftime(dt.now(), '%Y-%m-%d %H:%M:%S')}"
             )
             os.rename(
                 os.path.join(NETWORK_PATH, "outbound", pendiente),

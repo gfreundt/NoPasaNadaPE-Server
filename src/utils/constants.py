@@ -37,7 +37,6 @@ elif platform.system() == "Windows":
 else:
     NETWORK_PATH = os.path.join("/var", "www", "app")
 
-print("Network Path:", NETWORK_PATH)
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
 
