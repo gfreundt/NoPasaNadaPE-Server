@@ -95,8 +95,8 @@ class ChromeUtils:
         chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--window-size=2560,1440")
-        chrome_options.add_argument("--remote-debugging-port=0")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
 
         # Keep cert flags only if you truly need them
         chrome_options.add_argument("--ignore-certificate-errors")
@@ -112,7 +112,7 @@ class ChromeUtils:
 
         # Use the system chromedriver
         service = Service(
-            executable_path="/usr/bin/chromedriver",  # adjust if needed
+            executable_path="/usr/local/bin/chromedriver",  # adjust if needed
             log_output="/tmp/chromedriver.log",
         )
 
