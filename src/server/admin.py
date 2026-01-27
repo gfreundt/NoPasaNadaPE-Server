@@ -2,6 +2,7 @@ import os
 import logging
 from flask import request, jsonify
 import uuid
+import threading
 
 
 from security.keys import INTERNAL_AUTH_TOKEN
@@ -139,9 +140,16 @@ def main(self):
         )
 
         cursor.execute(
-            "SELECT DocTipo, DocNum FROM InfoMiembros WHERE IdMember = ?", (id_member,)
+            "SELECT NombreCompleto, DocTipo, DocNum FROM InfoMiembros WHERE IdMember = ?",
+            (id_member,),
         )
         data = cursor.fetchone()
+
+        if not data:
+            logger.warning(f"ID Member no encontrado: {id_member}")
+            return jsonify("ID Member no encontrado."), 404
+
+        # inicio de proceso interno en thread separado
         doc_tipo, doc_num = data["DocTipo"], data["DocNum"]
 
         cursor.execute(
@@ -161,8 +169,12 @@ def main(self):
             "DataSunarpFichas": placas,
         }
 
-        gather_all.gather_threads(self.dash, upd)
-        return jsonify(upd), 200
+        thread = threading.Thread(
+            target=gather_all.gather_threads, args=(self.dash, upd)
+        )
+        thread.start()
+
+        return jsonify(f"Lanzado Actualizadion de {data['NombreCompleto']}"), 200
 
     # solicitud no reconocida
     logger.warning("Solicitud no reconocida.")
