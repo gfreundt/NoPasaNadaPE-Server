@@ -71,11 +71,18 @@ class ChromeUtils:
             "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.176 Safari/537.36"
         )
 
-    def proxy_driver(self):
-        username = "LcL8ujXtMohd3ODu"
-        password = "Lm4lJIxiyRd9nNCp_country-pe"
-        proxy_url = "geo.iproyal.com"
-        proxy_url_port = "11201"
+    def proxy_driver(self, residential=True):
+        if residential:
+            username = "LcL8ujXtMohd3ODu"
+            password = "Lm4lJIxiyRd9nNCp_country-pe"
+            proxy_url = "geo.iproyal.com"
+            proxy_url_port = "11201"
+        else:
+            username = "14ac34c1fcc08"
+            password = "4f480ab2ca"
+            proxy_url = "104.234.188.209"
+            proxy_url_port = "12323"
+
         proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
 
         proxy_options = {
@@ -85,10 +92,10 @@ class ChromeUtils:
         }
 
         chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
+        # chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--window-size=2560,1440")
         chrome_options.add_argument("--remote-debugging-port=0")
 
         # Keep cert flags only if you truly need them
@@ -146,10 +153,10 @@ class ChromeUtils:
 
         # Initialize the WebDriver
         return sw_webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
-                options=chrome_options,
-                seleniumwire_options=proxy_options,
-            )
+            service=Service(ChromeDriverManager().install()),
+            options=chrome_options,
+            seleniumwire_options=proxy_options,
+        )
 
     def direct_driver(self):
         return webdriver.Chrome(service=self.service, options=self.options)
@@ -198,7 +205,6 @@ class ChromeUtils:
             os.remove(os.path.join(UNZIPPED_PATH, "LICENSE.chromedriver"))
 
         def file_cleanup(path):
-
             try:
                 # erase downloaded zip file
                 os.remove(TARGET_PATH)

@@ -1,5 +1,6 @@
 from datetime import datetime as dt, timedelta as td
 from func_timeout import exceptions
+from requests.exceptions import RequestException, ReadTimeout
 
 
 # local imports
@@ -51,11 +52,6 @@ def gather(data):
 
         except KeyboardInterrupt:
             quit()
-
-        except exceptions.FunctionTimedOut:
-            print(f"SOATS ({placa}): Timeout")
-            webdriver.quit()
-            break
 
         except Exception as e:
             print(f"SOATS ({placa}): Crash: {str(e)}")
