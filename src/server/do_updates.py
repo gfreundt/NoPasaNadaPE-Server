@@ -62,7 +62,7 @@ def main(db, data):
             vals = list(record.values())
             placeholders = ", ".join("?" for _ in vals)
 
-            logger.debug(f"Actualizando {table}: {}")
+            logger.debug(f"Actualizando {table}")
             sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders})"
             cursor.execute(sql, vals)
 
