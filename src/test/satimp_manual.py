@@ -10,7 +10,7 @@ def gather(docs):
     webdriver = chromedriver.proxy_driver(residential=False)
 
     # se tiene un registro, intentar extraer la informacion
-    for id_member, doc_num in docs:
+    for id_member, _, doc_num in docs:
         try:
             scraper_response = scrape_satimp.browser_wrapper(
                 doc_tipo="DNI", doc_num=doc_num, webdriver=webdriver

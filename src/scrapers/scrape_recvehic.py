@@ -14,20 +14,18 @@ from src.utils.constants import NETWORK_PATH, SCRAPER_TIMEOUT
 
 
 @func_set_timeout(SCRAPER_TIMEOUT["revtec"])
-def browser_wrapper(doc_num, webdriver, lock):
+def browser_wrapper(doc_num, webdriver):
     try:
-        return browser(doc_num, webdriver, lock)
+        return browser(doc_num, webdriver)
     except exceptions.FunctionTimedOut:
         return "Timeout"
 
 
-def browser(doc_num, webdriver, lock):
-
+def browser(doc_num, webdriver):
     url = "https://recordconductor.mtc.gob.pe/"
 
     intentos_captcha = 0
     while intentos_captcha < 5:
-
         # abrir url
         if webdriver.current_url != url:
             webdriver.get(url)
@@ -102,42 +100,39 @@ def browser(doc_num, webdriver, lock):
 
         # apretar boton que lleva a bajar archivo
         b = webdriver.find_elements(By.ID, "btnprint")
-        with lock:
-            try:
-                webdriver.execute_script("arguments[0].click();", b[0])
-                time.sleep(2)
+        try:
+            webdriver.execute_script("arguments[0].click();", b[0])
+            time.sleep(2)
 
-            except Exception:
-                webdriver.refresh()
-                return "@No Hay Boton Download"
+        except Exception:
+            webdriver.refresh()
+            return "@No Hay Boton Download"
 
-            # si ha bajado un archivo copia porque no se borro el anterior generar error
-            if os.path.isfile(
-                os.path.join(NETWORK_PATH, "static", "RECORD DE CONDUCTOR (2).pdf")
-            ):
-                return "Multiples archivos de PDF."
+        # si ha bajado un archivo copia porque no se borro el anterior generar error
+        if os.path.isfile(
+            os.path.join(NETWORK_PATH, "static", "RECORD DE CONDUCTOR (2).pdf")
+        ):
+            return "Multiples archivos de PDF."
 
-            # esperar un tiempo hasta que baje el archivo
-            start_time = time.time()
-            _file = os.path.join(NETWORK_PATH, "static", "RECORD DE CONDUCTOR.pdf")
-            while time.time() - start_time < 12:
+        # esperar un tiempo hasta que baje el archivo
+        start_time = time.time()
+        _file = os.path.join(NETWORK_PATH, "static", "RECORD DE CONDUCTOR.pdf")
+        while time.time() - start_time < 12:
+            if os.path.isfile(_file):
+                # refrescar captcha (presionar boton) para siguiente iteracion
+                b = webdriver.find_element(By.ID, "idxRefreshCapcha")
+                webdriver.execute_script("arguments[0].click();", b)
 
-                if os.path.isfile(_file):
+                # borrar download y devolver la imagen en bytes
+                with open(_file, "rb") as f:
+                    data = base64.b64encode(f.read()).decode("utf-8")
+                os.remove(_file)
+                return data
 
-                    # refrescar captcha (presionar boton) para siguiente iteracion
-                    b = webdriver.find_element(By.ID, "idxRefreshCapcha")
-                    webdriver.execute_script("arguments[0].click();", b)
+            time.sleep(1)
 
-                    # borrar download y devolver la imagen en bytes
-                    with open(_file, "rb") as f:
-                        data = base64.b64encode(f.read()).decode("utf-8")
-                    os.remove(_file)
-                    return data
-
-                time.sleep(1)
-
-            # si no se encontro imagen, retornar error
-            return "@No Se Puedo Bajar Archivo"
+        # si no se encontro imagen, retornar error
+        return "@No Se Puedo Bajar Archivo"
 
     # demasiados intentos de captcha errados consecutivos
     return "Excede Intentos de Captcha"

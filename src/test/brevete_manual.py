@@ -10,9 +10,9 @@ def gather(d):
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils()
 
-    for id_member, doc_num in d:
+    for id_member, _, doc_num in d:
         try:
-            webdriver = chromedriver.proxy_driver(residential=False)
+            webdriver = chromedriver.proxy_driver(residential=True)
             scraper_response = scrape_brevete.browser_wrapper(
                 doc_num=doc_num, webdriver=webdriver
             )
