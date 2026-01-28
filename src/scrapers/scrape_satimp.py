@@ -18,24 +18,23 @@ def browser_wrapper(doc_num, doc_tipo, webdriver):
 
 
 def browser(doc_num, doc_tipo, webdriver):
+    # cargar pagina inicial solo si es la primera vez
+    if "data" in webdriver.current_url:
+        url_inicial = "https://www.sat.gob.pe/WebSitev8/IncioOV2.aspx"
+        webdriver.get(url_inicial)
 
-    url_inicial = "https://www.sat.gob.pe/WebSitev8/IncioOV2.aspx"
-    webdriver.get(url_inicial)
+        # extraer codigo de sesion y navegar a url final
+        url_final = (
+            "https://www.sat.gob.pe/VirtualSAT/modulos/TributosResumen.aspx?tri=T&mysession="
+            + webdriver.current_url.split("=")[-1]
+        )
 
-    # extraer codigo de sesion y navegar a url final
-    url_final = (
-        "https://www.sat.gob.pe/VirtualSAT/modulos/TributosResumen.aspx?tri=T&mysession="
-        + webdriver.current_url.split("=")[-1]
-    )
+        webdriver.get(url_final)
 
+    response = []
     intentos_captcha = 0
-    while intentos_captcha < 5:
-
-        # abrir url
-        if webdriver.current_url != url_final:
-            webdriver.get(url_final)
-            time.sleep(2)
-
+    _qty = 0
+    while True:
         # extraer texto de captcha
         _captcha_img = webdriver.find_element(
             By.XPATH,
@@ -75,76 +74,71 @@ def browser(doc_num, doc_tipo, webdriver):
         webdriver.find_element(By.CLASS_NAME, "boton").click()
         time.sleep(0.5)
 
-        # determina si hay datos disponibles
-        _msg = webdriver.find_element(
-            By.ID, "ctl00_cplPrincipal_lblMensajeCantidad"
-        ).text
-        if not _msg:
-            # captcha equivocado, reintentar
-            intentos_captcha += 1
-            continue
-
-        # empieza extraccion
-        _qty = int("".join([i for i in _msg if i.isdigit()]))
-
-        # no hay registro, regresar blanco
+        # determina si hay datos disponibles (solo la primera pasada)
         if _qty == 0:
-            return []
-
-        # entra a cada codigo y para cada uno extrae informacion de deudas asociadas
-        response = []
-        for row in range(_qty):
-            codigo = webdriver.find_element(
-                By.ID, f"ctl00_cplPrincipal_grdAdministrados_ctl0{row+2}_lnkCodigo"
+            _msg = webdriver.find_element(
+                By.ID, "ctl00_cplPrincipal_lblMensajeCantidad"
             ).text
 
-            webdriver.find_element(
-                By.ID, f"ctl00_cplPrincipal_grdAdministrados_ctl0{row+2}_lnkNombre"
-            ).click()
-            time.sleep(0.5)
+            # captcha equivocado, reintentar
+            if not _msg:
+                intentos_captcha += 1
+                if intentos_captcha >= 3:
+                    return "Excede Intentos de Captcha"
+                continue
 
-            _deudas = []
-            webdriver.find_element(By.ID, "ctl00_cplPrincipal_rbtMostrar_2").click()
-            time.sleep(0.5)
+            # determinar cantidad total de registros
+            _qty_max = int("".join([i for i in _msg if i.isdigit()]))
 
-            for i in range(2, 10):
-                _placeholder = f"ctl00_cplPrincipal_grdEstadoCuenta_ctl0{i}_lbl"
-                y = f"{_placeholder}Anio"
-                x = webdriver.find_elements(By.ID, y)
-                if x:
-                    periodo = webdriver.find_element(
-                        By.ID, f"{_placeholder}Periodo"
-                    ).text
+            # no hay registros, regresar blanco
+            if _qty_max == 0:
+                return []
 
-                    # reducir a 4 cualquier numero mayor
-                    periodo = min(int(periodo), 4)
-                    ano = x[0].text
-
-                    # fecha es la ultima del trimestre para fines de alertas
-                    _f = ("03-31", "06-30", "09-30", "12-31")
-                    fecha_hasta = f"{ano}-{_f[periodo-1]}"
-                    _fila = [
-                        ano,
-                        periodo,
-                        webdriver.find_element(By.ID, f"{_placeholder}Documento").text,
-                        webdriver.find_element(By.ID, f"{_placeholder}Deuda").text,
-                        fecha_hasta,
-                    ]
-                    _deudas.append(_fila)
-
-            # retroceder a pagina de codigos (dos saltos)
-            webdriver.back()
-            time.sleep(1)
-            webdriver.back()
-            time.sleep(1)
-
-            # armar respuesta con datos de este codigo, pasar al siguiente
-            response.append({"codigo": int(codigo), "deudas": _deudas})
-
-        # presionar "nueva busqueda" para dejar listo para la siguiente iteracion y regresar respuesta
+        # entra a cada codigo y para cada uno extrae informacion de deudas asociadas
+        codigo = webdriver.find_element(
+            By.ID, f"ctl00_cplPrincipal_grdAdministrados_ctl0{_qty + 2}_lnkCodigo"
+        ).text
+        webdriver.find_element(
+            By.ID, f"ctl00_cplPrincipal_grdAdministrados_ctl0{_qty + 2}_lnkNombre"
+        ).click()
         time.sleep(0.5)
-        webdriver.find_element(By.ID, "ctl00_cplPrincipal_btnNuevaBusqueda").click()
-        return response
 
-    # demasiados intentos de captcha errados consecutivos
-    return "Excede Intentos de Captcha"
+        _deudas = []
+        webdriver.find_element(By.ID, "ctl00_cplPrincipal_rbtMostrar_2").click()
+        time.sleep(0.5)
+
+        for i in range(2, 10):
+            _placeholder = f"ctl00_cplPrincipal_grdEstadoCuenta_ctl0{i}_lbl"
+            y = f"{_placeholder}Anio"
+            x = webdriver.find_elements(By.ID, y)
+            if x:
+                periodo = webdriver.find_element(By.ID, f"{_placeholder}Periodo").text
+
+                # reducir a 4 cualquier numero mayor
+                periodo = min(int(periodo), 4)
+                ano = x[0].text
+
+                # fecha es la ultima del trimestre para fines de alertas
+                _f = ("03-31", "06-30", "09-30", "12-31")
+                fecha_hasta = f"{ano}-{_f[periodo - 1]}"
+                _fila = [
+                    ano,
+                    periodo,
+                    webdriver.find_element(By.ID, f"{_placeholder}Documento").text,
+                    webdriver.find_element(By.ID, f"{_placeholder}Deuda").text,
+                    fecha_hasta,
+                ]
+                _deudas.append(_fila)
+
+        response.append({"codigo": int(codigo), "deudas": _deudas})
+
+        # presionar "nueva busqueda" para dejar listo para la siguiente iteracion
+        time.sleep(1)
+        webdriver.find_element(By.ID, "ctl00_cplPrincipal_btnNuevaBusqueda").click()
+        time.sleep(2)
+
+        _qty += 1
+        if _qty < _qty_max:
+            continue
+
+        return response

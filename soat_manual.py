@@ -11,7 +11,7 @@ from src.utils.webdriver import ChromeUtils
 
 def gather(data):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver()
+    webdriver = chromedriver.proxy_driver(residential=False)
 
     for placa in data:
         scraper_response = scraper.browser_wrapper(placa=placa, webdriver=webdriver)
