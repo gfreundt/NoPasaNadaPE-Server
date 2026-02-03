@@ -16,7 +16,7 @@ def flujo(self, tipo_mensaje):
     while True:
         # solicitar alertas/boletines pendientes para enviar a actualizar
         if tipo_mensaje == "alertas":
-            pendientes = datos_actualizar.alertas(self)
+            pendientes = datos_actualizar.get_alertas_para_mensajes(self)
 
         elif tipo_mensaje == "boletines":
             pendientes = datos_actualizar.boletines(self)

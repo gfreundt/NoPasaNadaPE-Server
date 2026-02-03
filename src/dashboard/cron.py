@@ -5,20 +5,33 @@ import logging
 
 from src.dashboard import auto_scraper, update_kpis, resumen_diario
 from src.utils import mantenimiento
+from src.test import prueba_scrapers
 
 
 logger = logging.getLogger(__name__)
 
 
 def run_scheduler_loop(self):
-    # ejecutar varias veces al dia
+
+    from src.comms import generar_mensajes
+
+    time.sleep(3)
+    a = generar_mensajes.alertas(self)
+    b = generar_mensajes.boletines(self)
+    return
+
+    # programar varias veces al dia
     schedule.every(15).minutes.do(update_kpis.main, self)
     schedule.every(20).minutes.do(auto_scraper.main, self, "boletines")
-    schedule.every(4).hours.do(auto_scraper.main, self, "alertas")
-    schedule.every().hour.do(mantenimiento.cada_hora, self)
+    schedule.every().hour.do(
+        mantenimiento.cada_hora, self
+    )  # reemplazar por trigger luego de cargar sunarp
 
-    # ejecutar una vez al dia
+    # programar una vez al dia
     schedule.every().day.at("07:05").do(resumen_diario.main, self)
+    schedule.every().day.at("07:10").do(prueba_scrapers.main, self)
+    schedule.every().day.at("07:30").do(auto_scraper.main, self, "alertas")
+    schedule.every().day.at("15:00").do(auto_scraper.main, self, "alertas")
 
     logger.info(
         f"Cron scheduler iniciado. Tareas programadas: {len(schedule.get_jobs())}."
@@ -31,7 +44,7 @@ def run_scheduler_loop(self):
 
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(10)
 
 
 def main(self):

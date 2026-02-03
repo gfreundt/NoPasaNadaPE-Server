@@ -144,7 +144,7 @@ class Dashboard:
     def datos_alerta(self):
         logger.info("Solicitud de actualización de datos de alertas recibida.")
         # solicitar actualizacion a servidor
-        self.actualizar_datos_alertas = datos_actualizar.alertas(self)
+        self.actualizar_datos_alertas = datos_actualizar.get_alertas_para_mensajes(self)
         return redirect(url_for("dashboard"))
 
     def datos_boletin(self):

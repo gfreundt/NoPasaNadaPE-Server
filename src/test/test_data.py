@@ -1,3 +1,6 @@
+import random
+
+
 def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
 
     # brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans
@@ -314,4 +317,10 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
         ],
     }
 
-    return {i: complete[i][:j] for i, j in zip(complete, sample_size)}
+    if type(sample_size) is int:
+        return {i: random.sample(complete[i], sample_size) for i in complete}
+
+    return {
+        i: random.sample(complete[i], min(j, len(complete[i])))
+        for i, j in zip(complete, sample_size)
+    }

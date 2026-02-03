@@ -2,6 +2,9 @@ import os
 import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 from flask import Flask
+import warnings
+
+warnings.filterwarnings("ignore", category=UserWarning, module="seleniumwire")
 
 from src.server import server
 from src.dashboard import dashboard

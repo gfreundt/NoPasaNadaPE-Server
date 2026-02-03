@@ -1,3 +1,4 @@
+import time
 import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module="seleniumwire")
@@ -70,10 +71,12 @@ def run_all_manual_tests():
     random.shuffle(tests)
 
     for k, test in enumerate(tests, start=1):
+        start_time = time.perf_counter()
         print(f"\nRunning {k}/{len(tests)} -- {test['name']}")
         try:
             test["fn"](test["data"])
-            print("✅ Success!")
+            end_time = time.perf_counter()
+            print(f"✅ Success! Time taken: {end_time - start_time:.2f} seconds")
         except Exception as e:
             print(f"❌ {test['name']} failed: {e}")
 
