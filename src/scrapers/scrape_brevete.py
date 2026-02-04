@@ -17,12 +17,12 @@ def browser_wrapper(doc_num, webdriver):
         return "Timeout"
 
 
-def browser(doc_num, webdriver):
+def browser(doc, webdriver):
 
     # abrir url
 
     url = "https://licencias.mtc.gob.pe/#/index"
-    webdriver.set_page_load_timeout(25)
+    webdriver.set_page_load_timeout(60)
     try:
         webdriver.get(url)
     except TimeoutException:
@@ -35,7 +35,6 @@ def browser(doc_num, webdriver):
     # esperar a que boton de cerrar pop-up se active (max 15 segundos)
     popup_btn, k = [], 0
     while not popup_btn and k < 30:
-
         popup_btn = webdriver.find_elements(
             By.XPATH,
             "/html/body/div/div[2]/div/mat-dialog-container/app-popupanuncio/div/mat-dialog-actions/button",
@@ -51,8 +50,8 @@ def browser(doc_num, webdriver):
     webdriver.execute_script("arguments[0].click();", popup_btn[0])
     time.sleep(1)
 
-    # ingresar documento
-    webdriver.find_element(By.ID, "mat-input-0").send_keys(doc_num)
+    # ingresar documento (solo numero)
+    webdriver.find_element(By.ID, "mat-input-0").send_keys(doc[1])
     time.sleep(1)
 
     # click on "Si, acepto"
@@ -145,8 +144,7 @@ def browser(doc_num, webdriver):
     response.append(_recordnum[9:] if _recordnum else None)
 
     # process completed succesfully
-    webdriver.back()
-    return response
+    return [response]
 
 
 def evade_captcha(webdriver):

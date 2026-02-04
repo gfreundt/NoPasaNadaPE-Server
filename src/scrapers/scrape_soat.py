@@ -10,14 +10,6 @@ from func_timeout import func_set_timeout, exceptions
 from src.utils.constants import SCRAPER_TIMEOUT
 
 
-@func_set_timeout(90)
-def browser_wrapper(placa, webdriver):
-    try:
-        return browser(placa, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
-
-
 def browser(placa, webdriver):
     intentos_captcha = 0
     while intentos_captcha < 5:
@@ -28,7 +20,6 @@ def browser(placa, webdriver):
         try:
             webdriver.get(url)
             time.sleep(2)
-            print("Pagina cargada")
         except TimeoutException:
             webdriver.execute_script("window.stop();")
             time.sleep(2)
@@ -36,12 +27,9 @@ def browser(placa, webdriver):
                 By.ID, "/html/body/div/div/main/div/form/button"
             )
             if not _btn:
-                print("Tiemout en carga de pagina. No hay boton de consulta. Reloading")
                 webdriver.refresh()
                 time.sleep(2)
                 continue
-
-            print("Tiemout en carga de pagina. Procediendo")
 
         # cambiar a frame
         webdriver.switch_to.frame(0)
@@ -98,7 +86,7 @@ def browser(placa, webdriver):
         # refrescar pagina para siguiente intento
         webdriver.back()
         time.sleep(2)
-        return response
+        return [response]
 
     # error en respuesta
     return "Exceso Reintentos Captcha"

@@ -22,7 +22,6 @@ def browser(placa, webdriver):
 
     intentos_captcha = 0
     while intentos_captcha < 5:
-
         # abrir url
         if webdriver.current_url != url:
             webdriver.get(url)
@@ -84,6 +83,6 @@ def browser(placa, webdriver):
         webdriver.execute_script("arguments[0].click();", btn)
 
         time.sleep(1)
-        return response
+        return [response]
 
     return "Exceso Reintentos Captcha"

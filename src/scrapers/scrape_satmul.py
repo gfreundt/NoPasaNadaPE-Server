@@ -11,14 +11,6 @@ from src.utils.constants import SCRAPER_TIMEOUT
 from security.keys import TWOCAPTCHA_API_KEY
 
 
-@func_set_timeout(SCRAPER_TIMEOUT["satmuls"])
-def browser_wrapper(doc_num, webdriver):
-    try:
-        return browser(doc_num, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
-
-
 def browser(placa, webdriver):
 
     # abrir url
@@ -44,6 +36,7 @@ def browser(placa, webdriver):
 
     # resolver recaptcha
     token = solve_recaptcha(webdriver, webdriver.current_url)
+    print("token", token)
     if not token:
         return "Problemas con Resolucion de Recaptcha"
 
@@ -81,7 +74,6 @@ def browser(placa, webdriver):
 
     # extrae todas las filas de multas
     while xpath_generator(webdriver, n, 1):
-
         # extraer campos (excepto fila 12)
         resp = [
             xpath_generator(webdriver, n, k + 2)[0].text for k in range(14) if k != 10
@@ -143,13 +135,13 @@ def solve_recaptcha(webdriver, page_url):
     polls for result, and returns the token.
     """
 
-    # Find recaptcha sitekey
-    sitekey = webdriver.find_element(By.CSS_SELECTOR, ".g-recaptcha").get_attribute(
-        "data-sitekey"
-    )
-
     # Send solve request
     try:
+        # Find recaptcha sitekey
+        sitekey = webdriver.find_element(By.CSS_SELECTOR, ".g-recaptcha").get_attribute(
+            "data-sitekey"
+        )
+
         resp = requests.post(
             "http://2captcha.com/in.php",
             data={
@@ -175,12 +167,13 @@ def solve_recaptcha(webdriver, page_url):
             ).text
 
             if check == "CAPCHA_NOT_READY":
+                print("not ready")
                 continue
 
             if "OK|" in check:
-                token = check.split("|")[1]
-                break
+                return check.split("|")[1]
 
+            print("2captcha response timeout")
             return False
 
         if not token:
@@ -188,5 +181,8 @@ def solve_recaptcha(webdriver, page_url):
 
         return token
 
-    except Exception:
-        return False
+    except KeyboardInterrupt:
+        pass
+
+    # except Exception:
+    #     return False

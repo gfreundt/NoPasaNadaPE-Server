@@ -1,6 +1,7 @@
 import os
 import platform
 
+
 # administrables
 GATHER_ITERATIONS = 1
 AUTOSCRAPER_REPETICIONES = 1

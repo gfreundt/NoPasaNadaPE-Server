@@ -12,12 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 def run_scheduler_loop(self):
-
-    from src.comms import generar_mensajes
+    from src.updates import gather_all_new
 
     time.sleep(3)
-    a = generar_mensajes.alertas(self)
-    b = generar_mensajes.boletines(self)
+    gather_all_new.main("")
     return
 
     # programar varias veces al dia
