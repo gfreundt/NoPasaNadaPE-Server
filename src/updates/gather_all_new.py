@@ -1,13 +1,10 @@
 import time
-import os
-import json
 from threading import Thread
 from func_timeout import func_timeout
 from func_timeout.exceptions import FunctionTimedOut
 from queue import Queue
 from src.server import do_updates
 from src.updates import gather_one
-from src.utils.constants import NETWORK_PATH
 import logging
 
 logger = logging.getLogger(__name__)
@@ -47,40 +44,6 @@ def recolector(data_actualizar, queue_respuesta):
             time.sleep(1)
 
 
-def grabar_datos(self, queue_respuesta):
-    """
-    Graba los datos en la base de datos y/o en un archivo local
-    """
-
-    # vacear cola en lista
-    respuesta = []
-    while not queue_respuesta.empty():
-        respuesta.append(queue_respuesta.get())
-
-    # intenta actualizar base de datos
-    exito = do_updates.main(self, data=respuesta)
-
-    # actualizacion correcta, fin de proceso
-    if exito:
-        logger.info(f"Base de datos actualizada. Total registros = {len(respuesta)}")
-        return
-
-    # si no se pudo actualizar base de datos grabar en archivo local
-    update_files = [
-        int(i[-10:-5])
-        for i in os.listdir(os.path.join(NETWORK_PATH, "security"))
-        if "update_" in i
-    ]
-
-    next_secuential = max(update_files) + 1 if update_files else 0
-    path = os.path.join(NETWORK_PATH, "security", f"update_{next_secuential:05d}.json")
-    with open(path, mode="w") as outfile:
-        outfile.write(json.dumps(respuesta))
-    logger.warning(
-        f"No se pudo grabar data de scrapers a base de datos. Grabado localmente a {path}. Total registros = {len(respuesta)}"
-    )
-
-
 def main(self, data_actualizar):
     """
     Punto de Entrada para Iniciar Proceso de Scraping.
@@ -100,16 +63,17 @@ def main(self, data_actualizar):
         logger.info(
             f"Final normal de Recolector. Tiempo = {time.perf_counter() - inicio}"
         )
-        exito = True
 
     except FunctionTimedOut:
         logger.warrning(f"Timeout de Recolector en {TIMEOUT} s.")
-        exito = False
 
     finally:
-        grabar_datos(self, queue_respuesta)
+        respuesta = []
+        while not queue_respuesta.empty():
+            respuesta.append(queue_respuesta.get())
 
-    return exito
+        # actualizar base de datos
+        do_updates.main(self, data=respuesta)
 
 
 def get_sample_data():
