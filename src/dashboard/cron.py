@@ -15,7 +15,7 @@ def run_scheduler_loop(self):
     from src.updates import gather_all_new
 
     time.sleep(3)
-    gather_all_new.main("")
+    gather_all_new.main(self, "")
     return
 
     # programar varias veces al dia

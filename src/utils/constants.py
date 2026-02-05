@@ -77,8 +77,7 @@ MESES_NOMBRE_COMPLETO = (
 # table data
 SQL_TABLES = {
     "DataMtcBrevetes": "DOC",
-    "DataSatImpuestosCodigos": "DOC",
-    "DataSatImpuestosDeudas": "COD",
+    "DataSatImpuestos": "DOC",
     "DataOsiptelLineas": "DOC",
     "DataMtcRecordsConductores": "DOC",
     "DataSunatRucs": "DOC",

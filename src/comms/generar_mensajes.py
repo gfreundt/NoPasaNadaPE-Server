@@ -6,11 +6,12 @@ from jinja2 import Environment, FileSystemLoader
 
 
 from src.utils.constants import NETWORK_PATH, MESES_NOMBRE_COMPLETO
-from src.updates.datos_actualizar import (
-    get_alertas_para_mensajes,
-    get_boletines_para_mensajes,
-    get_alertas_para_actualizar,
-)
+
+# from src.updates.datos_actualizar import (
+#     get_alertas_para_mensajes,
+#     get_boletines_para_mensajes,
+#     get_alertas_para_actualizar,
+# )
 from src.utils.utils import date_to_mail_format
 from src.ui.maquinarias.servicios import generar_data_servicios
 

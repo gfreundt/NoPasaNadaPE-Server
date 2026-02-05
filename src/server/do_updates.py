@@ -1,69 +1,52 @@
 from datetime import datetime as dt
 import logging
 
-from src.utils.constants import SQL_TABLES
+from src.scrapers import configuracion_scrapers
 
 logger = logging.getLogger(__name__)
 
 
-def main(db, data):
-    cursor = db.cursor()
-    conn = db.conn
+def main(self, data):
 
-    today = dt.now().strftime("%Y-%m-%d")
+    cursor = self.db.cursor()
+    conn = self.db.conn
 
-    for table, rows in data.items():
-        if table not in SQL_TABLES:
-            continue
+    HOY = dt.now().strftime("%Y-%m-%d")
 
-        table_type = SQL_TABLES[table]
+    for dato in data:
+        tabla = dato.get("Categoria")
 
-        # Identify corresponding Info-table + keys
-        if table_type == "DOC":
-            info_table = "InfoMiembros"
-            info_id = "IdMember"
-            info_fk = "IdMember_FK"
-
-        elif table_type == "PLACA":
+        if configuracion_scrapers.config(tabla)["indice_placa"]:
             info_table = "InfoPlacas"
             info_id = "Placa"
             info_fk = "PlacaValidate"
-
-        elif table_type == "COD":
+            value_id = dato["Placa"]
+        else:
             info_table = "InfoMiembros"
             info_id = "IdMember"
-            info_fk = "Codigo"
+            info_fk = "IdMember_FK"
+            value_id = dato["IdMember"]
 
-        else:
-            continue
+        # actualizar fecha de LastUpdate de InfoMiembros o InfoPlacas para el dato correspondiente
+        last_update_field = tabla.replace("Data", "LastUpdate")
+        cmd = f"UPDATE {info_table} SET {last_update_field} = ? WHERE {info_id} = ?"
+        val = (HOY, value_id)
+        print(cmd, val)
+        cursor.execute(cmd, val)
 
-        # Extract unique foreign keys from payload
-        keys = {str(row.get(info_fk)) for row in rows if info_fk in row}
-        keys = tuple(keys)
+        # borrar registros de IdMember / PlacaValidate previos de tabla correspondiente
+        cmd = f"DELETE FROM {tabla} WHERE {info_fk} = ?"
+        val = (value_id,)
+        print(cmd, val)
+        cursor.execute(cmd, val)
 
-        # Delete old records + update timestamp
-        for key in keys:
-            logger.info(f"Eliminado: de {table}: registro {info_fk} = {key}")
-            cursor.execute(f"DELETE FROM {table} WHERE {info_fk} = ?", (key,))
-            if table_type in ("DOC", "PLACA"):
-                field = f"LastUpdate{table[4:]}"
-                logger.info(f"Actualizando {info_table}: {field} para {info_id} = {key}")
-                cursor.execute(
-                    f"UPDATE {info_table} SET {field} = ? WHERE {info_id} = ?",
-                    (today, key),
-                )
+        # si hay informacion de scraper, actualizar tabla - agregar LastUpdate
+        for p in dato.get("Payload", []):
+            cols = list(p.keys()) + ["LastUpdate"]
+            cmd = f"INSERT INTO {tabla} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})"
+            val = tuple(p.values()) + (HOY,)
+            print(cmd, val)
+            cursor.execute(cmd, val)
 
-        # Insert new rows
-        for record in rows:
-            if "Empty" in record:
-                continue
-
-            cols = list(record.keys())
-            vals = list(record.values())
-            placeholders = ", ".join("?" for _ in vals)
-
-            logger.debug(f"Actualizando {table}")
-            sql = f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders})"
-            cursor.execute(sql, vals)
-
-    conn.commit()
+        conn.commit()
+        print("---------------")

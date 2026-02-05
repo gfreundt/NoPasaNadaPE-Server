@@ -4,20 +4,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
 # local imports
-from func_timeout import func_set_timeout, exceptions
 from src.utils.utils import use_truecaptcha
-from src.utils.constants import SCRAPER_TIMEOUT
 
 
-@func_set_timeout(SCRAPER_TIMEOUT["satimps"])
-def browser_wrapper(doc_num, doc_tipo, webdriver):
-    try:
-        return browser(doc_num, doc_tipo, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
-
-
-def browser(doc_num, doc_tipo, webdriver):
+def browser(doc, webdriver):
     # cargar pagina inicial solo si es la primera vez
     if "data" in webdriver.current_url:
         url_inicial = "https://www.sat.gob.pe/WebSitev8/IncioOV2.aspx"
@@ -56,13 +46,13 @@ def browser(doc_num, doc_tipo, webdriver):
 
         # select tipo documento (DNI/CE) from dropdown
         drop = Select(webdriver.find_element(By.ID, "ctl00_cplPrincipal_ddlTipoDocu"))
-        drop.select_by_value("4" if doc_tipo == "CE" else "2")
+        drop.select_by_value("4" if doc[0] == "CE" else "2")
         time.sleep(0.5)
 
         # clear field and enter DNI/CE
         _dnice = webdriver.find_element(By.ID, "ctl00_cplPrincipal_txtDocumento")
         _dnice.clear()
-        _dnice.send_keys(doc_num)
+        _dnice.send_keys(doc[1])
 
         # clear field and enter captcha
         _captcha_field = webdriver.find_element(By.ID, "ctl00_cplPrincipal_txtCaptcha")
@@ -103,7 +93,6 @@ def browser(doc_num, doc_tipo, webdriver):
         ).click()
         time.sleep(0.5)
 
-        _deudas = []
         webdriver.find_element(By.ID, "ctl00_cplPrincipal_rbtMostrar_2").click()
         time.sleep(0.5)
 
@@ -119,18 +108,17 @@ def browser(doc_num, doc_tipo, webdriver):
                 ano = x[0].text
 
                 # fecha es la ultima del trimestre para fines de alertas
-                _f = ("03-31", "06-30", "09-30", "12-31")
+                _f = ("02-28", "05-29", "08-31", "11-30")
                 fecha_hasta = f"{ano}-{_f[periodo - 1]}"
                 _fila = [
+                    int(codigo),
                     ano,
                     periodo,
                     webdriver.find_element(By.ID, f"{_placeholder}Documento").text,
                     webdriver.find_element(By.ID, f"{_placeholder}Deuda").text,
                     fecha_hasta,
                 ]
-                _deudas.append(_fila)
-
-        response.append({"codigo": int(codigo), "deudas": _deudas})
+                response.append(_fila)
 
         # presionar "nueva busqueda" para dejar listo para la siguiente iteracion
         time.sleep(1)
