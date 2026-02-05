@@ -40,7 +40,9 @@ def main(queue_data, queue_respuesta):
     # lanzar scraper dentro de un wrapper para timeout
     try:
         func_scraper = config["funcion_scraper"]
-        logger.info("Enviado dato a scraper.")
+        logger.info(
+            f"Enviado dato a scraper {dato['Categoria']}: Indice: {datos_scraper}."
+        )
         respuesta_scraper = func_timeout(
             config["timeout"], func_scraper.browser, args=(datos_scraper, webdriver)
         )
@@ -49,7 +51,7 @@ def main(queue_data, queue_respuesta):
         # si respuesta es texto, hubo un error -- reponer dato a cola y vuelve sin actualizar acumulador
         if isinstance(respuesta_scraper, str):
             queue_data.put(dato)
-            logger.warning("Error de scraper.")
+            logger.warning(f"Error de scraper: {respuesta_scraper}")
             return
 
         # respuesta es valida - armar esqueleto de respuesta scraper
@@ -75,7 +77,7 @@ def main(queue_data, queue_respuesta):
         # actualiza respuesta base con payload (vacio o con datos) y agrega al acumulador
         respuesta_local.update({"Payload": payload})
         queue_respuesta.put(respuesta_local)
-        logger.info(f"Resultado de Scraper: {respuesta_local}")
+        logger.info(f"Resultado de Armado de Data Post-Scraper: {respuesta_local}")
 
         # cierra webdriver y regresa al recolector
         webdriver.quit()
