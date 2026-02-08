@@ -109,7 +109,7 @@ def gather(
             with lock:
                 respuesta = {
                     "IdMember_FK": id_member,
-                    "ImageBytes": scraper_response,
+                    "ImageBytes": scraper_response[0],
                     "LastUpdate": dt.now().strftime("%Y-%m-%d"),
                 }
                 logger.info(f"RecVehic ({doc_tipo} {doc_num}): Imagen obtenida.")

@@ -23,7 +23,7 @@ def recolector(data_actualizar, queue_respuesta):
 
     # llenar queue con todos los datos por actualizad
     queue_data = Queue()
-    for k, item in enumerate(data_actualizar):
+    for k, item in enumerate(data_actualizar, start=1):
         queue_data.put(item)
     logger.info(f"Cargada cola con data para enviar a scrapers. Total registros = {k}")
 
@@ -51,8 +51,8 @@ def main(self, data_actualizar):
     Al completar el proceso (todos los registros o timeout) actualiza la base de datos.
     Retorna True si se actualizaron todos los registros, False si no se actualizaron todos.
     """
-    data_actualizar = get_sample_data()
-    print("DATA BAMBA!!")
+    # data_actualizar = get_sample_data()
+    # print("DATA BAMBA!!")
 
     TIMEOUT = 240
     queue_respuesta = Queue()

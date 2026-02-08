@@ -7,11 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.utils.constants import NETWORK_PATH, MESES_NOMBRE_COMPLETO
 
-# from src.updates.datos_actualizar import (
-#     get_alertas_para_mensajes,
-#     get_boletines_para_mensajes,
-#     get_alertas_para_actualizar,
-# )
+from src.updates.datos_actualizar import get_datos_alertas, get_boletines_para_mensajes
 from src.utils.utils import date_to_mail_format
 from src.ui.maquinarias.servicios import generar_data_servicios
 
@@ -30,9 +26,9 @@ def alertas(self):
 
     alertas = []
 
-    for row in get_alertas_para_mensajes(self):
+    for row in get_datos_alertas(self):
         mensaje = redactar_alerta(
-            db_cursor=cursor,
+            cursor=cursor,
             idmember=row["IdMember"],
             template=template_alertas,
             subject="Alerta de NoPasaNada PE",
@@ -52,15 +48,18 @@ def alertas(self):
             alertas.append(mensaje)
 
     # guardar data en archivo en outbound (reemplaza al anterior)
-    path = os.path.join(NETWORK_PATH, "outbound", "alertas_pendientes.json")
-    with open(path, "w", encoding="utf-8") as file:
-        json.dump(alertas, file, indent=4)
+    if alertas:
+        path = os.path.join(NETWORK_PATH, "outbound", "alertas_pendientes.json")
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(alertas, file, indent=4)
 
-    return len(alertas)
+        return True
+
+    return False
 
 
 def redactar_alerta(
-    db_cursor,
+    cursor,
     idmember,
     template,
     subject,
@@ -74,11 +73,11 @@ def redactar_alerta(
     """Construye el HTML final usando la plantilla Jinja2."""
 
     # Secure SELECT
-    db_cursor.execute(
+    cursor.execute(
         "SELECT NombreCompleto, Correo, IdMember, CodMemberInterno FROM InfoMiembros WHERE IdMember = ? LIMIT 1",
         (idmember,),
     )
-    member = db_cursor.fetchone()
+    member = cursor.fetchone()
 
     if not member:
         return None
@@ -183,3 +182,10 @@ def redactar_boletin(cursor, IdMember, template, subject, correo):
         "reset_next_send": 0,
         "html": template.render(data_servicios),
     }
+
+
+def main(self, tipo_mensaje):
+    if tipo_mensaje == "alerta":
+        alertas(self)
+    elif tipo_mensaje == "boletin":
+        boletines(self)

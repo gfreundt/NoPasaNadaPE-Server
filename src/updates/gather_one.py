@@ -18,12 +18,14 @@ def main(queue_data, queue_respuesta):
         dato = queue_data.get_nowait()
         logger.debug(f"Obtenido dato de cola: {dato['Categoria']}")
 
-        if dato["Categoria"] != "DataCallaoMultas":
-            return
+        # if dato["Categoria"] != "DataCallaoMultas":
+        #     return
 
         config = configuracion_scrapers.config(indice=dato["Categoria"])
     except Empty:
         return
+
+    # print(dato["Categoria"], dato["Placa"], dato["DocNum"])
 
     # hay un dato valido, asignar scraper
     chromedriver = ChromeUtils()

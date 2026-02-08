@@ -1,262 +1,209 @@
 import logging
-from pprint import pformat
+from pprint import pformat, pprint
 from src.updates import configuracion_plazos
+from datetime import datetime as dt
 
 logger = logging.getLogger(__name__)
 
-ULTIMA_ACTUALIZACION_HORAS = 23
 
+def get_datos_alertas(self):
+    cte1_estructura = [
+        {
+            "tabla": "DataApesegSoats",
+            "placa_select": True,
+            "dias": "-18, -9, -2, 0, 1, 2, 3",
+            "last_update": "LastUpdateApesegSoats",
+        },
+        {
+            "tabla": "DataMtcRevisionesTecnicas",
+            "placa_select": True,
+            "dias": "-21, -11, -2, 0, 1, 2, 3",
+            "last_update": "LastUpdateMtcRevisionesTecnicas",
+        },
+        {
+            "tabla": "DataMtcBrevetes",
+            "placa_select": False,
+            "dias": "-30, -15, -2, 0, 1, 2, 3",
+            "last_update": "LastUpdateMtcBrevetes",
+        },
+        {
+            "tabla": "DataSatImpuestosCodigos a JOIN DataSatImpuestosDeudas b ON a.Codigo = b.Codigo",
+            "placa_select": False,
+            "dias": "-18, -7, -2, 0, 1, 2, 3",
+            "last_update": "LastUpdateSatImpuestosCodigos",
+        },
+    ]
 
-def alertas(self):
-    """
-    Genera requerimientos de actualización basados en las reglas de configuracion_plazos.
-    """
+    cte1 = []
 
-    cursor = self.db.cursor()
+    # crear sub-query para cada tabla
+    for tabla in cte1_estructura:
 
-    # Generamos los fragmentos SQL dinámicamente
-    sql_soat = configuracion_plazos.generar_sql_condicion("s.FechaHasta", "SOAT")
-    sql_revtec = configuracion_plazos.generar_sql_condicion("r.FechaHasta", "REVTEC")
-    sql_brevete = configuracion_plazos.generar_sql_condicion("b.FechaHasta", "BREVETE")
-    sql_satimp = configuracion_plazos.generar_sql_condicion("d.FechaHasta", "SATIMP")
+        cmd = f"""  SELECT '{tabla['tabla']}' as Categoria, 
+                    {"PlacaValidate" if tabla.get('placa_select') else "NULL"} as Placa,
+                    {"(SELECT IdMember_FK FROM InfoPlacas WHERE PlacaValidate = Placa)" if tabla.get('placa_select') else "IdMember_FK"} as IdMember,
+                    FechaHasta
+                    FROM {tabla['tabla']} 
+                    WHERE
+                """
 
-    query = f"""
-    WITH RecentAlerts AS (
-    SELECT IdMember
-    FROM StatusMensajesEnviados
-    WHERE DATE(FechaEnvio) = DATE('now', 'localtime') 
-    AND TipoMensaje = 'ALERTA'
-    )
-    
-    -- 1. SOAT
-    SELECT 'SOAT' as Tipo, p.IdMember_FK, NULL as DocTipo, NULL as DocNum, s.PlacaValidate as Placa
-    FROM DataApesegSoats s
-    JOIN InfoPlacas p ON p.Placa = s.PlacaValidate
-    WHERE p.IdMember_FK > 0
-      AND p.IdMember_FK NOT IN (SELECT IdMember_FK FROM RecentAlerts)
-      AND p.LastUpdateApesegSoats < datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      AND {sql_soat}
-    
-    UNION ALL
-    
-    -- 2. REVTEC
-    SELECT 'REVTEC', p.IdMember_FK, NULL, NULL, r.PlacaValidate
-    FROM DataMtcRevisionesTecnicas r
-    JOIN InfoPlacas p ON p.Placa = r.PlacaValidate
-    WHERE p.IdMember_FK > 0
-      AND p.IdMember_FK NOT IN (SELECT IdMember_FK FROM RecentAlerts)
-      AND p.LastUpdateMtcRevisionesTecnicas < datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      AND {sql_revtec}
+        cmd += (
+            f"DATE ({'FechaHasta'}) IN ("
+            + ",\n ".join(
+                f"DATE('now','localtime', '{-int(n):+d} days')"
+                for n in tabla["dias"].split(", ")
+            )
+            + ")"
+        )
 
-    UNION ALL
-    
-    -- 3. BREVETE
-    SELECT 'BREVETE', m.IdMember, m.DocTipo, m.DocNum, NULL
-    FROM DataMtcBrevetes b
-    JOIN InfoMiembros m ON m.IdMember = b.IdMember_FK
-    WHERE m.IdMember > 0
-      AND m.IdMember NOT IN (SELECT IdMember_FK FROM RecentAlerts)
-      AND m.LastUpdateMtcBrevetes < datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      AND {sql_brevete}
+        cte1.append(cmd)
 
-    UNION ALL
-    
-    -- 4. SATIMP
-    SELECT 'SATIMP', m.IdMember, m.DocTipo, m.DocNum, NULL
-    FROM DataSatImpuestosDeudas d
-    JOIN DataSatImpuestosCodigos c ON d.Codigo = c.Codigo
-    JOIN InfoMiembros m ON m.IdMember = c.IdMember_FK
-    WHERE m.IdMember > 0
-      AND m.IdMember NOT IN (SELECT IdMember_FK FROM RecentAlerts)
-      AND {sql_satimp}
-    """
+    # unir todos los sub-querys y crear select final que unifica todo y extrae datos de documentos
+    cte1 = "\n\nUNION ALL\n\n".join(cte1)
 
-    cursor.execute(query)
-    results = cursor.fetchall()
-
-    upd = {
-        "DataMtcBrevetes": [],
-        "DataApesegSoats": [],
-        "DataMtcRevisionesTecnicas": [],
-        "DataSatImpuestos": [],
+    cte2_estructura = {
+        "ventana_ultima_alerta_dias": 1,
     }
 
-    for row in results:
-        tipo = row[0]
-        if tipo == "BREVETE":
-            upd["DataMtcBrevetes"].append((row[1], row[2], row[3]))
-        elif tipo == "SOAT":
-            upd["DataApesegSoats"].append(row[4])
-        elif tipo == "REVTEC":
-            upd["DataMtcRevisionesTecnicas"].append(row[4])
-        elif tipo == "SATIMP":
-            upd["DataSatImpuestos"].append((row[1], row[2], row[3]))
+    cte2_estructura = f""" SELECT IdMember FROM StatusMensajesEnviados
+                WHERE
+                TipoMensaje = "ALERTA" AND
+                DATE(FechaEnvio) > DATE('now','localtime','-{cte2_estructura["ventana_ultima_alerta_dias"]} days')
+             """
 
-    # actualizar kpis para dashboard con respuesta
-    total = 0
-    for key, val in upd.items():
-        self.data["scrapers_kpis"][key]["alertas"] = len(val)
-        total += len(val)
-    self.data["scrapers_kpis"]["Acumulado"]["alertas"] = total
+    select = """
+        SELECT 
+        c.Categoria, 
+        c.Placa, 
+        c.IdMember,
+        c.FechaHasta,
+        m.DocNum, 
+        m.DocTipo,
+        m.Correo
+    FROM TodasAlertas c
+    JOIN infomiembros m ON c.IdMember = m.idmember; """
 
-    data = {k: list(set(v)) for k, v in upd.items()}
-    logger.info(f"Datos a actualizar (Alertas):\n {pformat(data)}")
-    return data
+    # consolidar query final
+    query = f"""WITH TodasAlertas AS ({cte1}), 
+                    AlertasRecientes AS ({cte2_estructura})
+                    {select}"""
 
-
-def boletines(self):
-    """
-    Genera requerimientos de actualización para boletines.
-    """
-    SUNARP_DAYS = 120
-
+    # extrae informacion de base de datos
     cursor = self.db.cursor()
-
-    # Definimos los CTEs 'TargetUsers' y 'TargetPlacas' al principio.
-    query = f"""
-    WITH TargetUsers AS (
-        SELECT IdMember, DocTipo, DocNum
-        FROM InfoMiembros
-        WHERE NextMessageSend <= datetime('now','localtime')
-    ),
-    TargetPlacas AS (
-        SELECT p.Placa
-        FROM InfoPlacas p
-        JOIN TargetUsers u ON u.IdMember = p.IdMember_FK
-    )
-
-    -- 1. BREVETES (Usa TargetUsers)
-    SELECT 'DataMtcBrevetes' AS KeyName, u.IdMember AS IdMember_FK, u.DocTipo, u.DocNum, NULL AS Placa
-    FROM TargetUsers u
-    WHERE u.DocTipo = 'DNI'
-      AND u.IdMember NOT IN (
-          SELECT IdMember_FK FROM DataMtcBrevetes 
-          WHERE FechaHasta >= datetime('now','localtime', '+30 days')
-      )
-      AND u.IdMember NOT IN (
-          SELECT IdMember FROM InfoMiembros 
-          WHERE LastUpdateMtcBrevetes >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 2. SOATS (Usa TargetPlacas)
-    SELECT 'DataApesegSoats', NULL, NULL, NULL, p.Placa
-    FROM TargetPlacas p
-    WHERE p.Placa NOT IN (
-          SELECT PlacaValidate FROM DataApesegSoats 
-          WHERE FechaHasta >= datetime('now','localtime', '+15 days')
-      )
-      AND p.Placa NOT IN (
-          SELECT Placa FROM InfoPlacas 
-          WHERE LastUpdateApesegSoats >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 3. REVTECS (Usa TargetPlacas)
-    SELECT 'DataMtcRevisionesTecnicas', NULL, NULL, NULL, p.Placa
-    FROM TargetPlacas p
-    WHERE p.Placa NOT IN (
-          SELECT PlacaValidate FROM DataMtcRevisionesTecnicas 
-          WHERE FechaHasta >= datetime('now','localtime', '+30 days')
-      )
-      AND p.Placa NOT IN (
-          SELECT Placa FROM InfoPlacas 
-          WHERE LastUpdateMtcRevisionesTecnicas >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 4. SUNARPS (Usa TargetPlacas)
-    -- SELECT 'DataSunarpFichas', NULL, NULL, NULL, p.Placa
-    -- FROM TargetPlacas p
-    -- WHERE p.Placa NOT IN (
-    --      SELECT Placa FROM InfoPlacas 
-    --      WHERE LastUpdateSunarpFichas >= datetime('now','localtime', '-{SUNARP_DAYS} days')
-    --  )
-
-    -- UNION ALL
-
-    -- 5. SATIMPS (Usa TargetUsers)
-    SELECT 'DataSatImpuestos', u.IdMember, u.DocTipo, u.DocNum, NULL
-    FROM TargetUsers u
-    WHERE u.IdMember NOT IN (
-          SELECT IdMember FROM InfoMiembros 
-          WHERE LastUpdateSatImpuestosCodigos >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 6. SATMULS (Usa TargetPlacas)
-    SELECT 'DataSatMultas', NULL, NULL, NULL, p.Placa
-    FROM TargetPlacas p
-    WHERE p.Placa NOT IN (
-          SELECT Placa FROM InfoPlacas 
-          WHERE LastUpdateSatMultas >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 7. SUTRANS (Usa TargetPlacas)
-    SELECT 'DataSutranMultas', NULL, NULL, NULL, p.Placa
-    FROM TargetPlacas p
-    WHERE p.Placa NOT IN (
-          SELECT Placa FROM InfoPlacas 
-          WHERE LastUpdateSutranMultas >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 8. RECVEHIC (Usa TargetUsers)
-    SELECT 'DataMtcRecordsConductores', u.IdMember, u.DocTipo, u.DocNum, NULL
-    FROM TargetUsers u
-    WHERE u.DocTipo = 'DNI'
-      AND u.IdMember NOT IN (
-          SELECT IdMember FROM InfoMiembros 
-          WHERE LastUpdateMtcRecordsConductores >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    UNION ALL
-
-    -- 9. CAMUL (Usa TargetPlacas)
-    SELECT 'DataCallaoMultas', NULL, NULL, NULL, p.Placa
-    FROM TargetPlacas p
-    WHERE p.Placa NOT IN (
-          SELECT Placa FROM InfoPlacas 
-          WHERE LastUpdateCallaoMultas >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
-      )
-
-    """
-
-    # Inicializar diccionario
-    upd = {
-        "DataMtcBrevetes": [],
-        "DataApesegSoats": [],
-        "DataMtcRevisionesTecnicas": [],
-        "DataSatImpuestos": [],
-        "DataSatMultas": [],
-        "DataSutranMultas": [],
-        "DataMtcRecordsConductores": [],
-        "DataCallaoMultas": [],
-    }
-
     cursor.execute(query)
+    # resultado = cursor.fetchall()
 
-    for row in cursor.fetchall():
-        key = row["KeyName"]
-        if key in [
-            "DataApesegSoats",
-            "DataMtcRevisionesTecnicas",
-            "DataSatMultas",
-            "DataSutranMultas",
-            "DataCallaoMultas",
-        ]:  # "DataSunarpFichas",
-            upd[key].append(row["Placa"])
-        else:
-            upd[key].append((row["IdMember_FK"], row["DocTipo"], row["DocNum"]))
+    return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
 
-    # Retornar listas únicas
-    datos = {i: list(set(j)) for i, j in upd.items()}
-    logger.info(f"Datos a actualizar (Boletines):\n {pformat(datos)}")
-    return datos
+
+def get_boletines_para_actualizar(self):
+
+    cte = """   SELECT IdMember FROM InfoMiembros
+	            WHERE DATE(NextMessageSend) <= DATE('now','localtime')"""
+
+    cmds = []
+
+    select_estructura = [
+        {
+            "tabla": "DataApesegSoats",
+            "placa_select": True,
+            "fecha_hasta": True,
+        },
+        {
+            "tabla": "DataMtcRevisionesTecnicas",
+            "placa_select": True,
+            "fecha_hasta": True,
+        },
+        {
+            "tabla": "DataMtcBrevetes",
+            "fecha_hasta": True,
+            "placa_select": False,
+        },
+        {
+            "tabla": "DataSatImpuestosCodigos a JOIN DataSatImpuestosDeudas b ON a.Codigo = b.Codigo",
+            "fecha_hasta": False,
+            "placa_select": False,
+        },
+        {
+            "tabla": "DataSatMultas",
+            "fecha_hasta": False,
+            "placa_select": True,
+        },
+        {
+            "tabla": "DataSutranMultas",
+            "fecha_hasta": False,
+            "placa_select": True,
+        },
+        {
+            "tabla": "DataMtcRecordsConductores",
+            "fecha_hasta": False,
+            "placa_select": False,
+        },
+        {
+            "tabla": "DataCallaoMultas",
+            "fecha_hasta": False,
+            "placa_select": True,
+        },
+    ]
+
+    for tabla in select_estructura:
+
+        cola = (
+            f""" AND NOT EXISTS (
+                    SELECT 1
+                    FROM {tabla['tabla']} s
+                    WHERE {'s.PlacaValidate = p.Placa' if tabla['placa_select'] else 's.IdMember_FK = m.IdMember'}
+                    AND DATE(s.FechaHasta) > DATE('now','localtime', '+30 days')
+                    )
+                """
+            if tabla["fecha_hasta"]
+            else ""
+        )
+
+        cmd = f"""  SELECT DISTINCT
+                    '{tabla['tabla']}' AS Categoria,
+                    {"p.Placa" if tabla.get('placa_select') else "NULL"} as Placa,
+                    m.IdMember
+                    FROM InfoMiembros m
+                    JOIN InfoPlacas p
+                        ON p.IdMember_FK = m.IdMember
+                    WHERE DATE(m.NextMessageSend) <= DATE('now','localtime')
+                    {cola}
+                """
+
+        cmds.append(cmd)
+
+    cmds = "\n\nUNION ALL\n\n".join(cmds)
+
+    query = f"""SELECT 
+                        c.Categoria, 
+                        c.Placa, 
+                        c.IdMember,
+                        m.DocNum, 
+                        m.DocTipo,
+                        m.Correo
+                        FROM (
+                            (
+                        {cmds}
+                                ) c 
+                            JOIN Infomiembros m 
+                            ON c.IdMember = m.Idmember);"""
+
+    # extrae informacion de base de datos
+    cursor = self.db.cursor()
+    cursor.execute(query)
+    # resultado = cursor.fetchall()
+
+    return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
+
+
+def get_boletines_para_mensajes(self):
+
+    cmd = """
+            SELECT IdMember, DocTipo, DocNum, Correo
+                FROM InfoMiembros 
+                WHERE DATE(NextMessageSend) <= DATE('now','localtime')
+            """
+    cursor = self.db.cursor()
+    cursor.execute(cmd)
+    return [dict(i) for i in cursor.fetchall()]

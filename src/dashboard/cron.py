@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 
 
 def run_scheduler_loop(self):
+    from src.updates import datos_actualizar
     from src.updates import gather_all_new
 
     time.sleep(3)
-    gather_all_new.main(self, "")
-    return
+    c = datos_actualizar.get_alertas_para_mensajes(self)
+    print(c)
+    gather_all_new.main(self, c)
 
     # programar varias veces al dia
     schedule.every(15).minutes.do(update_kpis.main, self)
