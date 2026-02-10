@@ -34,6 +34,7 @@ def main(self, data):
             last_update_field = tabla.replace("Data", "LastUpdate")
             cmd = f"UPDATE {info_table} SET {last_update_field} = ? WHERE {info_id} = ?"
             val = (HOY, value_id)
+
             cursor.execute(cmd, val)
 
             # borrar registros de IdMember / PlacaValidate previos de tabla correspondiente
@@ -41,11 +42,11 @@ def main(self, data):
             val = (value_id,)
             cursor.execute(cmd, val)
 
-            # si hay informacion de scraper, actualizar tabla - agregar LastUpdate
+            # si hay informacion de scraper, actualizar tabla - agregar primary key y LastUpdate
             for p in dato.get("Payload", []):
-                cols = list(p.keys()) + ["LastUpdate"]
+                cols = list(p.keys()) + [info_fk, "LastUpdate"]
                 cmd = f"INSERT INTO {tabla} ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})"
-                val = tuple(p.values()) + (HOY,)
+                val = tuple(p.values()) + (value_id, HOY)
                 cursor.execute(cmd, val)
 
         conn.commit()

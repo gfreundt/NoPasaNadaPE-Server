@@ -39,7 +39,7 @@ def generar_data_servicios(cursor, correo):
 
     cursor.execute(
         """ SELECT  IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores,
-                    LastUpdateSatImpuestosCodigos, NombreCompleto, DocTipo, DocNum
+                    LastUpdateSatImpuestos, NombreCompleto, DocTipo, DocNum
             FROM InfoMiembros
             WHERE Correo = ?
             LIMIT 1
@@ -51,7 +51,7 @@ def generar_data_servicios(cursor, correo):
     ultimas_actualizaciones_miembro = {
         "brevetes": dato_miembro["LastUpdateMtcBrevetes"],
         "recvehic": dato_miembro["LastUpdateMtcRecordsConductores"],
-        "satimps": dato_miembro["LastUpdateSatImpuestosCodigos"],
+        "satimps": dato_miembro["LastUpdateSatImpuestos"],
     }
 
     cursor.execute(
@@ -164,13 +164,11 @@ def generar_data_servicios(cursor, correo):
 
     # Impuestos SAT
     cursor.execute(
-        """ SELECT a.Codigo, b.FechaHasta, b.TotalAPagar
-            FROM InfoMiembros c
-            LEFT JOIN DataSatImpuestosCodigos a
-            ON a.IdMember_FK = c.IdMember
-            LEFT JOIN DataSatImpuestosDeudas b
-            ON b.Codigo = a.Codigo
-            WHERE c.IdMember = ?
+        """ SELECT Codigo, FechaHasta, TotalAPagar
+            FROM InfoMiembros a
+            LEFT JOIN DataSatImpuestos b 
+            ON a.IdMember = b.IdMember_FK
+            WHERE a.IdMember = ?
         """,
         (id_miembro,),
     )
@@ -197,86 +195,70 @@ def generar_data_servicios(cursor, correo):
             }
         )
     # -------- MANTENIMIENTOS -------- #
+    mantenimientos = []
 
-    mantenimientos = [
+    fake_from_db = [
         {
-            "placa": "ABC123",
-            "actividades": [
+            "Placa": "ABC123",
+            "previos": [],
+            "Proximos": [
                 {
-                    "status": "Realizado",
-                    "km": "5,000 km",
-                    "fecha": date_to_user_format("2024-09-15"),
-                    "boton_detalle": True,
-                },
-                {
-                    "status": "Realizado",
-                    "km": "10,000 km",
-                    "fecha": date_to_user_format("2025-06-12"),
-                    "boton_detalle": True,
-                },
-                {
-                    "status": "Pendiente",
-                    "km": "15,000 km",
-                    "fecha": date_to_user_format("2026-09-15"),
-                    "boton_detalle": False,
-                },
-                {
-                    "status": "Pendiente",
-                    "km": "25,000 km",
-                    "fecha": date_to_user_format("2027-06-12"),
-                    "boton_detalle": True,
-                },
-                {
-                    "status": "Pendiente",
-                    "km": "50,000 km",
-                    "fecha": date_to_user_format("2028-07-10"),
-                    "boton_detalle": True,
-                },
+                    "km": "35,000 km.",
+                    "FechaHasta": "2026-01-27",
+                }
             ],
-            "ultima_revision": date_to_user_format("2026-01-15"),
+            "ultima_revision": "2026-01-15",
         },
         {
-            "placa": "JKL456",
-            "actividades": [],
-            "ultima_revision": date_to_user_format("2026-01-15"),
-        },
-        {
-            "placa": "XYZ999",
-            "actividades": [
+            "Placa": "XYZ999",
+            "previos": [],
+            "Proximos": [
                 {
-                    "status": "Realizado",
-                    "km": "5,000 km",
-                    "fecha": date_to_user_format("2024-09-15"),
-                    "boton_detalle": True,
+                    "km": "15,000 km.",
+                    "FechaHasta": "2027-05-22",
                 },
                 {
-                    "status": "Realizado",
-                    "km": "10,000 km",
-                    "fecha": date_to_user_format("2025-06-12"),
-                    "boton_detalle": False,
-                },
-                {
-                    "status": "Pendiente",
-                    "km": "15,000 km",
-                    "fecha": date_to_user_format("2026-09-15"),
-                    "boton_detalle": True,
-                },
-                {
-                    "status": "Pendiente",
-                    "km": "25,000 km",
-                    "fecha": date_to_user_format("2027-06-12"),
-                    "boton_detalle": True,
-                },
-                {
-                    "status": "Pendiente",
-                    "km": "50,000 km",
-                    "fecha": date_to_user_format("2028-07-10"),
-                    "boton_detalle": False,
+                    "km": "20,000 km.",
+                    "FechaHasta": "2027-08-12",
                 },
             ],
-            "ultima_revision": date_to_user_format("2026-01-15"),
+            "ultima_revision": "2026-01-15",
+        },
+        {
+            "Placa": "RJK874",
+            "previos": [],
+            "Proximos": [],
+            "ultima_revision": "2026-01-15",
         },
     ]
+
+    for mant in fake_from_db:
+        estado_bg = STATUS_BG["ok"]
+        manto = []
+        placa = mant["Placa"]
+        for proximo in mant["Proximos"]:
+            plazos = calculo_plazos(
+                fecha_vigencia=proximo["FechaHasta"],
+                fecha_actualizacion="2026-01-21",  # ultimas_actualizaciones_placas[placa]["soat"]
+            )
+            manto.append(plazos | {"km": proximo["km"]})
+
+            # definir color de toda la fila: cualquier rojo en subfila hace que toda la fila sea roja
+            if plazos.get("estado_bg") != STATUS_BG["ok"]:
+                estado_bg = plazos.get("estado_bg")
+
+        # definir color de todas la fila: si no hay infomracion pone color info
+        if not mant["Proximos"]:
+            estado_bg = STATUS_BG["info"]
+
+        mantenimientos.append(
+            {
+                "placa": placa,
+                "info": manto,
+                "ultima_actualizacion": plazos["ultima_actualizacion"],
+                "estado_bg": estado_bg,
+            }
+        )
 
     # -------- MULTAS -------- #
 
@@ -412,7 +394,7 @@ def generar_data_servicios(cursor, correo):
     if not [i for i in existentes if i["titulo"] == "Municipalidad del Callao"]:
         avisos.append(
             {
-                "texto": "No se encontraron multas Municipalidad del Callao.",
+                "texto": "No se encontraron multas de la Municipalidad del Callao.",
                 "fecha": "Actualizado: TBD",
             }
         )

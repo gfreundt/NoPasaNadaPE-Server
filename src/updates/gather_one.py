@@ -18,14 +18,9 @@ def main(queue_data, queue_respuesta):
         dato = queue_data.get_nowait()
         logger.debug(f"Obtenido dato de cola: {dato['Categoria']}")
 
-        # if dato["Categoria"] != "DataCallaoMultas":
-        #     return
-
         config = configuracion_scrapers.config(indice=dato["Categoria"])
     except Empty:
         return
-
-    # print(dato["Categoria"], dato["Placa"], dato["DocNum"])
 
     # hay un dato valido, asignar scraper
     chromedriver = ChromeUtils()
@@ -86,10 +81,14 @@ def main(queue_data, queue_respuesta):
 
     # scraper no termino a tiempo, se devuelve dato a la cola y regresa al recolector
     except FunctionTimedOut:
-        logger.warning("Timeout de scraper.")
+        logger.warning(
+            f"Timeout de scraper {dato['Categoria']}. Indice: {datos_scraper}"
+        )
         queue_data.put(dato)
 
-    # error generico - devolver el dato a la cola y regresar al recolector
+    # error generico - NO devolver el dato a la cola y regresar al recolector
     except Exception as e:
-        logger.warning(f"Error general de scraper: {e}")
-        queue_data.put(dato)
+        logger.warning(
+            f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
+        )
+        # queue_data.put(dato)

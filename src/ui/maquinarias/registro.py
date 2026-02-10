@@ -21,7 +21,6 @@ def main(self):
 
     # Initial page load
     if request.method == "GET" or not session["usuario"].get("correo"):
-
         # extraer data de lo enviado al momento de la activacion y pre-llenar campos
         cursor = self.db.cursor()
         cmd = "SELECT Correo, NombreCompleto, TipoDocumento, NumeroDocumento, Celular FROM InfoClientesAutorizados WHERE Correo = ?"
@@ -47,7 +46,6 @@ def main(self):
 
     # POST — form submitted
     elif request.method == "POST":
-
         forma = dict(request.form)
 
         # procesar texto ingresados de placas lo mejor que se pueda
@@ -86,7 +84,7 @@ def main(self):
         )
         session["etapa"] = "validado"
         send_pushbullet(
-            title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get("correo")})"
+            title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get('correo')})"
         )
         return servicios.main(self)
 
@@ -118,7 +116,7 @@ def inscribir(cursor, conn, forma):
         "Correo": forma.get("correo"),
         "LastUpdateMtcBrevetes": fecha_base,
         "LastUpdateMtcRecordsConductores": fecha_base,
-        "LastUpdateSatImpuestosCodigos": fecha_base,
+        "LastUpdateSatImpuestos": fecha_base,
         "LastLoginDatetime": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
         "CountFailedLogins": 0,
         "Password": hash_text(forma.get("password1")),
@@ -128,7 +126,7 @@ def inscribir(cursor, conn, forma):
 
     # crear nuevo miembro
     cursor.execute(
-        f"INSERT INTO InfoMiembros ({", ".join(_nr.keys())}) VALUES ({", ".join(["?"] * len(_nr))})",
+        f"INSERT INTO InfoMiembros ({', '.join(_nr.keys())}) VALUES ({', '.join(['?'] * len(_nr))})",
         tuple(_nr.values()),
     )
     id_member = cursor.lastrowid
@@ -220,7 +218,6 @@ def validaciones(db, forma):
     # placas
     # --------------------------------------------------------------
     if forma.get("placas"):
-
         _placas = forma["placas"].split(", ")
 
         if any(len(i) != 6 for i in _placas):
@@ -231,7 +228,7 @@ def validaciones(db, forma):
 
         # placa inscrita por otro usuario
         cur.execute(
-            f"SELECT 1 FROM InfoPlacas WHERE Placa IN ({", ".join(["?"] * len(_placas))}) AND IdMember_FK != 0 LIMIT 1",
+            f"SELECT 1 FROM InfoPlacas WHERE Placa IN ({', '.join(['?'] * len(_placas))}) AND IdMember_FK != 0 LIMIT 1",
             tuple(_placas),
         )
 

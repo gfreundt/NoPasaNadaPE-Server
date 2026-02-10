@@ -7,9 +7,13 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.utils.constants import NETWORK_PATH, MESES_NOMBRE_COMPLETO
 
-from src.updates.datos_actualizar import get_datos_alertas, get_boletines_para_mensajes
+from src.updates.datos_actualizar import get_datos_alertas, get_datos_boletines
 from src.utils.utils import date_to_mail_format
 from src.ui.maquinarias.servicios import generar_data_servicios
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def alertas(self):
@@ -17,45 +21,66 @@ def alertas(self):
     Crea el HTML de las alertas que deben ser enviadas en esta iteración y
     las guarda en el folder "outbound".
     """
+    try:
+        cursor = self.db.cursor()
 
-    cursor = self.db.cursor()
+        # Load HTML template
+        environment = Environment(loader=FileSystemLoader("templates/"))
+        template_alertas = environment.get_template("comms-maquinarias-alerta.html")
 
-    # Load HTML template
-    environment = Environment(loader=FileSystemLoader("templates/"))
-    template_alertas = environment.get_template("comms-maquinarias-alerta.html")
+        alertas = []
 
-    alertas = []
+        for row in get_datos_alertas(self, premensaje=False):
+            mensaje = redactar_alerta(
+                cursor=cursor,
+                idmember=row["IdMember"],
+                template=template_alertas,
+                subject="Alerta de NoPasaNada PE",
+                tipo_alerta=row["Categoria"],
+                vencido=(
+                    True
+                    if dt.strptime(row["FechaHasta"], "%Y-%M-%d") < dt.now()
+                    else False
+                ),
+                fecha_hasta=row["FechaHasta"],
+                placa=row["Placa"],
+                doc_tipo=row["DocTipo"],
+                doc_num=row["DocNum"],
+            )
 
-    for row in get_datos_alertas(self):
-        mensaje = redactar_alerta(
-            cursor=cursor,
-            idmember=row["IdMember"],
-            template=template_alertas,
-            subject="Alerta de NoPasaNada PE",
-            tipo_alerta=row["Categoria"],
-            vencido=(
-                True if dt.strptime(row["FechaHasta"], "%Y-%M-%d") < dt.now() else False
-            ),
-            fecha_hasta=row["FechaHasta"],
-            placa=row["Placa"],
-            doc_tipo=row["DocTipo"],
-            doc_num=row["DocNum"],
-        )
+            if not mensaje:
+                continue
+            else:
+                logger.info(
+                    f"Alerta (IdMember = {row['IdMember']}) generada correctamente."
+                )
+                logger.debug(f"Alerta generada: {mensaje}")
+                alertas.append(mensaje)
 
-        if not mensaje:
-            continue
-        else:
-            alertas.append(mensaje)
+                # solo para ver html
+                path = os.path.join(
+                    NETWORK_PATH,
+                    "outbound",
+                    "temp",
+                    f"alerta_{uuid.uuid4().hex[:8]}.html",
+                )
+                with open(path, "w", encoding="utf-8") as file:
+                    file.write(mensaje["html"])
 
-    # guardar data en archivo en outbound (reemplaza al anterior)
-    if alertas:
-        path = os.path.join(NETWORK_PATH, "outbound", "alertas_pendientes.json")
-        with open(path, "w", encoding="utf-8") as file:
-            json.dump(alertas, file, indent=4)
+        # guardar data en archivo en outbound (reemplaza al anterior)
+        if alertas:
+            path = os.path.join(NETWORK_PATH, "outbound", "alertas_pendientes.json")
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump(alertas, file, indent=4)
+            logger.info(
+                f"Archivo 'alertas_pendientes.json' grabado correctamente. Total alertas = {len(alertas)}"
+            )
 
         return True
 
-    return False
+    except Exception as e:
+        logger.warning(f"Error generando alertas: {e}")
+        return False
 
 
 def redactar_alerta(
@@ -97,10 +122,7 @@ def redactar_alerta(
         servicio = "Certificado SOAT"
         genero = "O"
 
-    elif (
-        tipo_alerta
-        == "DataSatImpuestosCodigos a JOIN DataSatImpuestosDeudas b ON a.Codigo = b.Codigo"
-    ):
+    elif tipo_alerta == "DataSatImpuestos":
         servicio = "Impuesto Vehicular SAT Lima"
         genero = "O"
 
@@ -133,35 +155,55 @@ def boletines(self):
     Crea mensajes regulares en HTML y los guarda en /outbound.
     """
 
-    cursor = self.db.cursor()
+    try:
+        cursor = self.db.cursor()
 
-    # Carga plantilla HTML
-    environment = Environment(loader=FileSystemLoader("templates/"))
-    template_regular = environment.get_template("comms-maquinarias-boletin.html")
+        # Carga plantilla HTML
+        environment = Environment(loader=FileSystemLoader("templates/"))
+        template_regular = environment.get_template("comms-maquinarias-boletin.html")
 
-    mes = MESES_NOMBRE_COMPLETO[int(dt.strftime(dt.now(), "%m")) - 1]
+        mes = MESES_NOMBRE_COMPLETO[int(dt.strftime(dt.now(), "%m")) - 1]
 
-    boletines = []
-    for row in get_boletines_para_mensajes(self):
-        mensaje = redactar_boletin(
-            cursor,
-            IdMember=row["IdMember"],
-            template=template_regular,
-            subject=f"Tu Boletín de No Pasa Nada PE - {mes} 2025",
-            correo=row["Correo"],
-        )
+        boletines = []
+        for row in get_datos_boletines(self, premensaje=False):
+            mensaje = redactar_boletin(
+                cursor,
+                IdMember=row["IdMember"],
+                template=template_regular,
+                subject=f"Tu Boletín de No Pasa Nada PE - {mes} 2025",
+                correo=row["Correo"],
+            )
 
-        if not mensaje:
-            continue
-        else:
-            boletines.append(mensaje)
+            if not mensaje:
+                continue
+            else:
+                logger.info(
+                    f"Boletin (IdMember = {row['IdMember']}) generado correctamente."
+                )
+                logger.debug(f"Boletin generado: {mensaje}")
+                boletines.append(mensaje)
 
-    # guardar data en archivo (reemplaza al anterior)
-    path = os.path.join(NETWORK_PATH, "outbound", "boletines_pendientes.json")
-    with open(path, "w", encoding="utf-8") as file:
-        json.dump(boletines, file, indent=4)
+                # solo para ver html
+                path = os.path.join(
+                    NETWORK_PATH, "outbound", "temp", f"bol_{uuid.uuid4().hex[:8]}.html"
+                )
+                with open(path, "w", encoding="utf-8") as file:
+                    file.write(mensaje["html"])
 
-    return len(boletines)
+        if boletines:
+            # guardar data en archivo (reemplaza al anterior)
+            path = os.path.join(NETWORK_PATH, "outbound", "boletines_pendientes.json")
+            with open(path, "w", encoding="utf-8") as file:
+                json.dump(boletines, file, indent=4)
+                logger.info(
+                    f"Archivo 'boletines_pendientes.json' grabado correctamente. Total boletines = {len(boletines)}"
+                )
+
+        return True
+
+    except Exception as e:
+        logger.warning(f"Error generando boletines: {e}")
+        return False
 
 
 def redactar_boletin(cursor, IdMember, template, subject, correo):
@@ -171,6 +213,10 @@ def redactar_boletin(cursor, IdMember, template, subject, correo):
 
     data_servicios = generar_data_servicios(cursor, correo)
 
+    from pprint import pprint
+
+    pprint(data_servicios)
+
     return {
         "to": correo,
         "bcc": "gabfre@gmail.com",
@@ -179,8 +225,8 @@ def redactar_boletin(cursor, IdMember, template, subject, correo):
         "timestamp": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
         "hashcode": f"{str(uuid.uuid4())[-12:]}",
         "attachment_paths": [],
-        "reset_next_send": 0,
-        "html": template.render(data_servicios),
+        "reset_next_send": 1,
+        "html": template.render(payload=data_servicios),
     }
 
 

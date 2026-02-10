@@ -17,7 +17,7 @@ def config(indice):
             "residential_proxy": False,
             "indice_placa": False,
             "funcion_scraper": scrape_recvehic,
-            "timeout": 60,
+            "timeout": 90,
             "estructura_respuesta": {
                 "ImageBytes": 0,
             },
@@ -67,7 +67,7 @@ def config(indice):
             "residential_proxy": False,
             "indice_placa": False,
             "funcion_scraper": scrape_satimp,
-            "timeout": 60,
+            "timeout": 90,
             "estructura_respuesta": {
                 "Codigo": 0,
                 "Ano": 1,
@@ -81,7 +81,7 @@ def config(indice):
             "residential_proxy": True,
             "indice_placa": True,
             "funcion_scraper": scrape_revtec,
-            "timeout": 60,
+            "timeout": 90,
             "estructura_respuesta": {
                 "IdPlaca_FK": None,
                 "Certificadora": 0,
@@ -97,7 +97,7 @@ def config(indice):
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_sutran,
-            "timeout": 60,
+            "timeout": 90,
             "estructura_respuesta": {
                 "Documento": 0,
                 "Tipo": 1,
@@ -113,10 +113,10 @@ def config(indice):
             "timeout": 90,
         },
         "DataApesegSoats": {
-            "residential_proxy": False,
+            "residential_proxy": True,
             "indice_placa": True,
             "funcion_scraper": scrape_soat,
-            "timeout": 60,
+            "timeout": 90,
             "estructura_respuesta": {
                 "IdPlaca_FK": None,
                 "Aseguradora": 0,
@@ -136,7 +136,7 @@ def config(indice):
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_calmul,
-            "timeout": 45,
+            "timeout": 60,
             "estructura_respuesta": {
                 "PlacaValidate": 0,
                 "Codigo": 1,

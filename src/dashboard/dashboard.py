@@ -9,7 +9,7 @@ from src.dashboard import cron
 from src.utils.constants import TABLAS_BD
 from src.updates import gather_all
 from src.updates import datos_actualizar
-from src.comms import generar_mensajes, enviar_correo_mensajes
+from src.comms import generar_mensajes, enviar_mensajes
 from src.utils.utils import get_public_ip, get_local_ip
 from security.keys import DASHBOARD_URL
 
@@ -89,7 +89,7 @@ class Dashboard:
             self.data["top_right"]["status"] = kwargs["general_status"][1]
 
         if "action" in kwargs:
-            _ft = f"{dt.now():%Y-%m-%d %H:%M:%S} > {kwargs["action"]}"
+            _ft = f"{dt.now():%Y-%m-%d %H:%M:%S} > {kwargs['action']}"
             self.log_entries.append(_ft)
             self.data["bottom_left"].append(_ft[:140])
             self.data["bottom_left"] = self.data["bottom_left"][-40:]
@@ -101,7 +101,7 @@ class Dashboard:
                 self.data["cards"][kwargs["card"]][field] = kwargs[field]
 
         if "usuario" in kwargs:
-            _ft = f"<b>{dt.now():%Y-%m-%d %H:%M:%S} ></b>{kwargs["usuario"]}"
+            _ft = f"<b>{dt.now():%Y-%m-%d %H:%M:%S} ></b>{kwargs['usuario']}"
             self.data["bottom_left"].append(_ft[:140])
             if len(self.data["bottom_left"]) > 30:
                 self.data["bottom_left"].pop(0)
@@ -203,10 +203,10 @@ class Dashboard:
     def enviar_mensajes(self):
         logger.info("Enviando mensajes pendientes.")
         # envia todos los mensajes pendientes en "alertas_pendientes.json" y "boletines_pendientes.json"
-        mensajes = enviar_correo_mensajes.send(db=self.db)
+        mensajes = enviar_mensajes.send(db=self.db)
         if mensajes["ALERTA"] != 0 or mensajes["BOLETIN"] != 0:
             self.log(
-                action=f"[ ENVIAR MENSAJES ] Alertas: {mensajes["ALERTA"]} | Boletines: {mensajes["BOLETIN"]}"
+                action=f"[ ENVIAR MENSAJES ] Alertas: {mensajes['ALERTA']} | Boletines: {mensajes['BOLETIN']}"
             )
 
         # mantenerse en la misma pagina

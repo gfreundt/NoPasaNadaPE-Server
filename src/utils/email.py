@@ -62,6 +62,8 @@ class Email:
     def send_zeptomail(self, email, simulation=False):
         url = "https://api.zeptomail.com/v1.1/email"
 
+        to = email["to_address"] if not simulation else "gabfre@gmail.com"
+
         payload = {
             "from": {
                 "address": self.from_account["address"],
@@ -70,7 +72,7 @@ class Email:
             "to": [
                 {
                     "email_address": {
-                        "address": email["to_address"],
+                        "address": to,
                         "name": "",
                     }
                 }

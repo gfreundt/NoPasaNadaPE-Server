@@ -63,7 +63,6 @@ def main(self):
 
         # no errors
         if not any(errors.values()):
-
             # get next record id
             self.db.cursor.execute("SELECT MAX(IdMember) FROM InfoMiembros")
             new_id = self.db.cursor.fetchone()[0] + 1
@@ -82,7 +81,7 @@ def main(self):
                 "Correo": registration["correo"],
                 "LastUpdateMtcBrevetes": default_date,
                 "LastUpdateMtcRecordsConductores": default_date,
-                "LastUpdateSatImpuestosCodigos": default_date,
+                "LastUpdateSatImpuestos": default_date,
                 "LastUpdateSunatRucs": default_date,
                 "LastUpdateJneMultas": default_date,
                 "LastUpdateOsiptelLineas": default_date,
@@ -139,7 +138,6 @@ def validation(db, attempt, page, codigo=None):
     }
 
     if page == 1:
-
         # nombre
         if len(attempt["nombre"]) < 5:
             errors["nombre"].append("Nombre debe tener mínimo 5 letras")
@@ -189,7 +187,6 @@ def validation(db, attempt, page, codigo=None):
             )
 
     elif page == 2:
-
         # codigo
         if not re.match(r"^[A-Za-z]{4}$", attempt["codigo"]):
             errors["codigo"].append("Codigo de validacion son 4 letras")

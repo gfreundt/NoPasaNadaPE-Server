@@ -48,7 +48,7 @@ def generar_data_servicios(correo):
 
     cursor.execute(
         """ SELECT  IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores,
-                    LastUpdateSatImpuestosCodigos, NombreCompleto, DocTipo, DocNum
+                    LastUpdateSatImpuestos, NombreCompleto, DocTipo, DocNum
             FROM InfoMiembros
             WHERE Correo = ?
             LIMIT 1
@@ -60,7 +60,7 @@ def generar_data_servicios(correo):
     ultimas_actualizaciones_miembro = {
         "brevetes": dato_miembro["LastUpdateMtcBrevetes"],
         "recvehic": dato_miembro["LastUpdateMtcRecordsConductores"],
-        "satimps": dato_miembro["LastUpdateSatImpuestosCodigos"],
+        "satimps": dato_miembro["LastUpdateSatImpuestos"],
     }
 
     cursor.execute(
@@ -115,7 +115,7 @@ def generar_data_servicios(correo):
             plazos
             | {
                 "titulo": "Licencia de Conducir",
-                "subtitulo": f"Numero: {licencia["Numero"]}",
+                "subtitulo": f"Numero: {licencia['Numero']}",
                 "boton_detalle": licencia["FechaHasta"] is not None,
             }
         )
@@ -201,7 +201,7 @@ def generar_data_servicios(correo):
             plazos
             | {
                 "titulo": "Impuestos SAT",
-                "subtitulo": f"Código: {satimp["Codigo"]}" if satimp["Codigo"] else "",
+                "subtitulo": f"Código: {satimp['Codigo']}" if satimp["Codigo"] else "",
                 "boton_detalle": satimp["FechaHasta"] is not None,
             }
         )
@@ -310,18 +310,18 @@ def generar_data_servicios(correo):
         existentes.append(
             {
                 "titulo": "SAT Lima",
-                "subtitulo": f"Placa: {satmul["PlacaValidate"]}",
+                "subtitulo": f"Placa: {satmul['PlacaValidate']}",
                 "fecha": date_to_user_format(satmul["FechaEmision"]),
                 "falta": satmul["Falta"],
                 "situacion": {
                     "titulo": satmul["Estado"],
-                    "subtitulo": f"S/{satmul["Deuda"]}",
+                    "subtitulo": f"S/{satmul['Deuda']}",
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(satmul["LastUpdate"]),
-                    "dias_desde": f"{(
-                        dt.now() - dt.strptime(satmul["LastUpdate"], "%Y-%m-%d")
-                    ).days} días",
+                    "dias_desde": f"{
+                        (dt.now() - dt.strptime(satmul['LastUpdate'], '%Y-%m-%d')).days
+                    } días",
                 },
                 "boton_detalle": True,
             }
@@ -346,7 +346,7 @@ def generar_data_servicios(correo):
         existentes.append(
             {
                 "titulo": "SUTRAN",
-                "subtitulo": f"Placa: {sutran["PlacaValidate"]}",
+                "subtitulo": f"Placa: {sutran['PlacaValidate']}",
                 "fecha": date_to_user_format(sutran["FechaDoc"]),
                 "falta": sutran["CodigoInfrac"],
                 "situacion": {
@@ -355,9 +355,9 @@ def generar_data_servicios(correo):
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(sutran["LastUpdate"]),
-                    "dias_desde": f"{(
-                        dt.now() - dt.strptime(sutran["LastUpdate"], "%Y-%m-%d")
-                    ).days} días",
+                    "dias_desde": f"{
+                        (dt.now() - dt.strptime(sutran['LastUpdate'], '%Y-%m-%d')).days
+                    } días",
                 },
                 "boton_detalle": True,
             }
@@ -382,18 +382,18 @@ def generar_data_servicios(correo):
         existentes.append(
             {
                 "titulo": "Municipalidad del Callao",
-                "subtitulo": f"Placa: {calmul["PlacaValidate"]}",
+                "subtitulo": f"Placa: {calmul['PlacaValidate']}",
                 "fecha": date_to_user_format(calmul["FechaInfraccion"]),
                 "falta": calmul["Codigo"],
                 "situacion": {
-                    "titulo": f"Total: S/{calmul["TotalInfraccion"]}",
-                    "subtitulo": f"Descontada: S/{calmul["TotalBeneficio"]}",
+                    "titulo": f"Total: S/{calmul['TotalInfraccion']}",
+                    "subtitulo": f"Descontada: S/{calmul['TotalBeneficio']}",
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(calmul["LastUpdate"]),
-                    "dias_desde": f"{(
-                        dt.now() - dt.strptime(calmul["LastUpdate"], "%Y-%m-%d")
-                    ).days} días",
+                    "dias_desde": f"{
+                        (dt.now() - dt.strptime(calmul['LastUpdate'], '%Y-%m-%d')).days
+                    } días",
                 },
                 "boton_detalle": True,
             }
@@ -594,7 +594,6 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
         }
 
     else:
-
         return {
             "estado": "No Disponible",
             "estado_bg": STATUS_BG["info"],
@@ -610,7 +609,6 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
 
 
 if __name__ == "__main__":
-
     STATUS_BG = {
         "ok": "#d1e7dd",
         "advertencia": "#fff3cd",

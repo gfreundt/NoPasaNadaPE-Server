@@ -28,7 +28,7 @@ def generar_data_servicios(cursor, correo):
 
     # obtener informacion de miembro y placa, almacenar en variables
     cursor.execute(
-        "SELECT IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores, LastUpdateSatImpuestosCodigos FROM InfoMiembros WHERE Correo = ? LIMIT 1",
+        "SELECT IdMember, LastUpdateMtcBrevetes, LastUpdateMtcRecordsConductores, LastUpdateSatImpuestos FROM InfoMiembros WHERE Correo = ? LIMIT 1",
         (correo,),
     )
     data_miembro = cursor.fetchone()

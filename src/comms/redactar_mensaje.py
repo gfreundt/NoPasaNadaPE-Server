@@ -149,9 +149,7 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
         "record_conductor": date_to_mail_format(
             _data["LastUpdateMtcRecordsConductores"], elapsed=True
         ),
-        "satimp": date_to_mail_format(
-            _data["LastUpdateSatImpuestosCodigos"], elapsed=True
-        ),
+        "satimp": date_to_mail_format(_data["LastUpdateSatImpuestos"], elapsed=True),
     }
     db_cursor.execute(
         f"SELECT * FROM InfoPlacas WHERE IdMember_FK = {member[0]} LIMIT 1"
@@ -187,7 +185,6 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
     _revtecs = []
 
     for _m in db_cursor.fetchall():
-
         _revtecs.append(
             {
                 "certificadora": _m["Certificadora"].split("-")[-1][:35],
@@ -295,7 +292,7 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
         if _m["ImageBytes"]:
             _attachments.append(
                 {
-                    "filename": f'SOAT {_m["PlacaValidate"]}.jpg',
+                    "filename": f"SOAT {_m['PlacaValidate']}.jpg",
                     "bytes": _m["ImageBytes"],
                     "type": "image/jpeg",
                 }
@@ -331,26 +328,26 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
         if _m["ImageBytes1"]:
             _attachments.append(
                 {
-                    "filename": f'Multa SAT Papeleta {_m["PlacaValidate"]} - {n+1}.jpg',
+                    "filename": f"Multa SAT Papeleta {_m['PlacaValidate']} - {n + 1}.jpg",
                     "bytes": _m["ImageBytes1"],
                     "type": "image/jpeg",
                 }
             )
             _attach_txt.append(
-                f"Papeleta de Infracción de Tránsito SAT de Vehículo Placa {_m["PlacaValidate"]}."
+                f"Papeleta de Infracción de Tránsito SAT de Vehículo Placa {_m['PlacaValidate']}."
             )
 
         # add image to attachment list
         if _m["ImageBytes2"]:
             _attachments.append(
                 {
-                    "filename": f'Multa SAT Fotografía {_m["PlacaValidate"]} - {n+1}.jpg',
+                    "filename": f"Multa SAT Fotografía {_m['PlacaValidate']} - {n + 1}.jpg",
                     "bytes": _m["ImageBytes2"],
                     "type": "image/jpeg",
                 }
             )
             _attach_txt.append(
-                f"Fotografía de Infracción de Tránsito de Vehículo Placa {_m["PlacaValidate"]}."
+                f"Fotografía de Infracción de Tránsito de Vehículo Placa {_m['PlacaValidate']}."
             )
     _info.update({"satmuls": _satmuls})
 
@@ -367,14 +364,14 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
         if _m["ImageBytes"]:
             _attachments.append(
                 {
-                    "filename": f'Ficha SUNARP {_m["PlacaValidate"]}.jpg',
+                    "filename": f"Ficha SUNARP {_m['PlacaValidate']}.jpg",
                     "bytes": _m["ImageBytes"],
                     "type": "image/jpeg",
                     "actualizado": actualizado["sunarp"],
                 }
             )
             _attach_txt.append(
-                f"Consulta Vehicular SUNARP de Vehículo Placa {_m["PlacaValidate"]}."
+                f"Consulta Vehicular SUNARP de Vehículo Placa {_m['PlacaValidate']}."
             )
 
     # add RECORD DE CONDUCTOR image
@@ -398,7 +395,9 @@ def boletin(db_cursor, member, template, email_id, subject, alertas, placas, cor
     _subj = (
         f"{len(_txtal)} ALERTAS"
         if len(_txtal) > 1
-        else "1 ALERTA" if len(_txtal) == 1 else "SIN ALERTAS"
+        else "1 ALERTA"
+        if len(_txtal) == 1
+        else "SIN ALERTAS"
     )
 
     # meta data

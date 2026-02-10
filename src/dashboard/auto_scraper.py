@@ -1,6 +1,7 @@
+from comms import enviar_mensajes
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
 from src.utils.utils import send_pushbullet
-from src.comms import generar_mensajes, enviar_correo_mensajes
+from src.comms import generar_mensajes
 from src.updates import datos_actualizar, gather_all_new, do_actualizar
 import time
 from datetime import datetime as dt
@@ -48,7 +49,7 @@ def main(self, tipo_mensaje):
                 f"[ AUTOSCREAPER {tipo_mensaje.upper()} ] Generado Boletines: {b}"
             )
         # enviar mensajes
-        b, a = enviar_correo_mensajes.send(db=self.db)
+        b, a = enviar_mensajes.send(db=self.db)
         if a > 0:
             self.log(action=f"[ AUTOSC {tipo_mensaje.upper()} ] Enviado A: {a}")
         if b > 0:

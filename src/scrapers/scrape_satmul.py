@@ -167,13 +167,11 @@ def solve_recaptcha(webdriver, page_url):
             ).text
 
             if check == "CAPCHA_NOT_READY":
-                print("not ready")
                 continue
 
             if "OK|" in check:
                 return check.split("|")[1]
 
-            print("2captcha response timeout")
             return False
 
         if not token:

@@ -258,7 +258,7 @@ def boletineds(cursor):
     FROM TargetUsers u
     WHERE u.IdMember NOT IN (
           SELECT IdMember FROM InfoMiembros 
-          WHERE LastUpdateSatImpuestosCodigos >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
+          WHERE LastUpdateSatImpuestos >= datetime('now','localtime', '-{ULTIMA_ACTUALIZACION_HORAS} hours')
       )
 
     UNION ALL

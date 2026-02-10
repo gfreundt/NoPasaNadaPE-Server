@@ -5,6 +5,7 @@ from func_timeout.exceptions import FunctionTimedOut
 from queue import Queue
 from src.server import do_updates
 from src.updates import gather_one
+from src.utils.constants import TIMEOUT_RECOLECTOR
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ def recolector(data_actualizar, queue_respuesta):
     Controla el maximo numero de scrapers activados en paralelo.
     Variable "queue_respuesta" junta todas las respuestas de los scrapers
     """
-    MAX_SIMULTANEOUS_SCRAPERS = 3
+    MAX_SIMULTANEOUS_SCRAPERS = 10
     logger.info(
         f"Iniciando Recolector de Scrapers... maximo simulataneo = {MAX_SIMULTANEOUS_SCRAPERS}"
     )
@@ -44,7 +45,7 @@ def recolector(data_actualizar, queue_respuesta):
             time.sleep(1)
 
 
-def main(self, data_actualizar):
+def main(data_actualizar):
     """
     Punto de Entrada para Iniciar Proceso de Scraping.
     Controla el timeout general de todo el proceso.
@@ -54,26 +55,28 @@ def main(self, data_actualizar):
     # data_actualizar = get_sample_data()
     # print("DATA BAMBA!!")
 
-    TIMEOUT = 240
     queue_respuesta = Queue()
+    respuesta = []
 
     try:
         inicio = time.perf_counter()
-        func_timeout(TIMEOUT, recolector, args=(data_actualizar, queue_respuesta))
+        func_timeout(
+            TIMEOUT_RECOLECTOR, recolector, args=(data_actualizar, queue_respuesta)
+        )
         logger.info(
             f"Final normal de Recolector. Tiempo = {time.perf_counter() - inicio}"
         )
-
-    except FunctionTimedOut:
-        logger.warrning(f"Timeout de Recolector en {TIMEOUT} s.")
-
-    finally:
-        respuesta = []
         while not queue_respuesta.empty():
             respuesta.append(queue_respuesta.get())
 
-        # actualizar base de datos
-        do_updates.main(self, data=respuesta)
+        return respuesta
+
+    except FunctionTimedOut:
+        logger.warrning(f"Timeout de Recolector en {TIMEOUT_RECOLECTOR} s.")
+        while not queue_respuesta.empty():
+            respuesta.append(queue_respuesta.get())
+
+        return respuesta
 
 
 def get_sample_data():

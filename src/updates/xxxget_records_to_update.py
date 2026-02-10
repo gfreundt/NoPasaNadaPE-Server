@@ -146,7 +146,7 @@ def get_records_satimps(db_cursor, HLA):
                     IdMember_FK
                     NOT IN
 			        (SELECT IdMember FROM InfoMiembros
-		                WHERE LastUpdateSatImpuestosCodigos >= datetime('now','localtime', '-{HLA} hours'))
+		                WHERE LastUpdateSatImpuestos >= datetime('now','localtime', '-{HLA} hours'))
             UNION
             SELECT IdMember_FK, DocTipo, DocNum FROM _actualizar_alertas
                 WHERE TipoAlerta = "SATIMP"

@@ -6,8 +6,6 @@ from selenium.common.exceptions import TimeoutException
 import time
 import io
 from src.utils.utils import use_truecaptcha
-from func_timeout import func_set_timeout, exceptions
-from src.utils.constants import SCRAPER_TIMEOUT
 
 
 def browser(placa, webdriver):
@@ -83,9 +81,6 @@ def browser(placa, webdriver):
         except Exception:
             response = "@Sin Datos"
 
-        # refrescar pagina para siguiente intento
-        webdriver.back()
-        time.sleep(2)
         return [response]
 
     # error en respuesta
