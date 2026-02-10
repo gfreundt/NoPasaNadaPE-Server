@@ -95,10 +95,10 @@ def main(self, queue_data, queue_respuesta, lock):
         webdriver.quit()
 
     # error generico - NO devolver el dato a la cola y regresar al recolector
-    except Exception as e:
-        logger.warning(
-            f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
-        )
-        time.sleep(1)
-        webdriver.quit()
-        # queue_data.put(dato)
+    # except Exception as e:
+    #     logger.warning(
+    #         f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
+    #     )
+    #     time.sleep(1)
+    #     webdriver.quit()
+    #     # queue_data.put(dato)

@@ -43,7 +43,7 @@ def run_scheduler_loop(self):
 
     # programar varias veces al dia
     schedule.every(15).minutes.do(update_kpis.main, self)
-    schedule.every(30).minutes.do(do_mensajes.main, self, "boletines")
+    schedule.every(60).minutes.do(do_mensajes.main, self, "boletines")
     schedule.every().hour.do(mantenimiento.cada_hora, self)
 
     # programar una vez al dia

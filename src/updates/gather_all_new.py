@@ -19,7 +19,7 @@ def recolector(self, data_actualizar, queue_respuesta, lock):
     """
     MAX_SIMULTANEOUS_SCRAPERS = 5
     logger.info(
-        f"Iniciando Recolector de Scrapers... maximo simulataneo = {MAX_SIMULTANEOUS_SCRAPERS}. Timeout en {TIMEOUT_RECOLECTOR} segundos"
+        f"Iniciando Recolector de Scrapers... maximo simultaneo = {MAX_SIMULTANEOUS_SCRAPERS}. Timeout en {TIMEOUT_RECOLECTOR} segundos"
     )
 
     # llenar queue con todos los datos por actualizad
@@ -52,8 +52,8 @@ def main(self, data_actualizar):
     Al completar el proceso (todos los registros o timeout) actualiza la base de datos.
     Retorna True si se actualizaron todos los registros, False si no se actualizaron todos.
     """
-    # data_actualizar = get_sample_data()
-    # print("DATA BAMBA!!")
+    data_actualizar = get_sample_data()
+    print("DATA BAMBA!!")
 
     lock = Lock()
     queue_respuesta = Queue()
@@ -90,7 +90,9 @@ def get_sample_data():
             "Placa": "F2L100",
             "DocTipo": "DNI",
             "DocNum": "91387786",
-        },
+        }
+    ]
+    """,
         {
             "Categoria": "DataCallaoMultas",
             "IdMember": 71,
@@ -218,3 +220,4 @@ def get_sample_data():
             "DocNum": "86617420",
         },
     ]
+"""
