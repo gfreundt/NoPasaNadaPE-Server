@@ -31,7 +31,7 @@ def main(self, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
             return True
 
         # realizar scraping
-        respuesta = gather_all_new.main(pendientes)
+        respuesta = gather_all_new.main(self, pendientes)
 
         # actualizar base de datos con lo que haya sido devuelto (completo o parcial)
         logger.info(

@@ -5,6 +5,7 @@ from pprint import pformat
 from src.utils.webdriver import ChromeUtils
 from src.scrapers import configuracion_scrapers
 from src.utils.utils import date_to_db_format
+from src.server import do_updates
 from datetime import datetime as dt
 
 import logging
@@ -12,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def main(queue_data, queue_respuesta):
+def main(self, queue_data, queue_respuesta, lock):
     # intentar extraer siguiente registro de cola
     try:
         dato = queue_data.get_nowait()
@@ -75,6 +76,8 @@ def main(queue_data, queue_respuesta):
         respuesta_local.update({"Payload": payload})
         queue_respuesta.put(respuesta_local)
         logger.info(f"Resultado de Armado de Data Post-Scraper: {respuesta_local}")
+        with lock:
+            do_updates(self, [respuesta_local])
 
         # cierra webdriver y regresa al recolector
         webdriver.quit()
