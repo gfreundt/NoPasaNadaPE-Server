@@ -52,8 +52,8 @@ def main(self, data_actualizar):
     Al completar el proceso (todos los registros o timeout) actualiza la base de datos.
     Retorna True si se actualizaron todos los registros, False si no se actualizaron todos.
     """
-    data_actualizar = get_sample_data()
-    print("DATA BAMBA!!")
+    # data_actualizar = get_sample_data()
+    # print("DATA BAMBA!!")
 
     lock = Lock()
     queue_respuesta = Queue()
