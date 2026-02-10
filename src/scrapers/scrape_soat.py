@@ -1,7 +1,11 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
 
 import time
 import io
@@ -64,13 +68,14 @@ def browser(placa, webdriver):
             webdriver.quit()
             return []
         # extraer data de respuesta (espera hasta 10 segundos que aparezca)
-        WebDriverWait(webdriver, 30).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "/html/body/div/div/main/div/div/table/tbody/tr[1]/td")
-            )
-        )
+
         # busca datos, si no existen responder con error de scraper
         try:
+            WebDriverWait(webdriver, 30).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "/html/body/div/div/main/div/div/table/tbody/tr[1]/td")
+                )
+            )
             response = [
                 webdriver.find_element(
                     By.XPATH,
@@ -78,7 +83,11 @@ def browser(placa, webdriver):
                 ).text.strip()
                 for i in range(1, 13)
             ]
-        except Exception:
+        except (
+            TimeoutException,
+            StaleElementReferenceException,
+            NoSuchElementException,
+        ):
             response = "@Sin Datos"
 
         return [response]
