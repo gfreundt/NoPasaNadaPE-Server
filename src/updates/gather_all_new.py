@@ -64,7 +64,7 @@ def main(self, data_actualizar):
         func_timeout(
             TIMEOUT_RECOLECTOR,
             recolector,
-            args=(data_actualizar, queue_respuesta, lock),
+            args=(self, data_actualizar, queue_respuesta, lock),
         )
         logger.info(
             f"Final normal de Recolector. Tiempo = {time.perf_counter() - inicio}"
