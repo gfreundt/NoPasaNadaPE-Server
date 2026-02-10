@@ -14,32 +14,32 @@ logger = logging.getLogger(__name__)
 
 def run_scheduler_loop(self):
 
-    from src.comms import generar_mensajes
-    from jinja2 import Environment, FileSystemLoader
-    import os
-    from src.utils.constants import NETWORK_PATH
-    import uuid
+    # from src.comms import generar_mensajes
+    # from jinja2 import Environment, FileSystemLoader
+    # import os
+    # from src.utils.constants import NETWORK_PATH
+    # import uuid
 
-    # Load HTML template
-    environment = Environment(loader=FileSystemLoader("templates/"))
-    template = environment.get_template("comms-maquinarias-boletin.html")
-    cursor = self.db.cursor()
-    IdMember = "25"
-    subject = ("Alerta de NoPasaNada PE",)
-    correo = "gabfre@gmail.com"
-    mensaje = generar_mensajes.redactar_boletin(
-        cursor, IdMember, template, subject, correo
-    )
-    # solo para ver html
-    path = os.path.join(
-        NETWORK_PATH,
-        "outbound",
-        "temp",
-        f"boletin_{uuid.uuid4().hex[:8]}.html",
-    )
-    with open(path, "w", encoding="utf-8") as file:
-        file.write(mensaje["html"])
-    return
+    # # Load HTML template
+    # environment = Environment(loader=FileSystemLoader("templates/"))
+    # template = environment.get_template("comms-maquinarias-boletin.html")
+    # cursor = self.db.cursor()
+    # IdMember = "25"
+    # subject = ("Alerta de NoPasaNada PE",)
+    # correo = "gabfre@gmail.com"
+    # mensaje = generar_mensajes.redactar_boletin(
+    #     cursor, IdMember, template, subject, correo
+    # )
+    # # solo para ver html
+    # path = os.path.join(
+    #     NETWORK_PATH,
+    #     "outbound",
+    #     "temp",
+    #     f"boletin_{uuid.uuid4().hex[:8]}.html",
+    # )
+    # with open(path, "w", encoding="utf-8") as file:
+    #     file.write(mensaje["html"])
+    # return
 
     # programar varias veces al dia
     schedule.every(15).minutes.do(update_kpis.main, self)
