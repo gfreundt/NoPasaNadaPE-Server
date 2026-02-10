@@ -11,7 +11,7 @@ from security.keys import ZEPTOMAIL_INFO_TOKEN
 logger = logging.getLogger(__name__)
 
 
-def main(self, tipo_mensaje, simulation=True):
+def main(self, tipo_mensaje, simulation=False):
 
     cursor = self.db.cursor()
     conn = self.db.conn

@@ -28,7 +28,6 @@ def main(self):
 
 def generar_data_servicios(cursor, correo):
     #
-    # -------- ENCABEZADO -------- #
 
     STATUS_BG = {
         "ok": "#d1e7dd",
@@ -76,6 +75,8 @@ def generar_data_servicios(cursor, correo):
         for i in datos_placas
     }
 
+    # -------- ENCABEZADO -------- #
+
     encabezado = {
         "nombre": dato_miembro["NombreCompleto"],
         "tipo_documento": dato_miembro["DocTipo"],
@@ -106,7 +107,9 @@ def generar_data_servicios(cursor, correo):
             plazos
             | {
                 "titulo": "Licencia de Conducir",
-                "subtitulo": f"Numero: {licencia['Numero']}",
+                "subtitulo": f"Número: {licencia['Numero']}"
+                if licencia["Numero"]
+                else "",
                 "boton_detalle": licencia["FechaHasta"] is not None,
             }
         )
@@ -374,6 +377,7 @@ def generar_data_servicios(cursor, correo):
 
     # Agregar avisos que no se encontraron multas
     avisos = []
+
     if not [i for i in existentes if i["titulo"] == "Multa SAT Lima"]:
         fecha = calculo_plazos(None, ultimas_actualizaciones_miembro["satimps"])[
             "ultima_actualizacion"
@@ -384,18 +388,32 @@ def generar_data_servicios(cursor, correo):
                 "fecha": f"Actualizado: {fecha['fecha']} ({fecha['dias_desde']})",
             }
         )
+
     if not [i for i in existentes if i["titulo"] == "Multa SUTRAN"]:
+        if datos_placas:
+            d = ultimas_actualizaciones_placas.get(datos_placas[0]["Placa"])
+            fecha = calculo_plazos(None, d["sutran"])["ultima_actualizacion"]
+        else:
+            fecha["fecha"] = {"fecha": "N/A", "dias_desde": ""}
+
         avisos.append(
             {
                 "texto": "No se encontraron multas SUTRAN.",
-                "fecha": "Actualizado: TBD",
+                "fecha": f"Actualizado: {fecha['fecha']} ({fecha['dias_desde']})",
             }
         )
+
     if not [i for i in existentes if i["titulo"] == "Municipalidad del Callao"]:
+        if datos_placas:
+            d = ultimas_actualizaciones_placas.get(datos_placas[0]["Placa"])
+            fecha = calculo_plazos(None, d["callaomultas"])["ultima_actualizacion"]
+        else:
+            fecha["fecha"] = {"fecha": "N/A", "dias_desde": ""}
+
         avisos.append(
             {
                 "texto": "No se encontraron multas de la Municipalidad del Callao.",
-                "fecha": "Actualizado: TBD",
+                "fecha": f"Actualizado: {fecha['fecha']} ({fecha['dias_desde']})",
             }
         )
     # -------- DESCARGAS -------- #
@@ -523,8 +541,13 @@ def generar_data_servicios(cursor, correo):
     urls = {
         "mi_perfil": "/maquinarias/mi-perfil",
         "salir": "/maquinarias/logout",
+        "landing": "https://nopasanadape.com/maquinarias",
     }
-    metadata = {"urls": urls}
+    imgs = {
+        "logo_nopasanadape": "https://nopasanadape.com/static/images/logo-nopasanadape-transparente-negro.png",
+        "logo_maquinarias": "https://nopasanadape.com/static/images/maquinarias-icon.png",
+    }
+    metadata = {"urls": urls, "imgs": imgs}
 
     # -------- ARMADO DE RESPUESTA -------- #
     payload = {
