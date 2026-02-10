@@ -77,7 +77,8 @@ def main(self, queue_data, queue_respuesta, lock):
         queue_respuesta.put(respuesta_local)
         logger.info(f"Resultado de Armado de Data Post-Scraper: {respuesta_local}")
         with lock:
-            do_updates(self, [respuesta_local])
+            logger.info(f"Enviado a actualizar base de datos: {respuesta_local}")
+            do_updates.main(self, [respuesta_local])
 
         # cierra webdriver y regresa al recolector
         webdriver.quit()

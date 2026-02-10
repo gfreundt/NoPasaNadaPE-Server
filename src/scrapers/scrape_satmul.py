@@ -36,7 +36,6 @@ def browser(placa, webdriver):
 
     # resolver recaptcha
     token = solve_recaptcha(webdriver, webdriver.current_url)
-    print("token", token)
     if not token:
         return "Problemas con Resolucion de Recaptcha"
 

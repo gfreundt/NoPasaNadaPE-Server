@@ -75,7 +75,7 @@ def main(self, data_actualizar):
         return respuesta
 
     except FunctionTimedOut:
-        logger.warrning(f"Timeout de Recolector en {TIMEOUT_RECOLECTOR} s.")
+        logger.warning(f"Timeout de Recolector en {TIMEOUT_RECOLECTOR} s.")
         while not queue_respuesta.empty():
             respuesta.append(queue_respuesta.get())
 
