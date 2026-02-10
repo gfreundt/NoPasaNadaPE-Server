@@ -113,7 +113,7 @@ def config(indice):
             "timeout": 90,
         },
         "DataApesegSoats": {
-            "residential_proxy": True,
+            "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_soat,
             "timeout": 90,
