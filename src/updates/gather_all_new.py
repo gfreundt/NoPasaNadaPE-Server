@@ -17,7 +17,7 @@ def recolector(self, data_actualizar, queue_respuesta, lock):
     Controla el maximo numero de scrapers activados en paralelo.
     Variable "queue_respuesta" junta todas las respuestas de los scrapers
     """
-    MAX_SIMULTANEOUS_SCRAPERS = 10
+    MAX_SIMULTANEOUS_SCRAPERS = 5
     logger.info(
         f"Iniciando Recolector de Scrapers... maximo simulataneo = {MAX_SIMULTANEOUS_SCRAPERS}. Timeout en {TIMEOUT_RECOLECTOR} segundos"
     )

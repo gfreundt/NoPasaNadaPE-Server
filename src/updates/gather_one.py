@@ -7,6 +7,7 @@ from src.scrapers import configuracion_scrapers
 from src.utils.utils import date_to_db_format
 from src.server import do_updates
 from datetime import datetime as dt
+import time
 
 import logging
 
@@ -81,6 +82,7 @@ def main(self, queue_data, queue_respuesta, lock):
             do_updates.main(self, [respuesta_local])
 
         # cierra webdriver y regresa al recolector
+        time.sleep(1)
         webdriver.quit()
 
     # scraper no termino a tiempo, se devuelve dato a la cola y regresa al recolector
@@ -89,10 +91,14 @@ def main(self, queue_data, queue_respuesta, lock):
             f"Timeout de scraper {dato['Categoria']}. Indice: {datos_scraper}"
         )
         queue_data.put(dato)
+        time.sleep(1)
+        webdriver.quit()
 
     # error generico - NO devolver el dato a la cola y regresar al recolector
     except Exception as e:
         logger.warning(
             f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
         )
+        time.sleep(1)
+        webdriver.quit()
         # queue_data.put(dato)
