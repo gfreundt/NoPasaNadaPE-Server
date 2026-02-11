@@ -5,9 +5,6 @@ import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
-from func_timeout import func_set_timeout, exceptions
-
-from src.utils.constants import SCRAPER_TIMEOUT
 from security.keys import TWOCAPTCHA_API_KEY
 
 
@@ -178,8 +175,5 @@ def solve_recaptcha(webdriver, page_url):
 
         return token
 
-    except KeyboardInterrupt:
-        pass
-
-    # except Exception:
-    #     return False
+    except Exception:
+        return False

@@ -6,9 +6,9 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
 )
-
 import time
 import io
+
 from src.utils.utils import use_truecaptcha
 
 

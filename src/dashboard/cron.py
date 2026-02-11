@@ -14,31 +14,9 @@ logger = logging.getLogger(__name__)
 
 def run_scheduler_loop(self):
 
-    # from src.comms import generar_mensajes
-    # from jinja2 import Environment, FileSystemLoader
-    # import os
-    # from src.utils.constants import NETWORK_PATH
-    # import uuid
-
-    # # Load HTML template
-    # environment = Environment(loader=FileSystemLoader("templates/"))
-    # template = environment.get_template("comms-maquinarias-boletin.html")
-    # cursor = self.db.cursor()
-    # IdMember = "25"
-    # subject = ("Alerta de NoPasaNada PE",)
-    # correo = "gabfre@gmail.com"
-    # mensaje = generar_mensajes.redactar_boletin(
-    #     cursor, IdMember, template, subject, correo
-    # )
-    # # solo para ver html
-    # path = os.path.join(
-    #     NETWORK_PATH,
-    #     "outbound",
-    #     "temp",
-    #     f"boletin_{uuid.uuid4().hex[:8]}.html",
-    # )
-    # with open(path, "w", encoding="utf-8") as file:
-    #     file.write(mensaje["html"])
+    # TEST: generar boletin fijo
+    # from src.test import crear_boletin
+    # crear_boletin.main(self, idmember="25", correo="gabfre@gmail.com")
     # return
 
     # programar varias veces al dia
@@ -48,7 +26,7 @@ def run_scheduler_loop(self):
 
     # programar una vez al dia
     schedule.every().day.at("07:05").do(resumen_diario.main, self)
-    schedule.every().day.at("07:10").do(prueba_scrapers.main, self)
+    # schedule.every().day.at("07:10").do(prueba_scrapers.main, self)
     schedule.every().day.at("07:30").do(do_mensajes.main, self, "alertas")
     schedule.every().day.at("15:00").do(do_mensajes.main, self, "alertas")
 

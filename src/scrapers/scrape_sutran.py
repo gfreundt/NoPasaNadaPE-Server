@@ -3,16 +3,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time
-from func_timeout import func_set_timeout, exceptions
-from src.utils.constants import SCRAPER_TIMEOUT
-
-
-@func_set_timeout(SCRAPER_TIMEOUT["sutrans"])
-def browser_wrapper(placa, webdriver):
-    try:
-        return browser(placa, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
 
 
 def browser(placa, webdriver):
@@ -96,7 +86,7 @@ def revisar_carga_pagina(webdriver):
     intentos_carga = 0
     while intentos_carga < 3:
         try:
-            WebDriverWait(webdriver, 5).until(
+            WebDriverWait(webdriver, 15).until(
                 EC.presence_of_element_located((By.ID, "post-1120"))
             )
             return True

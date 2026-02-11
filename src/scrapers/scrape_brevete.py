@@ -5,21 +5,11 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from src.utils.constants import MTC_CAPTCHAS, SCRAPER_TIMEOUT
-from func_timeout import func_set_timeout, exceptions
 
-
-@func_set_timeout(SCRAPER_TIMEOUT["brevetes"])
-def browser_wrapper(doc_num, webdriver):
-    try:
-        return browser(doc_num, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
+from src.utils.constants import MTC_CAPTCHAS
 
 
 def browser(doc, webdriver):
-
-    # abrir url
 
     url = "https://licencias.mtc.gob.pe/#/index"
     webdriver.set_page_load_timeout(60)
@@ -28,9 +18,6 @@ def browser(doc, webdriver):
     except TimeoutException:
         webdriver.execute_script("window.stop();")
     time.sleep(2)
-
-    # else:
-    #     webdriver.refresh()
 
     # esperar a que boton de cerrar pop-up se active (max 15 segundos)
     popup_btn, k = [], 0
@@ -153,10 +140,6 @@ def evade_captcha(webdriver):
         By.CSS_SELECTOR, "mat-checkbox .mat-checkbox-inner-container"
     )
     webdriver.execute_script("arguments[0].click();", visible_checkbox)
-
-    # # mueve el mouse y haz click, espera un segundo para que aparezca
-    # actions = ActionChains(webdriver)
-    # actions.move_to_element(visible_checkbox).click().perform()
     time.sleep(5)
 
     # extrae el texto de la imagen que se dene elegir

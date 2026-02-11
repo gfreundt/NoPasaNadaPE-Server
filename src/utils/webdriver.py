@@ -1,18 +1,18 @@
 import os
 import platform
 from selenium import webdriver
-from seleniumwire import webdriver as sw_webdriver
-from seleniumbase import sb_cdp, SB, Driver
-
-# REMOVED: seleniumwire
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-
 import subprocess
 import json
+import warnings
+
 from security.keys import PROXY_DATACENTER, PROXY_RESIDENTIAL
 from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH
+
+warnings.filterwarnings("ignore", message="pkg_resources*", category=UserWarning)
+from seleniumwire import webdriver as sw_webdriver
 
 
 class ChromeUtils:
@@ -73,11 +73,13 @@ class ChromeUtils:
 
     def proxy_driver(self, residential=True):
         if residential:
+            proxy = PROXY_RESIDENTIAL
             username = "LcL8ujXtMohd3ODu"
             password = "Lm4lJIxiyRd9nNCp_country-pe"
             proxy_url = "geo.iproyal.com"
             proxy_url_port = "11201"
         else:
+            proxy = PROXY_DATACENTER
             username = "14ac34c1fcc08"
             password = "4f480ab2ca"
             proxy_url = "104.234.188.209"

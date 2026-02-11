@@ -1,14 +1,7 @@
 import time
-from datetime import datetime as dt
-import warnings
-
-warnings.filterwarnings("ignore", category=UserWarning, module="seleniumwire")
-
-from pprint import pprint
 import random
 import logging
-
-logger = logging.getLogger(__name__)
+from datetime import datetime as dt
 
 from src.test.test_data import get_test_data
 from src.test import (
@@ -22,9 +15,13 @@ from src.test import (
     sutran_manual,
 )
 from src.utils.utils import send_pushbullet
+from src.comms import enviar_correo_interno
+
+logger = logging.getLogger(__name__)
 
 
-def main(size=1):
+def main(self, size=1):
+
     logger.info(f"Iniciando prueba de scrapers con {size} registro(s) cada uno.")
     sample_size = [size] * 9
     data_pruebas = get_test_data(sample_size=sample_size)
@@ -75,10 +72,9 @@ def main(size=1):
 
     random.shuffle(tests)
 
-    resultados = []
+    resultados, exitos, fallos = [], [], []
 
     for k, test in enumerate(tests, start=1):
-
         logger.info(f"\nScraper prueba {k}/{len(tests)} -- {test['name']}")
         start_time = time.perf_counter()
 
@@ -89,19 +85,24 @@ def main(size=1):
                 f"✅ {test['name']}. Tiempo: {end_time - start_time:.2f} seconds"
             )
             resultados.append(1)
+            exitos.append(test["name"])
 
         except Exception as e:
             logger.info(f"❌ {test['name']} failed: {e[:60]}...")
             resultados.append(0)
+            fallos.append(test["name"])
 
-    txt = f"Prueba de scrapers completa (Total: {len(tests)}). Exitos: {sum(resultados)}. Fallos: {len(tests) - sum(resultados)}."
-    logger.info(txt)
+    resultado = f"Prueba de scrapers completa (Total: {len(tests)}). Exitos: {sum(resultados)}. Fallos: {len(tests) - sum(resultados)}."
+    logger.info(resultado)
 
     activity = send_pushbullet(
-        title="Prueba de scrapers " + str(dt.now())[:10],
-        message=txt,
+        title="Error en Prueba Scrapers",
+        message=" - ".join([i for i in fallos]),
     )
     logger.info(f"Pushbullet Resultado Prueba Scrapers Enviado: {activity}")
+
+    titulo = f"Resumen Diario ({str(dt.now())[:19]})"
+    enviar_correo_interno.prueba_scrapers(titulo=titulo, mensaje=resultado)
 
 
 if __name__ == "__main__":

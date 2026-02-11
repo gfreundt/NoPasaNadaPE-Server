@@ -5,10 +5,9 @@ logger = logging.getLogger(__name__)
 
 def cada_hora(self):
     try:
-        cursor, conn = self.db.cursor(), self.cd.conn
+        cursor, conn = self.db.cursor(), self.db.conn
 
         # Toma datos de SUNARP sobre año de fabricacion y pone el dato en InfoPlacas si esta vacio
-
         cmd = """ UPDATE InfoPlacas
                     SET AnoFabricacion = (
                         SELECT Ano

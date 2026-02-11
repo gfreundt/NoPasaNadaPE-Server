@@ -1,19 +1,8 @@
 import time
 import io
-import copy
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoAlertPresentException
+
 from src.utils.utils import use_truecaptcha
-from func_timeout import func_set_timeout, exceptions
-from src.utils.constants import SCRAPER_TIMEOUT
-
-
-@func_set_timeout(SCRAPER_TIMEOUT["calmul"])
-def browser_wrapper(placa, webdriver):
-    try:
-        return browser(placa, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
 
 
 def browser(placa, webdriver):
@@ -22,7 +11,6 @@ def browser(placa, webdriver):
 
     intentos_captcha = 0
     while intentos_captcha < 5:
-
         # abrir url
         if webdriver.current_url != url:
             webdriver.get(url)

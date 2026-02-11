@@ -2,15 +2,10 @@ import os
 import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 from flask import Flask
-import warnings
-
-warnings.filterwarnings("ignore", category=UserWarning, module="seleniumwire")
-
+from src.utils.constants import NETWORK_PATH
+from src.utils.utils import get_local_ip, is_master_worker
 from src.server import server
 from src.dashboard import dashboard
-from src.utils.constants import NETWORK_PATH
-from security.keys import DASHBOARD_URL
-from src.utils.utils import get_local_ip, is_master_worker
 
 
 def create_app():

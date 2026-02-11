@@ -1,24 +1,14 @@
 import os
 import io
 import base64
-
-# import pyautogui
 import time
-from func_timeout import func_set_timeout, exceptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
+
 from src.utils.utils import use_truecaptcha
-from src.utils.constants import NETWORK_PATH, SCRAPER_TIMEOUT
-
-
-@func_set_timeout(SCRAPER_TIMEOUT["revtec"])
-def browser_wrapper(doc_num, webdriver):
-    try:
-        return browser(doc_num, webdriver)
-    except exceptions.FunctionTimedOut:
-        return "Timeout"
+from src.utils.constants import NETWORK_PATH
 
 
 def browser(doc_num, webdriver):

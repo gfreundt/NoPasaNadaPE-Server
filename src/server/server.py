@@ -1,21 +1,17 @@
 import os
 import sqlite3
-import threading
-from threading import Lock
 import time
 import base64
 from datetime import datetime as dt, timedelta as td
 from flask import session, redirect, render_template, url_for, Response, flash
 from authlib.integrations.flask_client import OAuth
-from authlib.common.security import generate_token
 from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
 import uuid
 import logging
-import warnings
-
-# Local imports
+from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
 from src.server import settings, updater, api, admin
+from src.comms import enviar_correo_inmediato
 from src.ui.maquinarias import (
     login as maq_login,
     registro as maq_registro,
@@ -24,11 +20,10 @@ from src.ui.maquinarias import (
     recuperar as maq_recuperar,
     servicios as maq_mis_servicios,
 )
-from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
-from src.comms import enviar_correo_inmediato
+
 
 logger = logging.getLogger(__name__)
-warnings.filterwarnings("ignore", message="pkg_resources*", category=UserWarning)
+
 
 # ============================================================
 #                      DATABASE LAYER
@@ -39,7 +34,6 @@ class Database:
     def __init__(self):
         self.conn = None
         self._pid = None
-        self.lock = Lock()
 
     def _ensure_conn(self):
         """Ensures each worker has its own SQLite connection."""
@@ -58,7 +52,6 @@ class Database:
                 timeout=5.0,
             )
             self.conn.row_factory = sqlite3.Row
-            # self.conn.execute("PRAGMA journal_mode=WAL")
             self._pid = current_pid
 
     def cursor(self):
@@ -88,9 +81,6 @@ class Server:
     def __init__(self, db, app, dash):
         self.db = db
         self.app = app
-
-        self.data_lock = threading.Lock()
-
         self.dash = dash
         self.dash.set_server(self)
         settings.set_dash_routes(self)
@@ -103,7 +93,6 @@ class Server:
         settings.set_server_routes(self)
 
         # activar dashboard
-
         self.oauth = OAuth(app)
         settings.set_oauth_config(self)
 

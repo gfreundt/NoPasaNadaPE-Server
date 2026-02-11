@@ -10,11 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class Email:
-    def __init__(self, cursor, conn, from_account, token):
+    def __init__(self, cursor, conn, from_account, token, registro_en_bd=True):
         self.from_account = from_account
         self.token = token
         self.cursor = cursor
         self.conn = conn
+        self.registro_en_bd = registro_en_bd
 
     def send_email(self, emails):
         # if user sends single email, change format to list
@@ -100,7 +101,9 @@ class Email:
             else:
                 response_request_id = respuesta.get("request_id")
                 response_message = "OK"
-            self.registrar_envio_bd(email, response_request_id, response_message)
+
+            if self.registro_en_bd:
+                self.registrar_envio_bd(email, response_request_id, response_message)
 
         else:
             logger.info(f"SIMULACION: Envío correo a {email['to_address']}")
