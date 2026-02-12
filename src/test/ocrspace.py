@@ -1,129 +1,62 @@
-from datetime import datetime as dt
-import os
-import re
-import sys
-import json
-from tqdm import tqdm
 import requests
-
-# local imports
+import re
+import base64
 from security.keys import OCRSPACE_API_KEY
-from src.utils.utils import NETWORK_PATH
-from client_api import get_sunarp, manual_upload
-from seleniumbase import SB
+from pprint import pprint
 
 
-def gather(data):
+def main(self):
 
-    response = []
+    cursor = self.db.cursor()
+    cursor.execute(
+        "SELECT PlacaValidate, ImageBytes FROM DataSunarpFichas WHERE ImageBytes IS NOT NULL"
+    )
+    for i in cursor.fetchall():
+        ocr_response = ocrspace_pdf_bytes(
+            pdf_bytes=base64.b64decode(i["ImageBytes"]), language="spa"
+        )
+        x = extract_values_from_text(ocr_response)
+        pprint(x)
 
-    for placa in data:
-        # send request to scraper
-        scraper_response = scrape(placa=placa)
+        cmd = """ UPDATE DataSunarpFichas 
+                    SET VIN = ?,
+                        Motor = ?,
+                        Color = ?,
+                        Marca = ?,
+                        Modelo = ?,
+                        Ano = ?,
+                        PlacaVigente = ?,
+                        PlacaAnterior = ?,
+                        Estado = ?,
+                        Anotaciones = ?,
+                        Sede = ?,
+                        Propietarios = ?
+                    WHERE
+                        PlacaValidate = ?
 
-        # respuesta es en blanco
-        if not scraper_response:
-            response.append(
-                {
-                    "Empty": True,
-                    "PlacaValidate": placa,
-                }
-            )
-            continue
-
-        _now = dt.now().strftime("%Y-%m-%d")
-
-        ocr = ocrspace_pdf_bytes(pdf_bytes=scraper_response, language="esp")
-
-        # add foreign key and current date to response
-        response.append(
-            {
-                "IdPlaca_FK": 999,
-                "PlacaValidate": placa,
-                "Serie": ocr.get("serie"),
-                "VIN": ocr.get("vin"),
-                "Motor": ocr.get("motor"),
-                "Color": ocr.get("color"),
-                "Marca": ocr.get("marca"),
-                "Modelo": ocr.get("modelo"),
-                "Ano": ocr.get("ano"),
-                "PlacaVigente": ocr.get("placa_vigente"),
-                "PlacaAnterior": ocr.get("placa_anterior"),
-                "Estado": ocr.get("estado"),
-                "Anotaciones": ocr.get("anotaciones"),
-                "Sede": ocr.get("sede"),
-                "Propietarios": ocr.get("propietarios"),
-                "ImageBytes": scraper_response,
-                "LastUpdate": _now,
-            }
+                
+                    
+            """
+        val = (
+            x.get("vin"),
+            x.get("motor"),
+            x.get("color"),
+            x.get("marca"),
+            x.get("modelo"),
+            x.get("año"),
+            x.get("vigente"),
+            x.get("anterior"),
+            x.get("estado"),
+            x.get("anotaciones"),
+            x.get("sede"),
+            x.get("propietarios"),
+            i["PlacaValidate"],
         )
 
-    with open(
-        os.path.join(NETWORK_PATH, "security", "update_manual_sunarp.json"),
-        mode="w",
-    ) as outfile:
-        outfile.write(json.dumps({"DataSunarpFichas": response}))
+        cursor.execute(cmd, val)
 
-
-def scrape(placa):
-    url = "https://consultavehicular.sunarp.gob.pe/consulta-vehicular"
-
-    # Initialize the progress bar with the total number of steps (6)
-    pbar = tqdm(total=6, desc=f"Scraping {placa}", unit="step")
-
-    try:
-        with SB(uc=True, headless=False) as sb:
-            # Step 1: Activate CDP
-            sb.activate_cdp_mode()
-            sb.set_window_size(1920, 1080)
-            pbar.update(1)
-
-            # Step 2: Open URL
-            sb.open(url)
-            sb.sleep(6)
-            pbar.update(1)
-
-            # Step 3: Click Captcha
-            sb.uc_gui_click_captcha()
-            sb.sleep(2)
-            pbar.update(1)
-
-            # Step 4: Type Placa
-            sb.type("#nroPlaca", placa)
-            sb.sleep(1)
-            pbar.update(1)
-
-            # Step 5: Click Submit
-            sb.click("button")
-            sb.sleep(5)
-            pbar.update(1)
-
-            # Step 6: Finalize/Image Extraction
-            result = get_vehicle_image_base64(sb)
-            pbar.update(1)
-
-            pbar.close()  # Close bar on success
-            return result
-
-    except Exception as e:
-        pbar.set_description(f"Error on {placa}")
-        pbar.close()  # Close bar on failure
-        return []
-
-
-def get_vehicle_image_base64(sb):
-
-    # Wait until the image exists in the DOM
-    sb.wait_for_element_present(".container-data-vehiculo img", timeout=15)
-
-    # Get the data URL
-    data_url = sb.get_attribute(".container-data-vehiculo img", "src")
-
-    if not data_url.startswith("data:image"):
-        raise RuntimeError("Image src is not a data URL")
-
-    # Return ONLY the Base64 payload (JSON-safe)
-    return data_url.split(",", 1)[1]
+    conn = self.db.conn
+    conn.commit()
 
 
 def ocrspace_pdf_bytes(pdf_bytes, language):
@@ -172,7 +105,7 @@ def ocrspace_pdf_bytes(pdf_bytes, language):
         r = [i.strip() for i in t.split(":") if len(i) > 1]
         final_text += r
 
-    return extract_values_from_text(final_text)
+    return final_text
 
 
 def extract_values_from_text(text):
@@ -277,35 +210,3 @@ def ano_segun_vin(vin):
 
     except Exception:
         return False
-
-
-def update(url):
-    manual_upload(url=url, filename="update_manual_sunarp.json")
-
-
-def main():
-
-    if len(sys.argv) > 1:
-        n = int(sys.argv[1])
-    else:
-        n = 3  # default number of placas to process
-
-    url = "https://nopasanadape.com"  # PROD
-
-    # get placas that need updating
-    data = get_sunarp(url).json().get("DataSunarpFichas")
-    print(f"Before ({len(data)}):", data)
-
-    # get the data from n placas
-    gather(data[:n])
-
-    # update database
-    update(url)
-
-    # get placas that need updating (used to compare to original)
-    data = get_sunarp(url).json().get("DataSunarpFichas")
-    print(f"After ({len(data)}):", data)
-
-
-if __name__ == "__main__":
-    main()

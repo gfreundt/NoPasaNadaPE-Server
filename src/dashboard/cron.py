@@ -24,6 +24,13 @@ def run_scheduler_loop(self):
     # prueba_scrapers.main(self, 1)
     # return
 
+    # TEST: ocr de sunarp
+    from src.test import ocrspace
+
+    ocrspace.main(self)
+
+    return
+
     # 1. Boletines a las hh:05 entre 7am y 8pm (inclusive)
     for hour in range(7, 21):
         schedule.every().day.at(f"{hour:02d}:05").do(
