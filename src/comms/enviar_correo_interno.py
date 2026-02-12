@@ -2,6 +2,9 @@ from jinja2 import Environment, FileSystemLoader
 
 from src.utils.email import Email
 from security.keys import ZEPTOMAIL_INFO_TOKEN
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def informe_diario(cursor, mensaje, titulo):
@@ -28,6 +31,7 @@ def informe_diario(cursor, mensaje, titulo):
     }
 
     # enviar
+    logger.info("Enviando Correo Resumen")
     return email.send_zeptomail(msg)
 
 
@@ -35,7 +39,7 @@ def prueba_scrapers(mensaje, titulo):
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
-    template = environment.get_template("comms-interno-informe-diario.html")
+    template = environment.get_template("comms-interno-informe-scrapers.html")
 
     # crea objeto para enviar correo desde info@
     email = Email(

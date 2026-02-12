@@ -1,10 +1,34 @@
 import random
 
 
-def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
+def get_test_data_new(s):
+
+    cruda = get_test_data()
+
+    fina = []
+    for key, value in cruda.items():
+        p = {"Categoria": key}
+        x = random.choice(value)
+        if len(x) == 3:
+            p.update(
+                {
+                    "IdMember": x[0],
+                    "Placa": None,
+                    "DocTipo": x[1],
+                    "DocNum": x[2],
+                }
+            )
+        else:
+            p.update({"IdMember": None, "Placa": x, "DocTipo": None, "DocNum": None})
+        fina.append(p)
+
+    return fina
+
+
+def get_test_data():
 
     # brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans
-    complete = {
+    return {
         "DataMtcBrevetes": [
             [79, "DNI", "09878584"],
             [80, "DNI", "09376240"],
@@ -212,23 +236,6 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "B2Y297",
             "CHO571",
         ],
-        "DataSunarpFichas": [
-            "CRN441",
-            "D8R344",
-            "B5L097",
-            "ACU640",
-            "CDO479",
-            "BKS357",
-            "AJF295",
-            "BTI160",
-            "BCJ252",
-            "F1B368",
-            "AUH614",
-            "D4B248",
-            "BWA113",
-            "ARD503",
-            "AHN426",
-        ],
         "DataSutranMultas": [
             "BAH829",
             "BMY249",
@@ -315,12 +322,4 @@ def get_test_data(sample_size=[5, 5, 5, 5, 5, 5, 5, 5]):
             "CFV251",
             "CJP227",
         ],
-    }
-
-    if type(sample_size) is int:
-        return {i: random.sample(complete[i], sample_size) for i in complete}
-
-    return {
-        i: random.sample(complete[i], min(j, len(complete[i])))
-        for i, j in zip(complete, sample_size)
     }

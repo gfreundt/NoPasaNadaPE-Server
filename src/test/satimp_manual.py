@@ -5,9 +5,9 @@ from src.scrapers import scrape_satimp
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(docs):
+def gather(docs, headless=True):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver(residential=False)
+    webdriver = chromedriver.proxy_driver(residential=False, headless=headless)
 
     # se tiene un registro, intentar extraer la informacion
     for id_member, _, doc_num in docs:

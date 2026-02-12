@@ -9,9 +9,9 @@ from src.scrapers import scrape_satmul
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(placas):
+def gather(placas, headless=True):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver(residential=False)
+    webdriver = chromedriver.proxy_driver(residential=False, headless=headless)
 
     for placa in placas:
         try:

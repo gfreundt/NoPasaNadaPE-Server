@@ -5,9 +5,9 @@ from src.scrapers import scrape_recvehic
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(dnis):
+def gather(dnis, headless=True):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver(residential=False)
+    webdriver = chromedriver.proxy_driver(residential=False, headless=headless)
 
     for id_member, _, doc_num in dnis:
         try:

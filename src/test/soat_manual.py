@@ -9,9 +9,9 @@ from src.scrapers import scrape_soat as scraper
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(data):
+def gather(data, headless=True):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver(residential=False)
+    webdriver = chromedriver.proxy_driver(residential=False, headless=headless)
 
     for placa in data:
         scraper_response = scraper.browser_wrapper(placa=placa, webdriver=webdriver)

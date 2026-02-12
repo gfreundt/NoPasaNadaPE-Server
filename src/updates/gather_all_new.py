@@ -22,7 +22,7 @@ def recolector(self, data_actualizar, queue_respuesta, lock):
         f"Iniciando Recolector de Scrapers... maximo simultaneo = {MAX_SIMULTANEOUS_SCRAPERS}. Timeout en {TIMEOUT_RECOLECTOR} segundos"
     )
 
-    # llenar queue con todos los datos por actualizad
+    # llenar queue con todos los datos por actualizar
     queue_data = Queue()
     for k, item in enumerate(data_actualizar, start=1):
         queue_data.put(item)

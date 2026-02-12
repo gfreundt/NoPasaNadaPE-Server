@@ -6,13 +6,13 @@ from src.scrapers import scrape_brevete
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(dato_prueba):
+def gather(dato_prueba, headless=True):
     # construir webdriver con parametros especificos
     chromedriver = ChromeUtils()
 
     id_member, _, doc_num = dato_prueba
     try:
-        webdriver = chromedriver.proxy_driver(residential=True)
+        webdriver = chromedriver.proxy_driver(residential=True, headless=headless)
         scraper_response = scrape_brevete.browser_wrapper(
             doc_num=doc_num, webdriver=webdriver
         )

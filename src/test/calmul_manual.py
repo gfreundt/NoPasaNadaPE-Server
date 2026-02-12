@@ -6,9 +6,9 @@ from src.scrapers import scrape_calmul
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(placa):
+def gather(placa, headless=True):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver(residential=False)
+    webdriver = chromedriver.proxy_driver(residential=False, headless=headless)
 
     try:
         scraper_response = scrape_calmul.browser_wrapper(

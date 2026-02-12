@@ -1,6 +1,7 @@
 from src.comms import enviar_correo_interno
 from datetime import datetime as dt
 import shutil
+from pprint import pformat
 import logging
 
 logger = logging.getLogger(__name__)
@@ -8,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 def main(self):
     try:
+        logger.info("Lanzando Resumen Diario")
         cursor = self.db.cursor()
 
         titulo = f"Resumen Diario ({str(dt.now())[:19]})"
@@ -17,7 +19,16 @@ def main(self):
         resultado += sunarps_pendientes(cursor)
         resultado += espacio_disco()
 
-        enviar_correo_interno.informe_diario(cursor, titulo=titulo, mensaje=resultado)
+        logger.info(f"Resumen diario: {pformat(resultado)}")
+
+        exito = enviar_correo_interno.informe_diario(
+            cursor, titulo=titulo, mensaje=resultado
+        )
+
+        if exito:
+            logger.info("Resumen diario enviado ok.")
+        else:
+            logger.warning("No se pudo enviar resumen diario.")
 
     except Exception as e:
         logger.error(f"Error Resumen Diario: {e}")

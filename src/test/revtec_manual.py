@@ -9,9 +9,9 @@ from src.scrapers import scrape_revtec
 from src.utils.webdriver import ChromeUtils
 
 
-def gather(placas):
+def gather(placas, headless=True):
     chromedriver = ChromeUtils()
-    webdriver = chromedriver.proxy_driver(residential=True)
+    webdriver = chromedriver.proxy_driver(residential=True, headless=headless)
 
     for placa in placas:
         try:
