@@ -7,7 +7,6 @@ import json
 from collections import deque
 from src.dashboard import cron
 from src.utils.constants import TABLAS_BD
-from src.updates import gather_all
 from src.updates import datos_actualizar
 from src.comms import generar_mensajes, enviar_mensajes
 from src.utils.utils import get_public_ip, get_local_ip
@@ -154,41 +153,10 @@ class Dashboard:
         return redirect(url_for("dashboard"))
 
     def actualizar_alertas(self):
-        logger.info("Iniciando actualización de datos de alertas.")
-        # logica general de scrapers
-        all_updates = self.actualizar_datos_alertas
-        tamano_actualizacion = gather_all.gather_threads(
-            dash=self, all_updates=all_updates
-        )
-        self.log(
-            action=f"[ ACT ALERTAS ] Tamaño: {tamano_actualizacion} kB",
-        )
-        logger.info(f"[ ACT ALERTAS ] Tamaño: {tamano_actualizacion} kB")
-        return redirect(url_for("dashboard"))
+        pass
 
     def actualizar_boletines(self):
-        logger.info("Iniciando actualización de datos de boletines.")
-        # logica general de scrapers
-        all_updates = self.actualizar_datos_boletines
-        tamano_actualizacion = gather_all.gather_threads(
-            dash=self, all_updates=all_updates
-        )
-
-        self.log(
-            action=f"[ ACT BOLETINES ] Data: {tamano_actualizacion} kB",
-        )
-        logger.info(f"[ ACT BOLETINES ] Data: {tamano_actualizacion} kB")
-        return redirect(url_for("dashboard"))
-
-    def generar_alertas(self):
-        logger.info("Generando alertas pendientes.")
-        # genera todas las alertas que tocan y las guarda en "alertas_pendientes.json"
-        mensajes = generar_mensajes.alertas(db=self.db)
-        if len(mensajes) > 0:
-            self.log(action=f"[ CREAR ALERTAS ] Total: {len(mensajes)}")
-
-        # mantenerse en la misma pagina
-        return redirect(url_for("dashboard"))
+        pass
 
     def generar_boletines(self):
         logger.info("Generando boletines pendientes.")

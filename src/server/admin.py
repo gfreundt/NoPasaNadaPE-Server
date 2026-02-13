@@ -9,7 +9,7 @@ from pprint import pformat
 from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text, NETWORK_PATH
 from src.server import do_updates
-from src.updates import gather_all
+from src.updates import extrae_data_terceros
 
 
 logger = logging.getLogger(__name__)
@@ -131,6 +131,7 @@ def main(self):
         return jsonify(faltan), 200
 
     if solicitud == "force_update":
+        return
         id_member = payload.get("id_member")
         logger.info(
             f"Iniciando actualización forzada desde Admin. ID Member: {id_member}"
