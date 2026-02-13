@@ -158,6 +158,9 @@ class Dashboard:
     def actualizar_boletines(self):
         pass
 
+    def generar_alertas(self):
+        pass
+
     def generar_boletines(self):
         logger.info("Generando boletines pendientes.")
         # genera todos los boletines que tocan y los guarda en "boletines_pendientes.json"
