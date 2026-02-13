@@ -11,3 +11,4 @@ __pycache__/
 dashboard_state.json
 dashboard_init.lock
 app.log
+prueba_un_scraper_no_headless.py

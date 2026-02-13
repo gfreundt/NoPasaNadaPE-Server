@@ -25,11 +25,9 @@ def run_scheduler_loop(self):
     # return
 
     # TEST: ocr de sunarp
-    from src.test import ocrspace
-
-    ocrspace.main(self)
-
-    return
+    # from src.test import ocrspace
+    # ocrspace.main(self)
+    # return
 
     # 1. Boletines a las hh:05 entre 7am y 8pm (inclusive)
     for hour in range(7, 21):
@@ -59,10 +57,10 @@ def run_scheduler_loop(self):
             "mantenimiento"
         )
 
+    # logger output
     logger.debug(
         f"Cron scheduler iniciado. Tareas programadas: \n{pformat(schedule.get_jobs())}"
     )
-
     logger.info(
         f"Cron scheduler iniciado. Tareas programadas: {len(schedule.get_jobs())}"
     )
@@ -70,10 +68,7 @@ def run_scheduler_loop(self):
     for job in sorted(schedule.get_jobs(), key=lambda j: j.next_run)[:10]:
         logger.info(f"Siguiente Tarea: {job.next_run} -> {job.tags}")
 
-    # ejecutar al iniciar
-    # do_mensajes.main(self, "boletines")
-    # do_mensajes.main(self, "alertas")
-
+    # activar schedule
     while True:
         schedule.run_pending()
         time.sleep(10)

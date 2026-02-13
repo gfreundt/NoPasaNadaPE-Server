@@ -19,18 +19,18 @@ def main(self, tipo_mensaje):
 
     # actualizar datos
     logger.info(f"{titulo} Lanzando Actualizar Datos")
-    resultado = do_actualizar.main(self, tipo_mensaje)
+    continuar = do_actualizar.main(self, tipo_mensaje)
 
-    # datos actualizados correctamente: generar mensajes
-    if resultado:
+    # si hubieron datos actualizados correctamente: generar mensajes
+    if continuar:
         logger.info(f"{titulo} Lanzando Generar Mensajes")
         if tipo_mensaje == "alertas":
-            resultado = generar_mensajes.alertas(self)
+            continuar = generar_mensajes.alertas(self)
         elif tipo_mensaje == "boletines":
-            resultado = generar_mensajes.boletines(self)
+            continuar = generar_mensajes.boletines(self)
 
         # hay mensajes generados - enviar mensajes
-        if resultado:
+        if continuar:
             logger.info(f"{titulo} Lanzando Enviar Mensajes")
             resultado = enviar_mensajes.main(self, tipo_mensaje)
 

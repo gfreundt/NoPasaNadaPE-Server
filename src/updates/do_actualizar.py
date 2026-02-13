@@ -25,10 +25,16 @@ def main(self, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
 
         logger.info(f"{titulo} Pendientes Actualizar:\n {pformat(pendientes)}")
 
-        # si ya no hay actualizaciones pendientes, regresar True
+        # si ya no hay actualizaciones pendientes, regresar True si hubieron actualizaciones, False si no hubieron
         if not pendientes:
-            logger.info(f"{titulo} Fin Normal.")
-            return True
+            if repetir == 1:
+                logger.info(
+                    f"{titulo} Fin Normal. No hubieron actualizaciones. Fin del Proceso."
+                )
+                return False
+            else:
+                logger.info(f"{titulo} Fin Normal. Si hubieron actualizaciones.")
+                return False
 
         # realizar scraping
         respuesta = gather_all_new.main(self, pendientes)
