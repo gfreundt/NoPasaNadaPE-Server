@@ -45,8 +45,5 @@ def main(self, tipo_mensaje):
                 f"{titulo} No se Completo Generar Mensajes. Fin del Proceso."
             )
 
-    else:
-        logger.warning(f"{titulo} No se Completo Actualizar Datos. Fin del Proceso.")
-
     # proceso no llego al final (error actualizando, no hay nuevos mensajes generados o no se pudieron enviar)
     return False

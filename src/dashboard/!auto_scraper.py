@@ -2,11 +2,13 @@ from comms import enviar_mensajes
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
 from src.utils.utils import send_pushbullet
 from src.comms import generar_mensajes
-from src.updates import datos_actualizar, gather_all_new, do_actualizar
+from src.updates import datos_actualizar, do_actualizar
 import time
 from datetime import datetime as dt
 from pprint import pformat
 import logging
+
+from updates import extrae_data_terceros
 
 logger = logging.getLogger(__name__)
 

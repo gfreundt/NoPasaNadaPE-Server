@@ -1,6 +1,6 @@
 import time
 from pprint import pformat
-from src.updates import datos_actualizar, gather_all_new
+from src.updates import datos_actualizar, extrae_data_terceros
 from src.utils.constants import AUTOSCRAPER_REPETICIONES
 from src.utils.utils import send_pushbullet
 from src.server import do_updates
@@ -37,7 +37,7 @@ def main(self, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
                 return False
 
         # realizar scraping
-        respuesta = gather_all_new.main(self, pendientes)
+        respuesta = extrae_data_terceros.main(self, pendientes)
 
         # actualizar base de datos con lo que haya sido devuelto (completo o parcial)
         logger.info(

@@ -8,25 +8,25 @@ def get_datos_alertas(self, premensaje):
         {
             "tabla": "DataApesegSoats",
             "placa_select": True,
-            "dias": "-18, -9, -2, 0, 1, 2, 3",
+            "dias": "-10, -5, -1, 0, 1, 2, 3",
             "last_update": "LastUpdateApesegSoats",
         },
         {
             "tabla": "DataMtcRevisionesTecnicas",
             "placa_select": True,
-            "dias": "-21, -11, -2, 0, 1, 2, 3",
+            "dias": "-25, -15, -5, 0, 1, 2, 3",
             "last_update": "LastUpdateMtcRevisionesTecnicas",
         },
         {
             "tabla": "DataMtcBrevetes",
             "placa_select": False,
-            "dias": "-30, -15, -2, 0, 1, 2, 3",
+            "dias": "-45, -25, -5, 0, 1, 2, 3",
             "last_update": "LastUpdateMtcBrevetes",
         },
         {
             "tabla": "DataSatImpuestos",
             "placa_select": False,
-            "dias": "-18, -7, -2, 0, 1, 2, 3",
+            "dias": "-10, -5, -1, 0, 1, 2, 3",
             "last_update": "LastUpdateSatImpuestos",
         },
     ]
@@ -187,8 +187,6 @@ def get_datos_boletines(self, premensaje):
                                     ) c 
                                 JOIN Infomiembros m 
                                 ON c.IdMember = m.Idmember);"""
-
-        # extrae informacion de base de datos
 
         cursor = self.db.cursor()
         cursor.execute(query)
