@@ -34,7 +34,7 @@ def main(self, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
                 return False
             else:
                 logger.info(f"{titulo} Fin Normal. Si hubieron actualizaciones.")
-                return False
+                return True
 
         # realizar scraping
         respuesta = extrae_data_terceros.main(self, pendientes)
