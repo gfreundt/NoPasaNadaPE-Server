@@ -1,7 +1,11 @@
 from jinja2 import Environment, FileSystemLoader
 from datetime import datetime as dt
+import logging
+
 from src.utils.email import Email
 from security.keys import ZEPTOMAIL_INFO_TOKEN
+
+logger = logging.getLogger(__name__)
 
 
 def activacion(db, correo, nombre=None):
@@ -32,6 +36,7 @@ def activacion(db, correo, nombre=None):
     }
 
     # enviar
+    logger.info(f"Solicitud Envio Correo {msg['tipo_mensaje']}: {msg['to_address']}")
     return email.send_zeptomail(msg)
 
 
@@ -63,6 +68,7 @@ def desactivacion(db, correo, nombre):
     }
 
     # enviar
+    logger.info(f"Solicitud Envio Correo {msg['tipo_mensaje']}: {msg['to_address']}")
     return email.send_zeptomail(msg)
 
 
@@ -98,6 +104,7 @@ def inscripcion(db, correo, nombre, placas):
     }
 
     # enviar
+    logger.info(f"Solicitud Envio Correo {msg['tipo_mensaje']}: {msg['to_address']}")
     return email.send_zeptomail(msg)
 
 
@@ -129,6 +136,7 @@ def eliminacion(db, correo, nombre):
     }
 
     # enviar
+    logger.info(f"Solicitud Envio Correo {msg['tipo_mensaje']}: {msg['to_address']}")
     return email.send_zeptomail(msg)
 
 
@@ -166,6 +174,7 @@ def recuperacion_contrasena(db, correo, token):
     }
 
     # enviar
+    logger.info(f"Solicitud Envio Correo {msg['tipo_mensaje']}: {msg['to_address']}")
     return email.send_zeptomail(msg)
 
 
@@ -197,4 +206,5 @@ def confirmacion_cambio_contrasena(db, correo):
     }
 
     # enviar
+    logger.info(f"Solicitud Envio Correo {msg['tipo_mensaje']}: {msg['to_address']}")
     return email.send_zeptomail(msg)

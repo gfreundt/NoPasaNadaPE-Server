@@ -1,7 +1,8 @@
 from datetime import datetime as dt
-from src.utils.utils import date_to_mail_format
 import uuid
-from src.ui.maquinarias.servicios import generar_data_servicios
+
+from src.utils.utils import date_to_mail_format
+from ui.maquinarias.mis_servicios import generar_data_servicios
 
 
 def alerta(

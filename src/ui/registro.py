@@ -3,7 +3,7 @@ from datetime import datetime as dt
 import uuid
 from random import randrange
 from string import ascii_uppercase
-from flask import render_template, request, flash, redirect
+from flask import render_template, request, flash, redirect, session
 
 from src.utils.utils import hash_text
 
@@ -25,10 +25,10 @@ def main(self):
         # no errors
         if not any(errors.values()):
             # keep data for second part of registration
-            self.session["registration_attempt"] = form_response
+            session["registration_attempt"] = form_response
 
             # generate validation code
-            self.session["codigo_generado"] = "".join(
+            session["codigo_generado"] = "".join(
                 [ascii_uppercase[randrange(0, len(ascii_uppercase))] for _ in range(4)]
             )
             print("-------- REG ---------->", self.session["codigo_generado"])
@@ -37,9 +37,7 @@ def main(self):
                 correo=self.session["registration_attempt"]["correo"],
                 nombre=self.session["registration_attempt"]["nombre"],
             )
-            self.log(
-                message=f"Nuevo Registro. Correo enviado. {form_response['correo']}."
-            )
+
             self.page = 2
             return render_template(
                 "ui-registro-2.html", user=form_response, errors=errors

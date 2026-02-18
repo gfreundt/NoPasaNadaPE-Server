@@ -2,16 +2,14 @@ import os
 import uuid
 import json
 from datetime import datetime as dt
+import logging
 from jinja2 import Environment, FileSystemLoader
 
-
 from src.utils.constants import NETWORK_PATH, MESES_NOMBRE_COMPLETO
-
 from src.updates.datos_actualizar import get_datos_alertas, get_datos_boletines
 from src.utils.utils import date_to_mail_format
-from src.ui.maquinarias.servicios import generar_data_servicios
+from src.ui.maquinarias.mis_servicios import generar_data_servicios
 
-import logging
 
 logger = logging.getLogger(__name__)
 

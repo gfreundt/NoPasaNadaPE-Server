@@ -13,7 +13,15 @@ from src.test import prueba_scrapers
 logger = logging.getLogger(__name__)
 
 
-def run_scheduler_loop(self):
+def ejecutar_scheduler(self):
+    """
+    1. Boletines a las hh:05 entre 7am y 8pm (inclusive)
+    2. Alertas dos veces al dia (8:30am y 3:30pm)
+    3. Resumen diario (del dia anterior), diariamente a la 1am
+    4. Prueba de scrapers diariamente a las 6:30am
+    5. Mantenimiento (cada hora) a las hh:45
+    6. Mantenimiento (cada dia) a las 02:05am
+    """
 
     # TEST: generar boletin fijo
     # from src.test import crear_boletin
@@ -51,11 +59,16 @@ def run_scheduler_loop(self):
         "prueba_scrapers"
     )
 
-    # 5. Mantenimiento a las hh:45 permanentenemente
+    # 5. Mantenimiento (cada hora) a las hh:45
     for hour in range(0, 24):
         schedule.every().day.at(f"{hour:02d}:45").do(mantenimiento.cada_hora, self).tag(
-            "mantenimiento"
+            "mantenimiento_horario"
         )
+
+    # 6. Mantenimiento (cada dia) a las 02:05am
+    schedule.every().day.at("02:05").do(mantenimiento.cada_dia, self).tag(
+        "mantenimiento_diario"
+    )
 
     # logger output
     logger.debug(
@@ -75,7 +88,13 @@ def run_scheduler_loop(self):
 
 
 def main(self):
-    time.sleep(3)
-    t = threading.Thread(target=run_scheduler_loop, args=(self,), daemon=True)
-    self.log(action="[ SERVICIO ] CRON: Activado")
+    """
+    Crea un thread que controla los procesos que se ejecutan de forma automatica segun horarios.
+    """
+    logger.info("Iniciando cron en master worker")
+    t = threading.Thread(
+        target=ejecutar_scheduler,
+        args=(self,),
+        daemon=True,
+    )
     t.start()

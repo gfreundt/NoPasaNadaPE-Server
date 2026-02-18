@@ -1,8 +1,11 @@
 import re
 from datetime import datetime as dt, timedelta as td
 from flask import render_template, redirect, request, flash, url_for
+import logging
 
 from src.utils.utils import hash_text, compare_text_to_hash
+
+logger = logging.getLogger(__name__)
 
 
 def main(self):
@@ -15,7 +18,6 @@ def main(self):
 
     # ------------------------ GET ------------------------
     if request.method == "GET":
-
         siguiente_boletin = _compute_siguiente_boletin(user_session)
 
         _user = {
@@ -129,7 +131,7 @@ def _delete_user(self, user):
         nombre=user["NombreCompleto"],
     )
 
-    self.log(
+    logger.info(
         message=f"Eliminado {user['CodMember']} | {user['NombreCompleto']} | {user['DocNum']} | {user['Correo']}"
     )
     flash("Usuario eliminado.", "success")
@@ -206,7 +208,7 @@ def _apply_user_changes(self, user, form, changes_made):
     user["NombreCompleto"] = form["nombre"]
     user["Celular"] = form["celular"]
     user["DocNum"] = form["dni"]
-    user["Placas"] = {f"placa{i+1}": p for i, p in enumerate(nuevas_placas)}
+    user["Placas"] = {f"placa{i + 1}": p for i, p in enumerate(nuevas_placas)}
 
 
 # ============================================================

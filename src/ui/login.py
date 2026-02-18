@@ -7,7 +7,7 @@ from src.utils.utils import compare_text_to_hash
 def main(self):
 
     # Session should expire naturally through PERMANENT_SESSION_LIFETIME
-    self.session.permanent = True
+    session.permanent = True
 
     # HEAD request (robots, uptime checks)
     if request.method == "HEAD":
@@ -30,20 +30,17 @@ def main(self):
     form = dict(request.form)
     errors = validation(self.db, form)
 
+    cursor = self.db.cursor()
     if not any(errors.values()):
         # LOGIN SUCCESS
         correo = form["correo"].lower()
 
         # Update login info
-        cur = self.db.cursor()
-        cur.execute(
+        cursor.execute(
             "UPDATE InfoMiembros SET LastLoginDatetime = ?, CountFailedLogins = 0 WHERE Correo = ?",
             (dt.now().strftime("%Y-%m-%d %H:%M:%S"), correo),
         )
         self.db.commit()
-
-        # Log the event
-        self.log(message=f"Login {correo}")
 
         # Load user into session
         self.load_user_data_into_session(correo)
@@ -53,15 +50,11 @@ def main(self):
     # LOGIN FAILED
     else:
         # Increase failed login count
-        cur = self.db.cursor()
-        cur.execute(
+        cursor.execute(
             "UPDATE InfoMiembros SET CountFailedLogins = CountFailedLogins + 1 WHERE Correo = ?",
             (form["correo"],),
         )
         self.db.commit()
-
-        # Log the failed attempt (do NOT log the password!)
-        self.log(message=f"Unsuccessful Login Attempt ({form['correo']})")
 
         # Reset password field for safety
         if "password" in form:
@@ -80,9 +73,11 @@ def validation(db, form):
     errors = {"correo": [], "password": [], "intentos": []}
 
     # Does the email exist?
-    cur = db.cursor()
-    cur.execute("SELECT Password FROM InfoMiembros WHERE Correo = ?", (form["correo"],))
-    row = cur.fetchone()
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT Password FROM InfoMiembros WHERE Correo = ?", (form["correo"],)
+    )
+    row = cursor.fetchone()
 
     if not row:
         errors["correo"].append("Correo no registrado")

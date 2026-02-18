@@ -3,7 +3,7 @@ from datetime import datetime as dt, timedelta as td
 from flask import redirect, request, render_template, session
 
 from src.utils.utils import compare_text_to_hash
-from src.ui.maquinarias import servicios
+from src.ui.maquinarias import mis_servicios
 from security.keys import PWD_BACKDOOR
 
 
@@ -11,12 +11,13 @@ from security.keys import PWD_BACKDOOR
 def main(self):
     cursor = self.db.cursor()
     conn = self.db.conn
-    self.session.permanent = True
+    session.permanent = True
 
     if request.method == "HEAD":
         return ("", 200)
 
     # GET -> load initial page
+
     if request.method == "GET" and not session.get("correo_login_externo"):
         return render_template(
             "ui-maquinarias-login.html",
@@ -101,7 +102,7 @@ def main(self):
         resetear_logins_fallidos(cursor, conn, correo=forma["correo_ingresado"])
         session["etapa"] = "validado"
 
-        return servicios.main(self)
+        return mis_servicios.main(self)
 
 
 def extraer_data_usuario(cursor, correo):

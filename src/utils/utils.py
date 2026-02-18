@@ -15,25 +15,27 @@ from PIL import Image, ImageDraw, ImageFont
 from selenium.webdriver.common.by import By
 import fcntl
 
-from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS, LOCAL
+from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS
 from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_API_KEY
 
 
 logger = logging.getLogger(__name__)
 
+
 # --- GUNICORN ---
+def soy_master_worker(db):
+    """
+    Funcion utilizada para darle status de "master" solamente al primer worker de Gunicorn.
+    Intenta acceder a archivo y si esta siendo utilizado no da el status de master al worker
+    """
 
-
-def is_master_worker(db):
-    if LOCAL:
-        return True
-
-    lock_path = os.path.join(NETWORK_PATH, "dashboard_init.lock")
+    lock_path = os.path.join(NETWORK_PATH, "static", "dashboard_init.lock")
     db._lock_file_handle = open(lock_path, "a")
 
     try:
         fcntl.flock(db._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return True
+
     except (OSError, BlockingIOError):
         db._lock_file_handle.close()
         db._lock_file_handle = None
@@ -41,8 +43,6 @@ def is_master_worker(db):
 
 
 # ----- FORMATTING ----
-
-
 def date_to_db_format(data):
     """Takes dd.mm.yyyy date formats with different separators and returns yyyy-mm-dd."""
 

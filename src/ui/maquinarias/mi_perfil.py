@@ -3,7 +3,7 @@ from flask import redirect, request, render_template, url_for, session
 
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import compare_text_to_hash, hash_text
-from src.ui.maquinarias import servicios
+from src.ui.maquinarias import mis_servicios
 
 
 # login endpoint
@@ -18,13 +18,12 @@ def main(self):
         return redirect(url_for("maquinarias"))
 
     session["perfil_muestra_password"] = False
+    session.permanent = True
 
-    self.session.permanent = True
     cursor = self.db.cursor()
     conn = self.db.conn
 
     if request.method == "GET":
-
         return render_template(
             "ui-maquinarias-mi-perfil.html",
             usuario=session["usuario"],
@@ -35,7 +34,6 @@ def main(self):
 
     # POST — form submitted
     elif request.method == "POST":
-
         forma = dict(request.form)
 
         # procesar texto ingresados de placas lo mejor que se pueda
@@ -67,7 +65,7 @@ def main(self):
         # No errors → proceed
         actualizar(cursor=cursor, conn=conn, forma=forma)
         session["usuario"].update(usuario)
-        return servicios.main(self)
+        return mis_servicios.main(self)
 
 
 def actualizar(cursor, conn, forma):
@@ -155,7 +153,6 @@ def validaciones(db, forma):
     # placas
     # --------------------------------------------------------------
     if forma.get("placas"):
-
         _placas = forma["placas"].split(", ")
 
         if any(len(i) != 6 for i in _placas):
@@ -186,7 +183,6 @@ def validaciones(db, forma):
     # --------------------------------------------------------------
 
     if forma.get("current_password"):
-
         session["perfil_muestra_password"] = True
 
         # revisar si usuario ingreso password vigente correctamente

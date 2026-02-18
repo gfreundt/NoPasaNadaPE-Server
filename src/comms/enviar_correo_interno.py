@@ -1,8 +1,9 @@
+import logging
 from jinja2 import Environment, FileSystemLoader
 
 from src.utils.email import Email
-from security.keys import ZEPTOMAIL_INFO_TOKEN
-import logging
+from security.keys import ZEPTOMAIL_INTERNO_TOKEN
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def informe_diario(cursor, mensaje, titulo):
         cursor=None,
         conn=None,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
-        token=ZEPTOMAIL_INFO_TOKEN,
+        token=ZEPTOMAIL_INTERNO_TOKEN,
         registro_en_bd=False,
     )
 
@@ -46,7 +47,7 @@ def prueba_scrapers(mensaje, titulo):
         cursor=None,
         conn=None,
         from_account={"name": "No Pasa Nada PE", "address": "info@nopasanadape.com"},
-        token=ZEPTOMAIL_INFO_TOKEN,
+        token=ZEPTOMAIL_INTERNO_TOKEN,
         registro_en_bd=False,
     )
 

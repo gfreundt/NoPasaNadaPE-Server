@@ -1,21 +1,17 @@
-from flask import render_template, jsonify, redirect, request, url_for
+from flask import render_template, jsonify, redirect, request
 import threading
 import logging
 from copy import deepcopy as copy
 from datetime import datetime as dt, timedelta as td
-import json
 from collections import deque
 from src.dashboard import cron
 from src.utils.constants import TABLAS_BD
-from src.updates import datos_actualizar
-from src.comms import generar_mensajes, enviar_mensajes
 from src.utils.utils import get_public_ip, get_local_ip
 from security.keys import DASHBOARD_URL
 
 from pprint import pprint
 
 
-# logging.getLogger("werkzeug").disabled = True
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +23,6 @@ class Dashboard:
 
         # crear estrcutura de variables y valores iniciales
         self.set_initial_data()
-        self.log(action=f"IP Inicio: {self.ip_original}")
 
         # iniciar cron (procesos automaticos que corren cada cierto plazo) solo si es worker "master"
         if self.master:
@@ -81,34 +76,34 @@ class Dashboard:
             "scrapers_en_linea": {key: True for key in TABLAS_BD},
         }
 
-    def log(self, **kwargs):
+    # def log(self, **kwargs):
 
-        if "general_status" in kwargs:
-            self.data["top_right"]["content"] = kwargs["general_status"][0]
-            self.data["top_right"]["status"] = kwargs["general_status"][1]
+    #     if "general_status" in kwargs:
+    #         self.data["top_right"]["content"] = kwargs["general_status"][0]
+    #         self.data["top_right"]["status"] = kwargs["general_status"][1]
 
-        if "action" in kwargs:
-            _ft = f"{dt.now():%Y-%m-%d %H:%M:%S} > {kwargs['action']}"
-            self.log_entries.append(_ft)
-            self.data["bottom_left"].append(_ft[:140])
-            self.data["bottom_left"] = self.data["bottom_left"][-40:]
+    #     if "action" in kwargs:
+    #         _ft = f"{dt.now():%Y-%m-%d %H:%M:%S} > {kwargs['action']}"
+    #         self.log_entries.append(_ft)
+    #         self.data["bottom_left"].append(_ft[:140])
+    #         self.data["bottom_left"] = self.data["bottom_left"][-40:]
 
-        if "card" in kwargs:
-            for field in kwargs:
-                if field == "card":
-                    continue
-                self.data["cards"][kwargs["card"]][field] = kwargs[field]
+    #     if "card" in kwargs:
+    #         for field in kwargs:
+    #             if field == "card":
+    #                 continue
+    #             self.data["cards"][kwargs["card"]][field] = kwargs[field]
 
-        if "usuario" in kwargs:
-            _ft = f"<b>{dt.now():%Y-%m-%d %H:%M:%S} ></b>{kwargs['usuario']}"
-            self.data["bottom_left"].append(_ft[:140])
-            if len(self.data["bottom_left"]) > 30:
-                self.data["bottom_left"].pop(0)
+    #     if "usuario" in kwargs:
+    #         _ft = f"<b>{dt.now():%Y-%m-%d %H:%M:%S} ></b>{kwargs['usuario']}"
+    #         self.data["bottom_left"].append(_ft[:140])
+    #         if len(self.data["bottom_left"]) > 30:
+    #             self.data["bottom_left"].pop(0)
 
-        # manejar gunicorn workers paralelos
-        if self.master:
-            with open(self.state_file, "w") as f:
-                json.dump(self.data, f)
+    #     # manejar gunicorn workers paralelos
+    #     if self.master:
+    #         with open(self.state_file, "w") as f:
+    #             json.dump(self.data, f)
 
     # -------- ACCION DE URL DE INGRESO --------
     def dashboard(self):
@@ -141,16 +136,10 @@ class Dashboard:
 
     # -------- ACCIONES DE BOTONES ----------
     def datos_alerta(self):
-        logger.info("Solicitud de actualización de datos de alertas recibida.")
-        # solicitar actualizacion a servidor
-        self.actualizar_datos_alertas = datos_actualizar.get_alertas_para_mensajes(self)
-        return redirect(url_for("dashboard"))
+        pass
 
     def datos_boletin(self):
-        logger.info("Solicitud de actualización de datos de boletines recibida.")
-        # solicitar actualizacion a servidor
-        self.actualizar_datos_boletines = datos_actualizar.boletines(self)
-        return redirect(url_for("dashboard"))
+        pass
 
     def actualizar_alertas(self):
         pass
@@ -162,26 +151,10 @@ class Dashboard:
         pass
 
     def generar_boletines(self):
-        logger.info("Generando boletines pendientes.")
-        # genera todos los boletines que tocan y los guarda en "boletines_pendientes.json"
-        mensajes = generar_mensajes.boletines(db=self.db)
-        if len(mensajes) > 0:
-            self.log(action=f"[ CREAR BOLETINES ] Total: {len(mensajes)}")
-
-        # mantenerse en la misma pagina
-        return redirect(url_for("dashboard"))
+        pass
 
     def enviar_mensajes(self):
-        logger.info("Enviando mensajes pendientes.")
-        # envia todos los mensajes pendientes en "alertas_pendientes.json" y "boletines_pendientes.json"
-        mensajes = enviar_mensajes.send(db=self.db)
-        if mensajes["ALERTA"] != 0 or mensajes["BOLETIN"] != 0:
-            self.log(
-                action=f"[ ENVIAR MENSAJES ] Alertas: {mensajes['ALERTA']} | Boletines: {mensajes['BOLETIN']}"
-            )
-
-        # mantenerse en la misma pagina
-        return redirect(url_for("dashboard"))
+        pass
 
     def toggle_scraper_status(self):
         """
@@ -196,9 +169,6 @@ class Dashboard:
         if service and service in TABLAS_BD:
             with self.server.data_lock:
                 self.data["scrapers_en_linea"][service] = is_checked
-            self.log(
-                action=f"[ CONFIG ] Scraper {service} toggled {'ON' if is_checked else 'OFF'}"
-            )
             return jsonify({"success": True})
         return jsonify({"success": False, "error": "Invalid service"}), 400
 
@@ -215,7 +185,7 @@ class Dashboard:
         try:
             tests.main(self)
         except KeyboardInterrupt:
-            self.log(action="*** Cannot execute test (server offline?)")
+            pass
         return redirect("/")
 
     def db_info(self):
@@ -273,9 +243,6 @@ class Dashboard:
                     # Use setattr to dynamically update the class attribute
                     setattr(self, attr_name, new_status)
 
-                self.log(
-                    action=f"[ CONFIG ] {key.capitalize()} toggled {'ON' if new_status else 'OFF'}"
-                )
                 return (
                     jsonify(
                         {"success": True, "message": f"{key} updated successfully."}

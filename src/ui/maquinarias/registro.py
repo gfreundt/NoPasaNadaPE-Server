@@ -6,7 +6,7 @@ from flask import request, render_template, session, redirect, url_for
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import hash_text, send_pushbullet
 from src.comms import enviar_correo_inmediato
-from src.ui.maquinarias import servicios
+from src.ui.maquinarias import mis_servicios
 
 
 def main(self):
@@ -86,7 +86,7 @@ def main(self):
         send_pushbullet(
             title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get('correo')})"
         )
-        return servicios.main(self)
+        return mis_servicios.main(self)
 
 
 # ==================================================================

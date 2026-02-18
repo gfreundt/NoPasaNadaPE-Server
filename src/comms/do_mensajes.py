@@ -1,6 +1,8 @@
+import logging
+
 from src.comms import generar_mensajes, enviar_mensajes
 from src.updates import do_actualizar
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,6 @@ def main(self, tipo_mensaje):
     # no activar si el switch de autoscraper esta apagado
     if not self.config_autoscraper:
         logger.warning(f"{titulo} OFFLINE")
-        self.log(action=f"{titulo} OFFLINE")
         return False
 
     # actualizar datos

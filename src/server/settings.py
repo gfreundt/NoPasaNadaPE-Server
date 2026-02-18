@@ -83,7 +83,7 @@ def set_server_routes(self):
     )
     self.app.add_url_rule(
         rule="/nuevo_password",
-        view_func=self.nuevo_password,
+        view_func=self.autorizar_nueva_contrasena,
         methods=["GET"],
     )
 
@@ -108,12 +108,12 @@ def set_server_routes(self):
     )
 
     # back end routes
-    self.app.add_url_rule(
-        rule="/update",
-        endpoint="update",
-        view_func=self.update,
-        methods=["POST"],
-    )
+    # self.app.add_url_rule(
+    #     rule="/update",
+    #     endpoint="update",
+    #     view_func=self.update,
+    #     methods=["POST"],
+    # )
     self.app.add_url_rule(
         rule="/api/<version>",
         endpoint="api_version",
@@ -303,6 +303,7 @@ def set_dash_routes(self):
 
 
 def set_flask_config(self):
+    self.app.jinja_env.add_extension("jinja2.ext.do")
     self.app.secret_key = FLASK_SECRET_KEY
     self.app.config["TEMPLATES_AUTO_RELOAD"] = True
     self.app.config["PERMANENT_SESSION_LIFETIME"] = td(minutes=10)

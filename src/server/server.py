@@ -2,23 +2,21 @@ import os
 import sqlite3
 import time
 import base64
-from datetime import datetime as dt, timedelta as td
 from flask import session, redirect, render_template, url_for, Response, flash
 from authlib.integrations.flask_client import OAuth
 from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
-import uuid
 import logging
+from src.server import autorizar_nueva_contrasena
 from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
-from src.server import settings, updater, api, admin
-from src.comms import enviar_correo_inmediato
+from src.server import settings, api, admin
 from src.ui.maquinarias import (
-    login as maq_login,
-    registro as maq_registro,
-    perfil as maq_mi_perfil,
-    eliminar as maq_eliminar_registro,
-    recuperar as maq_recuperar,
-    servicios as maq_mis_servicios,
+    login,
+    registro,
+    mi_perfil,
+    eliminar,
+    mis_servicios,
+    cambiar_contrasena,
 )
 
 
@@ -36,7 +34,7 @@ class Database:
         self._pid = None
 
     def _ensure_conn(self):
-        """Ensures each worker has its own SQLite connection."""
+        """Asegura que cada worker su propia conexion de SQLite."""
         current_pid = os.getpid()
 
         if self.conn is None or self._pid != current_pid:
@@ -78,60 +76,24 @@ class Database:
 
 
 class Server:
-    def __init__(self, db, app, dash):
+    def __init__(self, db, app):
         self.db = db
         self.app = app
-        self.dash = dash
-        self.dash.set_server(self)
-        settings.set_dash_routes(self)
 
-        # activar jinja extension
-        self.app.jinja_env.add_extension("jinja2.ext.do")
-
-        # Flask config + routes + OAuth
+        # configuracion de flask y definicion de rutas
         settings.set_flask_config(self)
         settings.set_server_routes(self)
 
-        # activar dashboard
+        # configuracion de OAuth para login con apps de terceros
         self.oauth = OAuth(app)
         settings.set_oauth_config(self)
 
-        self.session = session
-        self.page = 0
-
-        # limpiar registros huerfanos en InfoPlacas con respecto a InfoMiembros
-        self.limpiar_huerfanos()
-
-        print("> Network Path:", NETWORK_PATH)
         logger.info(f"Network Path: {NETWORK_PATH}")
 
-    # ======================================================
-    #                   DATABASE OPERATIONS
-    # ======================================================
-
-    def limpiar_huerfanos(self):
-        cursor = self.db.cursor()
-        cmd = """
-                UPDATE InfoPlacas
-                SET IdMember_FK = 0
-                WHERE IdMember_FK IS NOT NULL 
-                    AND IdMember_FK != 0 
-                    AND IdMember_FK NOT IN (SELECT IdMember FROM InfoMiembros)
-        """
-        cursor.execute(cmd)
-        self.db.commit()
-
-    def log(self, **kwargs):
-        """Insert a status log entry into the database."""
-        if not kwargs.get("type"):
-            kwargs["type"] = "0"
-
-        cur = self.db.cursor()
-        cur.execute(
-            "INSERT INTO StatusLogs VALUES (?,?,?)",
-            (kwargs["type"], kwargs["message"], str(dt.now())),
-        )
-        self.db.commit()
+        @app.errorhandler(Exception)
+        def handle_exception(e):
+            app.logger.exception("Unhandled exception")
+            return "Internal Server Error", 500
 
     # ======================================================
     #                        UI ROUTES
@@ -181,7 +143,6 @@ class Server:
         session.clear()
         return redirect(url_for("maquinarias"))
 
-    # Direct UI Pages
     def rnt(self):
         return render_template("ui-rnt.html")
 
@@ -191,21 +152,20 @@ class Server:
     def pdp(self):
         return render_template("ui-politica-de-privacidad.html")
 
-    # Maquinarias
     def maquinarias(self):
-        return maq_login.main(self)
+        return login.main(self)
 
     def maquinarias_registro(self):
-        return maq_registro.main(self)
+        return registro.main(self)
 
     def maquinarias_mis_servicios(self):
-        return maq_mis_servicios.main(self)
+        return mis_servicios.main(self)
 
     def maquinarias_eliminar_cuenta(self):
-        return maq_eliminar_registro.main(self)
+        return eliminar.main(self)
 
     def maquinarias_mi_perfil(self):
-        return maq_mi_perfil.main(self)
+        return mi_perfil.main(self)
 
     def maquinarias_logout(self):
         session.clear()
@@ -220,44 +180,15 @@ class Server:
     def documentacion_api_v1(self):
         return render_template("ui-documentacion-api-v1.html")
 
-    def nuevo_password(self):
-        # generar password alfanumerico al azar
-        token = uuid.uuid4().hex
-        cursor = self.db.cursor()
-        correo = session["usuario"]["correo"]
-        id_member = session["usuario"]["id_member"]
-
-        # actualizar base de datos
-        cmd = """
-                    INSERT INTO StatusTokens 
-                    (IdMember, TokenHash, TokenTipo, Correo, FechaHasta, TokenUsado)
-                    VALUES 
-                    (?, ?, ?, ?, ?, ?)
-                """
-        cursor.execute(
-            cmd, (id_member, token, "Password", correo, dt.now() + td(minutes=10), 0)
-        )
-        self.db.conn.commit()
-
-        # mandar correo
-        enviar_correo_inmediato.recuperacion_contrasena(
-            self.db,
-            correo=correo,
-            token=token,
-        )
-        flash(f"Hemos enviado un correo a {correo}.")
-
-        return redirect(url_for("maquinarias"))
+    def autorizar_nueva_contrasena(self):
+        return autorizar_nueva_contrasena.main(self)
 
     def recuperar_contrasena(self, token):
-        return maq_recuperar.main(self, token)
+        return cambiar_contrasena.main(self, token)
 
     # ======================================================
-    #                      BACKEND APIs
+    #                      APIs
     # ======================================================
-
-    def update(self):
-        return updater.update(self)
 
     def api_externo(self, version):
         timer_start = time.perf_counter()
@@ -311,9 +242,9 @@ class Server:
         cursor = self.db.cursor()
 
         # revisar si miembro activo -- si no, popup advirtiendo y regresa
-        activo = maq_login.validar_activacion(cursor, correo)
+        activo = login.validar_activacion(cursor, correo)
         if not activo:
-            self.session["auth_error"] = {
+            session["auth_error"] = {
                 "email": correo,
                 "provider": proveedor,
                 "name": nombre,
@@ -321,7 +252,7 @@ class Server:
             return redirect(url_for("maquinarias"))
 
         # revisar si miembro suscrito -- si no, flujo de registro antes
-        suscrito = maq_login.validar_suscripcion(cursor, correo)
+        suscrito = login.validar_suscripcion(cursor, correo)
         if not suscrito:
             session["usuario"] = {"correo": correo}
             session["password_only"] = False
@@ -329,9 +260,9 @@ class Server:
             session["etapa"] = "registro"
             return redirect("/maquinarias/registro")
         else:
-            maq_login.extraer_data_usuario(cursor, correo=correo)
+            login.extraer_data_usuario(cursor, correo=correo)
             session["etapa"] = "validado"
-            return maq_mis_servicios.main(self)
+            return mis_servicios.main(self)
 
     # ======================================================
     #     OAUTH (Pendientes) — APPLE, MICROSOFT, INSTAGRAM
