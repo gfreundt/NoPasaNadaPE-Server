@@ -1,5 +1,5 @@
 import re
-from flask import redirect, request, render_template, url_for, session
+from flask import current_app, redirect, request, render_template, url_for, session
 
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import compare_text_to_hash, hash_text
@@ -7,7 +7,9 @@ from src.ui.maquinarias import mis_servicios
 
 
 # login endpoint
-def main(self):
+def main():
+
+    db = current_app.db
 
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
@@ -20,8 +22,8 @@ def main(self):
     session["perfil_muestra_password"] = False
     session.permanent = True
 
-    cursor = self.db.cursor()
-    conn = self.db.conn
+    cursor = db.cursor()
+    conn = db.conn
 
     if request.method == "GET":
         return render_template(
@@ -52,7 +54,7 @@ def main(self):
             "placas": forma.get("placas"),
         }
 
-        errores = validaciones(self.db, forma)
+        errores = validaciones(db, forma)
 
         if errores:
             return render_template(
@@ -65,7 +67,7 @@ def main(self):
         # No errors → proceed
         actualizar(cursor=cursor, conn=conn, forma=forma)
         session["usuario"].update(usuario)
-        return mis_servicios.main(self)
+        return mis_servicios.main()
 
 
 def actualizar(cursor, conn, forma):
@@ -88,23 +90,27 @@ def actualizar(cursor, conn, forma):
     # volver a asociar miembro con las placas ingresadas
     # crear placas para nuevo miembro si no existe, si placa ya existe, asignar a este usuario
     fecha_base = "2020-01-01"
-    for placa in forma.get("placas").split(", "):
+    placas = [
+        i for i in (forma.get("placa1"), forma.get("placa2"), forma.get("placa3")) if i
+    ]
+    for k, placa in enumerate(placas, start=1):
         cursor.execute(
             """
             INSERT INTO InfoPlacas
-            (IdMember_FK, Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas, LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas)
-            VALUES (?,?,?,?,?,?,?)
+            (IdMember_FK, Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas, LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas, AnoFabricacion)
+            VALUES (?,?,?,?,?,?,?,?)
             ON CONFLICT(Placa) DO
                 UPDATE SET IdMember_FK = excluded.IdMember_FK
             """,
             (
                 id_member,
-                placa,
+                placa.upper(),
                 fecha_base,
                 fecha_base,
                 fecha_base,
                 fecha_base,
                 fecha_base,
+                forma.get(f"ano_fabricacion{k}"),
             ),
         )
 

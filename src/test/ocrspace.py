@@ -5,9 +5,9 @@ from security.keys import OCRSPACE_API_KEY
 from pprint import pprint
 
 
-def main(self):
+def main(db):
 
-    cursor = self.db.cursor()
+    cursor = db.cursor()
     cursor.execute(
         "SELECT PlacaValidate, ImageBytes FROM DataSunarpFichas WHERE ImageBytes IS NOT NULL"
     )
@@ -55,7 +55,7 @@ def main(self):
 
         cursor.execute(cmd, val)
 
-    conn = self.db.conn
+    conn = db.conn
     conn.commit()
 
 

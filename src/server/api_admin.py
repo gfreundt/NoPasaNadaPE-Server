@@ -1,21 +1,22 @@
 import os
-from flask import request, jsonify
+from flask import current_app, request, jsonify
 import uuid
 import threading
 import logging
 from pprint import pformat
 
-
 from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text, NETWORK_PATH
 from src.server import do_updates
-from src.updates import extrae_data_terceros
 
 
 logger = logging.getLogger(__name__)
 
 
-def main(self):
+def main():
+
+    db = current_app.db
+
     logger.info("Endpoint: admin accesado")
 
     token = request.args.get("token")
@@ -27,15 +28,14 @@ def main(self):
         logger.warning("Acceso no autorizado. Error en Token de Autorizacion.")
         return jsonify("Error en Token de Autorizacion."), 401
 
-    cursor = self.db.cursor()
-    conn = self.db.conn
+    cursor = db.cursor()
+    conn = db.conn
 
     if solicitud == "nuevo_password":
         logger.info(f"Generando nuevo password para: {correo}")
 
         # generate 6-char alphanumeric password
         nuevo_password = uuid.uuid4().hex[:6]
-        nuevo_password_hash = hash_text(nuevo_password)
 
         # update database
         cmd = """
@@ -45,7 +45,7 @@ def main(self):
                     Password = ?
                 WHERE Correo = ?
                 """
-        cursor.execute(cmd, (nuevo_password_hash, correo))
+        cursor.execute(cmd, (hash_text(nuevo_password), correo))
         conn.commit()
 
         return jsonify(f"Nuevo Password: {nuevo_password}"), 200
@@ -83,7 +83,7 @@ def main(self):
 
     if solicitud == "manual_upload":
         logger.info("Upload manual iniciado.")
-        do_updates.main(self.db, payload)
+        do_updates.main(db, payload)
         return jsonify("Actualizado."), 200
 
     if solicitud == "get_sunarp":
@@ -169,9 +169,7 @@ def main(self):
 
         logger.info(f"Datos a actualizar (forzado): \n{pformat(upd)}")
 
-        thread = threading.Thread(
-            target=gather_all.gather_threads, args=(self.dash, upd)
-        )
+        thread = threading.Thread(target=gather_all.gather_threads, args=(db, upd))
         thread.start()
 
         return jsonify(f"Lanzado Actualizacion de {data['NombreCompleto']}"), 200

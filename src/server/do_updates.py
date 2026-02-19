@@ -8,10 +8,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def main(self, data):
+def main(db, data):
 
-    cursor = self.db.cursor()
-    conn = self.db.conn
+    cursor = db.cursor()
+    conn = db.conn
 
     HOY = dt.now().strftime("%Y-%m-%d")
 

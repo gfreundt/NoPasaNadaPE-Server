@@ -116,7 +116,7 @@ def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 1))  # connect() for UDP doesn't send packets
     local_ip = s.getsockname()[0]
-    logger.info(f"IP Interno Detectado: {local_ip}")
+
     return local_ip
 
 

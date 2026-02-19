@@ -5,7 +5,6 @@ import re
 import json
 from security.keys import EXTERNAL_AUTH_TOKEN_API_V1
 from src.comms import enviar_correo_inmediato
-from src.utils.utils import send_pushbullet
 
 SQL_A_API = {
     "DireccionCorreo": "correo",
@@ -35,7 +34,10 @@ def clean_str(data, key, to_upper=False):
     return val.upper() if to_upper else val
 
 
-def api(self, timer_inicio):
+def api(db):
+
+    timer_inicio = time.perf_counter()
+
     # Inicializar datos básicos de log en caso de fallo temprano
     data_log = {
         "IdSolicitud": 0,  # Marcador, se actualizará después de insertar en BD
@@ -66,8 +68,8 @@ def api(self, timer_inicio):
         data_log["UsuarioSolicitando"] = usuario or ""
 
         # 2. Conexión a Base de Datos
-        cursor = self.db.cursor()
-        conn = self.db.conn
+        cursor = db.cursor()
+        conn = db.conn
 
         # --- CORRECCION: GENERACION DE ID SEGURA PARA HILOS ---
         # Insertar la entrada de log PRIMERO para generar un ID autoincremental único.
@@ -83,7 +85,7 @@ def api(self, timer_inicio):
         # --- VALIDACIONES ---
         if token != EXTERNAL_AUTH_TOKEN_API_V1:
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -99,7 +101,7 @@ def api(self, timer_inicio):
             "mensajes_enviados",
         ):
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -110,7 +112,7 @@ def api(self, timer_inicio):
 
         if not usuario:
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -121,7 +123,7 @@ def api(self, timer_inicio):
 
         if usuario == "TST-000":
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -147,7 +149,7 @@ def api(self, timer_inicio):
             column_names = [SQL_A_API.get(col[0], col[0]) for col in cursor.description]
             registros = [dict(zip(column_names, row)) for row in rows]
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -166,7 +168,7 @@ def api(self, timer_inicio):
             column_names = [SQL_A_API.get(col[0], col[0]) for col in cursor.description]
             registros = [dict(zip(column_names, row)) for row in rows]
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -178,7 +180,7 @@ def api(self, timer_inicio):
         # --- SOLICITUD: ALTA / BAJA ---
         if not isinstance(clientes, list) or len(clientes) == 0:
             return finalizar(
-                self,
+                db,
                 timer_inicio,
                 solicitud,
                 data_log,
@@ -374,7 +376,7 @@ def api(self, timer_inicio):
         conn.commit()
 
         return finalizar(
-            self,
+            db,
             timer_inicio,
             solicitud,
             data_log,
@@ -387,7 +389,7 @@ def api(self, timer_inicio):
         print(f"Error de API: {e}")
 
         return finalizar(
-            self,
+            db,
             timer_inicio,
             solicitud,
             data_log,
@@ -398,7 +400,7 @@ def api(self, timer_inicio):
 
 
 def finalizar(
-    self,
+    db,
     timer_inicio,
     solicitud,
     data_log,
@@ -451,8 +453,8 @@ def finalizar(
     )
 
     # Actualizar la entrada de log existente
-    cursor = self.db.cursor()
-    conn = self.db.conn
+    cursor = db.cursor()
+    conn = db.conn
 
     cmd = """UPDATE StatusApiLogs SET TipoSolicitud=?, Timestamp=?, DireccionIP=?, Metodo=?, Endpoint=?, Autenticado=?, UsuarioSolicitando=?, RespuestaStatus=?, RespuestaTiempoSeg=?, RespuestaTamanoKb=?, RespuestaMensaje=?
              WHERE IdSolicitud=?"""
@@ -479,19 +481,11 @@ def finalizar(
     # enviar correos de activacion a usuario
     if exitos and solicitud == "alta":
         for item in exitos:
-            enviar_correo_inmediato.activacion(self.db, item["correo"])
-        if self.dash.config_enviar_pushbullet:
-            send_pushbullet(
-                title=f"NoPasaNadaPE - Correos de Activacion Enviados ({len(exitos)})"
-            )
+            enviar_correo_inmediato.activacion(db, item["correo"])
 
     elif exitos and solicitud == "baja":
         for item in exitos:
-            enviar_correo_inmediato.desactivacion(self.db, item["correo"], nombre=None)
-        if self.dash.config_enviar_pushbullet:
-            send_pushbullet(
-                title=f"NoPasaNadaPE - Correos de DESActivacion Enviados ({len(exitos)})"
-            )
+            enviar_correo_inmediato.desactivacion(db, item["correo"], nombre=None)
 
     return (
         jsonify(

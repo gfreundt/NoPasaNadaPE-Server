@@ -1,5 +1,3 @@
-import os
-import sqlite3
 import time
 import base64
 from flask import session, redirect, render_template, url_for, Response, flash
@@ -7,9 +5,10 @@ from authlib.integrations.flask_client import OAuth
 from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
 import logging
+from server import api_admin, api_externo
 from src.server import autorizar_nueva_contrasena
-from src.utils.constants import DB_NETWORK_PATH, NETWORK_PATH
-from src.server import settings, api, admin
+from src.utils.constants import NETWORK_PATH
+from src.server import settings
 from src.ui.maquinarias import (
     login,
     registro,
@@ -23,59 +22,11 @@ from src.ui.maquinarias import (
 logger = logging.getLogger(__name__)
 
 
-# ============================================================
-#                      DATABASE LAYER
-# ============================================================
+class Rutas:
+    """
+    Crea una clase que define las rutas de Flask y las funciones de cada ruta.
+    """
 
-
-class Database:
-    def __init__(self):
-        self.conn = None
-        self._pid = None
-
-    def _ensure_conn(self):
-        """Asegura que cada worker su propia conexion de SQLite."""
-        current_pid = os.getpid()
-
-        if self.conn is None or self._pid != current_pid:
-            if self.conn is not None:
-                try:
-                    self.conn.close()
-                except Exception:
-                    pass
-
-            self.conn = sqlite3.connect(
-                DB_NETWORK_PATH,
-                check_same_thread=False,
-                timeout=5.0,
-            )
-            self.conn.row_factory = sqlite3.Row
-            self._pid = current_pid
-
-    def cursor(self):
-        self._ensure_conn()
-        return self.conn.cursor()
-
-    def commit(self):
-        self._ensure_conn()
-        self.conn.commit()
-
-    def close(self):
-        if self.conn:
-            try:
-                self.conn.close()
-            except Exception:
-                pass
-            self.conn = None
-            self._pid = None
-
-
-# ============================================================
-#                      MAIN SERVER CLASS
-# ============================================================
-
-
-class Server:
     def __init__(self, db, app):
         self.db = db
         self.app = app
@@ -92,11 +43,11 @@ class Server:
 
         @app.errorhandler(Exception)
         def handle_exception(e):
-            app.logger.exception("Unhandled exception")
+            app.logger.exception("Error de Flask - No Manejada")
             return "Internal Server Error", 500
 
     # ======================================================
-    #                        UI ROUTES
+    #                  Front End GENERAL
     # ======================================================
 
     def root(self):
@@ -139,18 +90,29 @@ class Server:
         except Exception as e:
             return f"Error procesando archivo: {e}.", 500
 
+    # ======================================================
+    #                 Front End MAQUINARIAS
+    # ======================================================
+
     def logout(self):
+        logger.info(
+            f"Logout: Id={session.get('id_member')} Correo={session.get('Correo')}"
+        )
         session.clear()
         return redirect(url_for("maquinarias"))
 
     def rnt(self):
         return render_template("ui-rnt.html")
 
-    def tyc(self):
-        return render_template("ui-terminos-y-condiciones.html")
+    def maquinarias_tyc_pdp(self):
+        return render_template(
+            "ui-maquinarias-terminos-y-condiciones-politica-de-privacidad.html"
+        )
 
-    def pdp(self):
-        return render_template("ui-politica-de-privacidad.html")
+    def maquinarias_pduddp(self):
+        return render_template(
+            "ui-maquinarias-politica-de-uso-de-datos-personales.html"
+        )
 
     def maquinarias(self):
         return login.main(self)
@@ -171,12 +133,6 @@ class Server:
         session.clear()
         return redirect(url_for("maquinarias"))
 
-    def maquinarias_tyc(self):
-        return render_template("ui-maquinarias-terminos-y-condiciones.html")
-
-    def maquinarias_pdp(self):
-        return render_template("ui-maquinarias-politica-de-privacidad.html")
-
     def documentacion_api_v1(self):
         return render_template("ui-documentacion-api-v1.html")
 
@@ -187,18 +143,18 @@ class Server:
         return cambiar_contrasena.main(self, token)
 
     # ======================================================
-    #                      APIs
+    #                   Back End APIs
     # ======================================================
 
     def api_externo(self, version):
         timer_start = time.perf_counter()
-        return api.version_select(self, version, timer_start)
+        return api_externo.version_select(self, version, timer_start)
 
     def api_admin(self):
-        return admin.main(self)
+        return api_admin.main(self)
 
     # ======================================================
-    #           OAUTH (Activos) — Google, Facebook
+    #       Back End OAUTH (Activos) — Google, Facebook
     # ======================================================
 
     def google_login(self):
@@ -264,9 +220,9 @@ class Server:
             session["etapa"] = "validado"
             return mis_servicios.main(self)
 
-    # ======================================================
-    #     OAUTH (Pendientes) — APPLE, MICROSOFT, INSTAGRAM
-    # ======================================================
+    # =========================================================
+    # Back End OAUTH (Pendientes) — APPLE, MICROSOFT, INSTAGRAM
+    # =========================================================
 
     def microsoft_login(self):
         redirect_uri = url_for("microsoft_authorize", _external=True)

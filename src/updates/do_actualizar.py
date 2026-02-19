@@ -9,17 +9,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def main(self, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
+def main(db, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
     # intentar una cantidad de veces actualizar el 100% de pendientes
     repetir = 1
 
     while True:
         # solicitar alertas/boletines pendientes para enviar a actualizar (pre-mensaje)
         if tipo_mensaje == "alertas":
-            pendientes = datos_actualizar.get_datos_alertas(self, premensaje=True)
+            pendientes = datos_actualizar.get_datos_alertas(db, premensaje=True)
 
         elif tipo_mensaje == "boletines":
-            pendientes = datos_actualizar.get_datos_boletines(self, premensaje=True)
+            pendientes = datos_actualizar.get_datos_boletines(db, premensaje=True)
 
         titulo = f"[ DO ACTUALIZAR {tipo_mensaje.upper()} ({repetir}/{AUTOSCRAPER_REPETICIONES}) ]"
 
@@ -37,13 +37,13 @@ def main(self, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
                 return True
 
         # realizar scraping
-        respuesta = extrae_data_terceros.main(self, pendientes)
+        respuesta = extrae_data_terceros.main(db, pendientes)
 
         # actualizar base de datos con lo que haya sido devuelto (completo o parcial)
         logger.info(
             f"[ AUTOMENSAJES {tipo_mensaje.upper()} Enviando a actualizar base de datos {pformat(respuesta)}"
         )
-        do_updates.main(self, data=respuesta)
+        do_updates.main(db, data=respuesta)
 
         # aumentar contador de repeticiones, si excede limite parar
         repetir += 1

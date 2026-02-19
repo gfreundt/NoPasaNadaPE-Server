@@ -1,7 +1,7 @@
 import re
 import uuid
 from datetime import datetime as dt
-from flask import request, render_template, session, redirect, url_for
+from flask import current_app, request, render_template, session, redirect, url_for
 
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import hash_text, send_pushbullet
@@ -9,7 +9,9 @@ from src.comms import enviar_correo_inmediato
 from src.ui.maquinarias import mis_servicios
 
 
-def main(self):
+def main():
+
+    db = current_app.db
 
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
@@ -22,7 +24,7 @@ def main(self):
     # Initial page load
     if request.method == "GET" or not session["usuario"].get("correo"):
         # extraer data de lo enviado al momento de la activacion y pre-llenar campos
-        cursor = self.db.cursor()
+        cursor = db.cursor()
         cmd = "SELECT Correo, NombreCompleto, TipoDocumento, NumeroDocumento, Celular FROM InfoClientesAutorizados WHERE Correo = ?"
         cursor.execute(cmd, (session["usuario"].get("correo"),))
         dato = cursor.fetchone()
@@ -64,7 +66,7 @@ def main(self):
             "placas": forma.get("placas"),
         }
 
-        errores = validaciones(self.db, forma)
+        errores = validaciones(db, forma)
 
         if errores:
             return render_template(
@@ -72,12 +74,12 @@ def main(self):
             )
 
         # No errors → proceed
-        cursor = self.db.cursor()
-        conn = self.db.conn
+        cursor = db.cursor()
+        conn = db.conn
         inscribir(cursor, conn, forma)
         session["usuario"].update(usuario)
         enviar_correo_inmediato.inscripcion(
-            self.db,
+            db,
             correo=forma.get("correo"),
             nombre=forma.get("nombre"),
             placas=forma.get("placas").split(" ,"),
@@ -86,7 +88,7 @@ def main(self):
         send_pushbullet(
             title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get('correo')})"
         )
-        return mis_servicios.main(self)
+        return mis_servicios.main(db)
 
 
 # ==================================================================

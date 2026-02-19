@@ -5,10 +5,10 @@ from src.utils.constants import NETWORK_PATH
 import uuid
 
 
-def main(self, idmember, correo):
+def main(db, idmember, correo):
     environment = Environment(loader=FileSystemLoader("templates/"))
     template = environment.get_template("comms-maquinarias-boletin.html")
-    cursor = self.db.cursor()
+    cursor = db.cursor()
     subject = ("Alerta de NoPasaNada PE",)
     mensaje = generar_mensajes.redactar_boletin(
         cursor, idmember, template, subject, correo

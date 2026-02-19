@@ -1,4 +1,4 @@
-{% extends "ui-pagina-base-maquinarias.html" %}
+{% extends "ui-maquinarias-pagina-base.html" %}
 
 {% block title %}
 Mi Perfil | No Pasa Nada PE 
@@ -131,30 +131,174 @@ Mi Perfil | No Pasa Nada PE
                     {% endif %}
                 </div>
 
-                <div class="form-group mb-3 
-                    {% if password_only %} d-none {% endif %}"> <label for="placas-input" class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
-                        <img src="/static/images/placa-icon.png" alt="Placas Icon" style="height: 22px; width: 22px; margin-right: 5px;">
-                        Placas
+                <div class="form-group mb-3 {% if password_only %} d-none {% endif %}">
+                    <label class="form-label small fw-medium text-secondary d-flex align-items-center mb-2">
+                        <img src="/static/images/placa-icon.png" alt="Placas Icon" style="height: 22px; width: 22px; margin-right: 6px;">
+                        Vehículos
                     </label>
-                    <input id="placas-input" 
-                            name="placas" 
-                            value="{{ usuario.placas if usuario.placas else '' }}" 
-                            class="form-control" 
-                            {% if password_only %} disabled {% endif %}
-                            style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                
-                    {% if errors.placas %}
-                        <div class="invalid-feedback text-center mb-1" style="display: block;">
-                            {{ errors.placas }}
+
+                <div class="row g-3">
+
+                    {# ================== VEHÍCULO 1 ================== #}
+                    <div class="col-12 col-md-4">
+                    <div class="border rounded-4 bg-white text-center px-2 pt-2 pb-2" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                        <div class="d-flex justify-content-center mb-2">
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center fw-semibold text-white"
+                                style="width: 30px; height: 30px; font-size: 14px; background: #3b82f6;">
+                            1
+                        </span>
                         </div>
-                    {% else %}
-                        <div class="text-secondary small text-center mb-1" style="display: block;">
-                            Ingresa hasta 3 placas separadas por comas.
+
+                        <label class="form-label small text-muted mb-1" for="placa1-input">Placa</label>
+                        <input
+                        id="placa1-input"
+                        name="placa1"
+                        value="{{ usuario.placa1 }}"
+                        class="form-control text-center"
+                        autocomplete="off"
+                        {% if password_only %} disabled {% endif %}
+                        style="height: 48px;"
+                        >
+
+                        <label class="form-label small text-muted mb-1 mt-2" for="ano_fabricacion1-input">Año</label>
+                        <input
+                        id="ano_fabricacion1-input"
+                        name="ano_fabricacion1"
+                        type="number"
+                        class="form-control text-center"
+                        min="1980"
+                        max="2026"
+                        step="1"
+                        value="{{ usuario.ano_fabricacion1 if usuario.ano_fabricacion1 else '' }}"
+                        {% if password_only %} disabled {% endif %}
+                        style="height: 48px;"
+                        >
+
+                        <button
+                        type="button"
+                        class="btn btn-sm border-0 bg-transparent mt-2 d-inline-flex align-items-center justify-content-center"
+                        title="Borrar"
+                        aria-label="Borrar"
+                        onclick="clearPair('placa1-input','ano_fabricacion1-input')"
+                        {% if password_only %} disabled {% endif %}
+                        style="width: 34px; height: 34px; border-radius: 10px;"
+                        >
+                        <i class="bi bi-trash3 text-danger"></i>
+                        </button>
+                    </div>
+                    </div>
+
+                    {# ================== VEHÍCULO 2 ================== #}
+                    <div class="col-12 col-md-4">
+                    <div class="border rounded-4 bg-white text-center px-2 pt-2 pb-2" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                        <div class="d-flex justify-content-center mb-2">
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center fw-semibold text-white"
+                                style="width: 30px; height: 30px; font-size: 14px; background: #3b82f6;">
+                            2
+                        </span>
                         </div>
-                    {% endif %}
+
+                        <label class="form-label small text-muted mb-1" for="placa2-input">Placa</label>
+                        <input
+                        id="placa2-input"
+                        name="placa2"
+                        value="{{ usuario.placa2 }}"
+                        class="form-control text-center"
+                        autocomplete="off"
+                        {% if password_only %} disabled {% endif %}
+                        style="height: 48px;"
+                        >
+
+                        <label class="form-label small text-muted mb-1 mt-2" for="ano_fabricacion2-input">Año</label>
+                        <input
+                        id="ano_fabricacion2-input"
+                        name="ano_fabricacion2"
+                        type="number"
+                        class="form-control text-center"
+                        min="1980"
+                        max="2026"
+                        step="1"
+                        value="{{ usuario.ano_fabricacion2 if usuario.ano_fabricacion2 else '' }}"
+                        {% if password_only %} disabled {% endif %}
+                        style="height: 48px;"
+                        >
+
+                        <button
+                        type="button"
+                        class="btn btn-sm border-0 bg-transparent mt-2 d-inline-flex align-items-center justify-content-center"
+                        title="Borrar"
+                        aria-label="Borrar"
+                        onclick="clearPair('placa2-input','ano_fabricacion2-input')"
+                        {% if password_only %} disabled {% endif %}
+                        style="width: 34px; height: 34px; border-radius: 10px;"
+                        >
+                        <i class="bi bi-trash3 text-danger"></i>
+                        </button>
+                    </div>
+                    </div>
+
+                    {# ================== VEHÍCULO 3 ================== #}
+                    <div class="col-12 col-md-4">
+                    <div class="border rounded-4 bg-white text-center px-2 pt-2 pb-2" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                        <div class="d-flex justify-content-center mb-2">
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center fw-semibold text-white"
+                                style="width: 30px; height: 30px; font-size: 14px; background: #3b82f6;">
+                            3
+                        </span>
+                        </div>
+
+                        <label class="form-label small text-muted mb-1" for="placa3-input">Placa</label>
+                        <input
+                        id="placa3-input"
+                        name="placa3"
+                        value="{{ usuario.placa3 }}"
+                        class="form-control text-center"
+                        autocomplete="off"
+                        {% if password_only %} disabled {% endif %}
+                        style="height: 48px;"
+                        >
+
+                        <label class="form-label small text-muted mb-1 mt-2" for="ano_fabricacion3-input">Año</label>
+                        <input
+                        id="ano_fabricacion3-input"
+                        name="ano_fabricacion3"
+                        type="number"
+                        class="form-control text-center"
+                        min="1980"
+                        max="2026"
+                        step="1"
+                        value="{{ usuario.ano_fabricacion3 if usuario.ano_fabricacion3 else '' }}"
+                        {% if password_only %} disabled {% endif %}
+                        style="height: 48px;"
+                        >
+
+                        <button
+                        type="button"
+                        class="btn btn-sm border-0 bg-transparent mt-2 d-inline-flex align-items-center justify-content-center"
+                        title="Borrar"
+                        aria-label="Borrar"
+                        onclick="clearPair('placa3-input','ano_fabricacion3-input')"
+                        {% if password_only %} disabled {% endif %}
+                        style="width: 34px; height: 34px; border-radius: 10px;"
+                        >
+                        <i class="bi bi-trash3 text-danger"></i>
+                        </button>
+                    </div>
+                    </div>
+
+                </div>
                 </div>
 
-                
+                <script>
+                function clearPair(placaId, anoId) {
+                    const placa = document.getElementById(placaId);
+                    const ano = document.getElementById(anoId);
+                    if (placa) placa.value = "";
+                    if (ano) ano.value = "";
+                }
+                </script>
+
+
                 {# --- CONTRASEÑA SECTION TOGGLE BUTTON --- #}
                 <button class="btn btn-secondary w-100 fw-bold my-3 {% if password_only or show_password_field %} d-none {% endif %}" type="button" 
                         id="toggle-password-btn"

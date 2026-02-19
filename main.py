@@ -1,12 +1,12 @@
 import os
+import fcntl
 import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 from flask import Flask
+
 from src.utils.constants import NETWORK_PATH
-from src.utils.utils import get_local_ip, soy_master_worker
-from src.server import server
-from src.dashboard import cron
-# from src.dashboard import dashboard
+from src.utils.utils import get_local_ip
+from src.server import cron, database, settings
 
 
 def create_app():
@@ -19,23 +19,43 @@ def create_app():
         static_folder=os.path.join(NETWORK_PATH, "static"),
     )
 
-    # configura las rutas y las funciones del backend
-    server.Server(db=db, app=app)
+    # configura parametros de Flask
+    settings.configurar_flask(app)
+
+    # configura rutas de Flask y las funciones asociandas
+    settings.definir_rutas(app)
+
+    # configuracion de OAuth para login con apps de terceros
+    settings.configurar_oauth(app)
 
     return app
 
 
 def iniciar_base_de_datos():
     # inicia la base de datos
-    db = server.Database()
+    db = database.Database()
     db._lock_file_handle = None
     return db
 
 
 def inicia_cron(db):
-    # iniciar cron solamente en el caso que esta instancia sea "master"
-    if soy_master_worker(db):
+    """
+    Funcion utilizada para darle status de "master" solamente al primer worker de Gunicorn.
+    Intenta acceder a archivo y si esta siendo utilizado no da el status de master al worker
+    En caso sea "master" activa cron.py
+    """
+
+    lock_path = os.path.join(NETWORK_PATH, "static", "dashboard_init.lock")
+    db._lock_file_handle = open(lock_path, "a")
+
+    try:
+        fcntl.flock(db._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         cron.main(db)
+
+    except (OSError, BlockingIOError):
+        db._lock_file_handle.close()
+        db._lock_file_handle = None
+        return
 
 
 def inicia_logger():
@@ -58,12 +78,13 @@ def inicia_logger():
     logging.getLogger("seleniumwire").setLevel(logging.WARNING)  # Selenium Wire
 
 
-# Gunicorn punto de entrada
+# ------------ Gunicorn: punto de entrada
 inicia_logger()
 db = iniciar_base_de_datos()
 app = create_app()
+app.db = db
 inicia_cron(db)
 
-# punto de entrada si se corre manualmente
+# ------------ Punto de entrada si se corre manualmente
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

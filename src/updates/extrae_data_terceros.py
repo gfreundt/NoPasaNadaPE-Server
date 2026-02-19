@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def recolector(self, data_actualizar, queue_respuesta, lock):
+def recolector(db, data_actualizar, queue_respuesta, lock):
     """
     Asigna cada registro que necesita ser actualizado al scraper que corresponde en threads.
     Controla el maximo numero de scrapers activados en paralelo.
@@ -36,7 +36,7 @@ def recolector(self, data_actualizar, queue_respuesta, lock):
         if sum(t.is_alive() for t in active_threads) < MAX_SIMULTANEOUS_SCRAPERS:
             thread = Thread(
                 target=extrae_data_terceros_individual.main,
-                args=(self, queue_data, queue_respuesta, lock),
+                args=(db, queue_data, queue_respuesta, lock),
             )
             active_threads.append(thread)
             thread.start()
@@ -46,7 +46,7 @@ def recolector(self, data_actualizar, queue_respuesta, lock):
             time.sleep(1)
 
 
-def main(self, data_actualizar):
+def main(db, data_actualizar):
     """
     Punto de Entrada para Iniciar Proceso de Scraping.
     Controla el timeout general de todo el proceso.
@@ -63,7 +63,7 @@ def main(self, data_actualizar):
         func_timeout(
             TIMEOUT_RECOLECTOR,
             recolector,
-            args=(self, data_actualizar, queue_respuesta, lock),
+            args=(db, data_actualizar, queue_respuesta, lock),
         )
         logger.info(
             f"Final normal de Recolector. Tiempo = {time.perf_counter() - inicio}"

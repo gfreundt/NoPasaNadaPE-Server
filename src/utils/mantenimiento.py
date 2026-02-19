@@ -3,9 +3,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def cada_hora(self):
+def cada_hora(db):
     try:
-        cursor, conn = self.db.cursor(), self.db.conn
+        cursor, conn = db.cursor(), db.conn
 
         # Toma datos de SUNARP sobre año de fabricacion y pone el dato en InfoPlacas si esta vacio
         cmd = """ UPDATE InfoPlacas
@@ -35,9 +35,9 @@ def cada_hora(self):
         logger.error(f"Error en mantenimiento de cada hora: {e}")
 
 
-def cada_dia(self):
+def cada_dia(db):
     try:
-        cursor, conn = self.db.cursor(), self.db.conn
+        cursor, conn = db.cursor(), db.conn
 
         # Pone el valor de IdMember en 0 para placas que no tienen un registro correspondiente en InfoMiembros
         cmd = """

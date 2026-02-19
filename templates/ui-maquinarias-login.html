@@ -1,4 +1,4 @@
-{% extends "ui-pagina-base-maquinarias.html" %}
+{% extends "ui-maquinarias-pagina-base.html" %}
 
 {% block title %}
 Bienvenido a No Pasa Nada PE
@@ -194,7 +194,7 @@ Bienvenido a No Pasa Nada PE
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Automatically show the modal if the error data is present
-        // This requires Bootstrap 5 JS to be loaded on ui-pagina-base-maquinarias.html
+        // This requires Bootstrap 5 JS to be loaded on ui-maquinarias-pagina-base.html
         var authErrorModal = new bootstrap.Modal(document.getElementById('authErrorModal'));
         authErrorModal.show();
     });

@@ -1,14 +1,16 @@
-from flask import redirect, session, url_for
+from flask import current_app, redirect, session, url_for
 from src.comms import enviar_correo_inmediato
 
 
-def main(self):
+def main():
+
+    db = current_app.db
 
     # seguridad: evitar navegacion directa a url
     if session.get("etapa") != "validado":
         return redirect(url_for("maquinarias"))
 
-    cursor = self.db.cursor()
+    cursor = db.cursor()
 
     # copiar registro de miembro a tabla de antiguos, eliminar registro de tabla activa y desasociar placas al id
     cmd = f""" INSERT INTO InfoMiembrosInactivos SELECT * FROM InfoMiembros WHERE IdMember = {session["usuario"]["id_member"]};
@@ -19,7 +21,7 @@ def main(self):
 
     # mandar correo de confirmacion de eliminacion
     enviar_correo_inmediato.eliminacion(
-        self.db,
+        db,
         correo=session["usuario"]["correo"],
         nombre=session["usuario"]["nombre"],
     )

@@ -1,10 +1,13 @@
 from datetime import datetime as dt
-from flask import render_template, request, session, redirect, url_for
+from flask import current_app, render_template, request, session, redirect, url_for
 
 from src.utils.utils import date_to_user_format
 
 
-def main(self):
+def main():
+
+    db = current_app.db
+
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
@@ -14,7 +17,7 @@ def main(self):
         return redirect(url_for("maquinarias"))
 
     # extraer toda la data relevante de la base de datos
-    cursor = self.db.cursor()
+    cursor = db.cursor()
     payload = generar_data_servicios(
         cursor, correo=session.get("usuario", {}).get("correo")
     )

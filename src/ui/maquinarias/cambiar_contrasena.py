@@ -1,32 +1,41 @@
 import re
 from datetime import datetime as dt
-from flask import request, render_template, session, redirect, url_for
+from flask import current_app, request, render_template, session, redirect, url_for
+import logging
 
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import hash_text
 from src.comms import enviar_correo_inmediato
 
 
-def main(self, token):
+logger = logging.getLogger(__name__)
+
+
+def main(token):
+
+    db = current_app.db
 
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
 
-    # Initial page load
+    # carga inicial de pagina
     if request.method == "GET" or not session["usuario"].get("correo"):
-
         # navegada directa a la pagina sin token asociado
         if not token:
             return redirect("maquinarias")
 
-        cursor = self.db.cursor()
+        # buscar token autorizado
+        cursor = db.cursor()
         cmd = "SELECT Correo, FechaHasta, TokenUsado FROM StatusTokens WHERE TokenHash = ? AND TokenTipo = ? LIMIT 1"
         cursor.execute(cmd, (token, "Password"))
         resultado = cursor.fetchone()
 
         # navegada directa a la pagina con un token que no ha sido generado por el sistema
         if not resultado:
+            logger.warning(
+                "Intento de Ingreso a Reestablecer Contraseña con Token Invalido."
+            )
             invalido = "Token Invalido"
 
         else:
@@ -34,10 +43,16 @@ def main(self, token):
 
             if resultado["TokenUsado"]:
                 invalido = "Token Usado."
+                logger.warning(
+                    "Intento de Ingreso a Reestablecer Contraseña con Token Usado."
+                )
             elif (
                 dt.strptime(resultado["FechaHasta"], "%Y-%m-%d %H:%M:%S.%f") < dt.now()
             ):
                 invalido = "Token Vencido."
+                logger.warning(
+                    "Intento de Ingreso a Reestablecer Contraseña con Token Vencido."
+                )
             else:
                 invalido = ""
 
@@ -48,9 +63,8 @@ def main(self, token):
             errors=[],
         )
 
-    # POST — form submitted
+    # POST — formulario ingresado
     elif request.method == "POST":
-
         errors = []
         forma = dict(request.form)
         errores = validaciones(forma)
@@ -63,32 +77,28 @@ def main(self, token):
                 errors=errors,
             )
 
-        # No errors → proceed
-        cursor = self.db.cursor()
-        conn = self.db.conn
+        # sin errrores -- proceder
+        cursor = db.cursor()
+        conn = db.conn
         if forma.get("password1"):
             # grabar cambios
             cmd = "UPDATE InfoMiembros SET Password = ? WHERE Correo = ?"
             cursor.execute(
                 cmd, (hash_text(forma.get("password1")), session["usuario"]["correo"])
             )
-            # desautorizar token
+
+            # desautorizar token usado
             cmd = "UPDATE StatusTokens SET TokenUsado = 1 WHERE Correo = ?"
             cursor.execute(cmd, (session["usuario"]["correo"],))
-
             conn.commit()
-            # correo de confirmarcion de cambio de contrasena
+
+            # correo de confirmacion de cambio de contrasena
             enviar_correo_inmediato.confirmacion_cambio_contrasena(
-                self.db, correo=session["usuario"]["correo"]
+                db, correo=session["usuario"]["correo"]
             )
 
         session.clear()
         return redirect(url_for("maquinarias"))
-
-
-# ==================================================================
-# VALIDATION
-# ==================================================================
 
 
 def validaciones(forma):
@@ -98,14 +108,13 @@ def validaciones(forma):
         "password2": "",
     }
 
-    # --------------------------------------------------------------
-    # password
-    # --------------------------------------------------------------
+    # contraseña no cumple condiciones
     if not re.match(FORMATO_PASSWORD["regex"], forma.get("password1", "")):
         errors["password1"] = FORMATO_PASSWORD["mensaje"]
 
+    # contraseñas no son iguales
     elif forma.get("password1") != forma.get("password2"):
         errors["password2"] = "Las contraseñas no coinciden."
 
-    # Remove empty error fields
+    # limpiar respuesta
     return {k: v for k, v in errors.items() if v}

@@ -14,7 +14,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def main(self, queue_data, queue_respuesta, lock):
+def main(db, queue_data, queue_respuesta, lock):
     # intentar extraer siguiente registro de cola
     try:
         dato = queue_data.get_nowait()
@@ -79,11 +79,10 @@ def main(self, queue_data, queue_respuesta, lock):
         logger.info(f"Resultado de Armado de Data Post-Scraper: {respuesta_local}")
         with lock:
             logger.info(f"Enviado a actualizar base de datos: {respuesta_local}")
-            do_updates.main(self, [respuesta_local])
+            do_updates.main(db, [respuesta_local])
 
-        # cierra webdriver y regresa al recolector
+        # regresa al recolector
         time.sleep(1)
-        webdriver.quit()
 
     # scraper no termino a tiempo, se devuelve dato a la cola y regresa al recolector
     except FunctionTimedOut:
@@ -92,13 +91,13 @@ def main(self, queue_data, queue_respuesta, lock):
         )
         queue_data.put(dato)
         time.sleep(1)
-        webdriver.quit()
 
     # error generico - NO devolver el dato a la cola y regresar al recolector
-    # except Exception as e:
-    #     logger.warning(
-    #         f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
-    #     )
-    #     time.sleep(1)
-    #     webdriver.quit()
-    #     # queue_data.put(dato)
+    except Exception as e:
+        logger.warning(
+            f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
+        )
+        time.sleep(1)
+
+    finally:
+        webdriver.quit()

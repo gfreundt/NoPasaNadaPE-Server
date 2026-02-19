@@ -1,23 +1,26 @@
 import re
 from datetime import datetime as dt, timedelta as td
-from flask import redirect, request, render_template, session
+from flask import current_app, redirect, request, render_template, session
+import logging
 
 from src.utils.utils import compare_text_to_hash
 from src.ui.maquinarias import mis_servicios
 from security.keys import PWD_BACKDOOR
 
+logger = logging.getLogger(__name__)
+
 
 # login endpoint
-def main(self):
-    cursor = self.db.cursor()
-    conn = self.db.conn
+def main():
+    db = current_app.db
+    cursor = db.cursor()
+    conn = db.conn
     session.permanent = True
 
     if request.method == "HEAD":
         return ("", 200)
 
-    # GET -> load initial page
-
+    # GET -- cargar pagina inicial
     if request.method == "GET" and not session.get("correo_login_externo"):
         return render_template(
             "ui-maquinarias-login.html",
@@ -26,12 +29,12 @@ def main(self):
             user_data={},
         )
 
-    # POST -> form submitted
+    # POST -- formulario enviado
     forma = dict(request.form)
 
-    # FIRST STEP: validating email only
+    # PASO 1: validating email only
     if request.form["show_password_field"] == "false":
-        # Validate email format
+        # validar formato de correo
         error_formato = validar_formato(forma["correo_ingresado"])
         if error_formato:
             return render_template(
@@ -44,6 +47,9 @@ def main(self):
         # validar que el correo haya sido activado
         activacion = validar_activacion(cursor, forma["correo_ingresado"])
         if not activacion:
+            logger.info(
+                f"Intento de ingreso correo no validado: {forma['correo_ingresado']}"
+            )
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=False,
@@ -60,9 +66,12 @@ def main(self):
             session["etapa"] = "registro"
             return redirect("/maquinarias/registro")
 
-        # Check if account is blocked
+        # validar que cuenta no esta bloqueada
         cuenta_bloqueada = validar_bloqueo_cuenta(cursor, forma["correo_ingresado"])
         if cuenta_bloqueada:
+            logger.info(
+                f"Intento de ingreso cuenta bloqueada: {forma['correo_ingresado']}"
+            )
             return render_template(
                 "ui-maquinarias-login.html",
                 show_password_field=False,
@@ -70,8 +79,9 @@ def main(self):
                 user_data=forma,
             )
 
-        # todo en orden -- carga la informacion en session
+        # todo en orden con correo -- carga la informacion en session
         extraer_data_usuario(cursor, correo=forma["correo_ingresado"])
+
         return render_template(
             "ui-maquinarias-login.html",
             show_password_field=True,
@@ -79,7 +89,7 @@ def main(self):
             user_data=forma,
         )
 
-    # SECOND STEP: validating password
+    # PASO 2: validar contraseña
     elif forma["show_password_field"] == "true":
         error_acceso, mostrar_campo_password = validar_password(
             cursor,
@@ -89,7 +99,9 @@ def main(self):
         )
 
         if error_acceso:
-            # Remove bad password
+            logger.info(
+                f"Intento de ingreso con contraseña equivocada: {forma['correo_ingresado']}"
+            )
             forma.update({"password_ingresado": ""})
             return render_template(
                 "ui-maquinarias-login.html",
@@ -101,8 +113,9 @@ def main(self):
         # Correct password → reset attempts
         resetear_logins_fallidos(cursor, conn, correo=forma["correo_ingresado"])
         session["etapa"] = "validado"
+        logger.info(f"Login exitoso: {forma['correo_ingresado']}")
 
-        return mis_servicios.main(self)
+        return mis_servicios.main()
 
 
 def extraer_data_usuario(cursor, correo):
@@ -115,10 +128,12 @@ def extraer_data_usuario(cursor, correo):
 
     # datos de placas
     cursor.execute(
-        "SELECT Placa FROM InfoPlacas WHERE IdMember_FK = ?",
+        "SELECT Placa, AnoFabricacion FROM InfoPlacas WHERE IdMember_FK = ?",
         (a["IdMember"],),
     )
-    placas = ", ".join(i["Placa"] for i in cursor.fetchall())
+    p = cursor.fetchall()
+    # agrega tres blancos para cubir en caso usuario tenga menos de tres placas
+    placas = [(i["Placa"], i["AnoFabricacion"] or "") for i in p] + [("", "")] * 3
 
     session["usuario"] = {
         "id_member": a["IdMember"],
@@ -127,13 +142,26 @@ def extraer_data_usuario(cursor, correo):
         "tipo_documento": a["DocTipo"],
         "numero_documento": a["DocNum"],
         "celular": a["Celular"],
-        "placas": placas,
+        "placa1": placas[0][0],
+        "placa2": placas[1][0],
+        "placa3": placas[2][0],
+        "ano_fabricacion1": placas[0][1],
+        "ano_fabricacion2": placas[1][1],
+        "ano_fabricacion3": placas[2][1],
         "password": a["Password"],
     }
 
+    print(session["usuario"])
+
+
+def resetear_logins_fallidos(cursor, conn, correo):
+    cmd = "UPDATE InfoMiembros SET NextLoginAllowed = NULL, CountFailedLogins = 0 WHERE Correo = ?"
+    cursor.execute(cmd, (correo,))
+    conn.commit()
+
 
 # =====================================================================
-# VALIDATION FUNCTIONS
+#   Validaciones
 # =====================================================================
 
 
@@ -177,11 +205,12 @@ def validar_bloqueo_cuenta(cursor, correo):
 
 
 def validar_password(cursor, conn, correo, password):
-    # Backdoor password
+
+    # password backdoor (!!)
     if password == PWD_BACKDOOR:
         return {}, ""
 
-    # Get hashed password
+    # password hasheado de base de datos
     cmd = "SELECT Password FROM InfoMiembros WHERE Correo = ?"
     cursor.execute(cmd, (correo,))
     row = cursor.fetchone()
@@ -191,13 +220,15 @@ def validar_password(cursor, conn, correo, password):
 
     stored_hash = row[0]
 
-    # Compare hashes
+    # comparar hashes
     if not compare_text_to_hash(text_string=password, hash_string=stored_hash):
         # Increase failed login count
-        cmd = """UPDATE InfoMiembros 
-                 SET CountFailedLogins = CountFailedLogins + 1 
-                 WHERE Correo = ?
-                 RETURNING CountFailedLogins;"""
+        cmd = """
+                UPDATE InfoMiembros 
+                SET CountFailedLogins = CountFailedLogins + 1 
+                WHERE Correo = ?
+                RETURNING CountFailedLogins
+                """
 
         cursor.execute(cmd, (correo,))
         logins_fallidos = cursor.fetchone()[0]
@@ -210,18 +241,21 @@ def validar_password(cursor, conn, correo, password):
             bloqueo_hasta = dt.now() + td(minutes=15)
             error = {"correo": "Cuenta bloqueada por 15 minutos."}
             mostrar_campo_password = False
+            logger.info(f"Bloqueo de cuenta por 15 min: {correo}")
 
         elif logins_fallidos == 4:
             bloqueo_hasta = dt.now() + td(minutes=60)
             error = {"correo": "Cuenta bloqueada por 1 hora."}
             mostrar_campo_password = False
+            logger.info(f"Bloqueo de cuenta por 1 hora: {correo}")
 
         elif logins_fallidos >= 5:
             bloqueo_hasta = dt.now() + td(days=1)
             error = {"correo": "Cuenta bloqueada por 1 día."}
             mostrar_campo_password = False
+            logger.info(f"Bloqueo de cuenta por 1 dia: {correo}")
 
-        # Update lock expiration if needed
+        # si se requiere bloquear, actualizar base de datos
         if bloqueo_hasta:
             cmd = "UPDATE InfoMiembros SET NextLoginAllowed = ? WHERE Correo = ?"
             cursor.execute(
@@ -229,14 +263,7 @@ def validar_password(cursor, conn, correo, password):
             )
 
         conn.commit()
-
         return error, mostrar_campo_password
 
-    # Correct password
+    # password correcto -- retorno sin errores
     return {}, ""
-
-
-def resetear_logins_fallidos(cursor, conn, correo):
-    cmd = "UPDATE InfoMiembros SET NextLoginAllowed = NULL, CountFailedLogins = 0 WHERE Correo = ?"
-    cursor.execute(cmd, (correo,))
-    conn.commit()

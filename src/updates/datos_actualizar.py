@@ -3,7 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_datos_alertas(self, premensaje):
+def get_datos_alertas(db, premensaje):
     cte1_estructura = [
         {
             "tabla": "DataApesegSoats",
@@ -88,14 +88,14 @@ def get_datos_alertas(self, premensaje):
                     {select}"""
 
     # extrae informacion de base de datos
-    cursor = self.db.cursor()
+    cursor = db.cursor()
     cursor.execute(query)
     # resultado = cursor.fetchall()
 
     return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
 
 
-def get_datos_boletines(self, premensaje):
+def get_datos_boletines(db, premensaje):
 
     if premensaje:
         cmds = []
@@ -188,7 +188,7 @@ def get_datos_boletines(self, premensaje):
                                 JOIN Infomiembros m 
                                 ON c.IdMember = m.Idmember);"""
 
-        cursor = self.db.cursor()
+        cursor = db.cursor()
         cursor.execute(query)
 
         return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
@@ -199,6 +199,6 @@ def get_datos_boletines(self, premensaje):
                     FROM InfoMiembros 
                     WHERE DATE(NextMessageSend) <= DATE('now','localtime')
                 """
-        cursor = self.db.cursor()
+        cursor = db.cursor()
         cursor.execute(cmd)
         return [dict(i) for i in cursor.fetchall()]

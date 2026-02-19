@@ -14,13 +14,13 @@ from src.ui.maquinarias.mis_servicios import generar_data_servicios
 logger = logging.getLogger(__name__)
 
 
-def alertas(self):
+def alertas(db):
     """
     Crea el HTML de las alertas que deben ser enviadas en esta iteración y
     las guarda en el folder "outbound".
     """
     try:
-        cursor = self.db.cursor()
+        cursor = db.cursor()
 
         # Load HTML template
         environment = Environment(loader=FileSystemLoader("templates/"))
@@ -28,7 +28,7 @@ def alertas(self):
 
         alertas = []
 
-        for row in get_datos_alertas(self, premensaje=False):
+        for row in get_datos_alertas(db, premensaje=False):
             mensaje = redactar_alerta(
                 cursor=cursor,
                 idmember=row["IdMember"],
@@ -148,13 +148,13 @@ def redactar_alerta(
     }
 
 
-def boletines(self):
+def boletines(db):
     """
     Crea mensajes regulares en HTML y los guarda en /outbound.
     """
 
     try:
-        cursor = self.db.cursor()
+        cursor = db.cursor()
 
         # Carga plantilla HTML
         environment = Environment(loader=FileSystemLoader("templates/"))
@@ -163,7 +163,7 @@ def boletines(self):
         mes = MESES_NOMBRE_COMPLETO[int(dt.strftime(dt.now(), "%m")) - 1]
 
         boletines = []
-        for row in get_datos_boletines(self, premensaje=False):
+        for row in get_datos_boletines(db, premensaje=False):
             mensaje = redactar_boletin(
                 cursor,
                 IdMember=row["IdMember"],
