@@ -7,8 +7,7 @@ from pprint import pformat
 from src.server import resumen_diario
 from src.comms import do_mensajes
 from src.utils import mantenimiento
-from src.test import prueba_scrapers
-
+from src.test import prueba_scrapers, test_script_from_cron
 
 logger = logging.getLogger(__name__)
 
@@ -23,23 +22,8 @@ def ejecutar_scheduler(db):
     6. Mantenimiento (cada dia) a las 02:05am
     """
 
-    # TEST: todo el proceso de mensajes con alertas y boletines
-    # do_mensajes.main(db, "alertas")
-    # do_mensajes.main(db, "boletines")
-    # return
-
-    # TEST: generar boletin fijo
-    # from src.test import crear_boletin
-    # crear_boletin.main(db, idmember="25", correo="gabfre@gmail.com")
-    # return
-
-    # TEST: prueba scrapers
-    # prueba_scrapers.main()
-    # return
-
-    # TEST: ocr de sunarp
-    # from src.test import ocrspace
-    # ocrspace.main(self)
+    # TEST TEST TEST TEST
+    # test_script_from_cron.main(db)
     # return
 
     # 1. Boletines a las hh:05 entre 7am y 8pm (inclusive)

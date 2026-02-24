@@ -33,11 +33,11 @@ def api(datos, timeout):
             if respuesta["detalle"] == "OK":
                 return [
                     (
-                        datos["Placa"],
                         respuesta["fecha_ultimo_servicio"],
                         respuesta["ultimo_servicio_detalle"],
                         respuesta["fecha_proximo_servicio"],
                         respuesta["proximo_servicio_detalle"],
+                        datos["Placa"],
                     )
                 ]
 
@@ -48,6 +48,9 @@ def api(datos, timeout):
             # dato no tiene informacion
             else:
                 return []
+
+        else:
+            return f"Error de Scraper: Status Code {response.status_code}"
 
     except requests.exceptions.RequestException as e:
         return f"Error de Scraper: {e[60]}"

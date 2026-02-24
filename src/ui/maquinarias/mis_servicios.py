@@ -58,7 +58,7 @@ def generar_data_servicios(cursor, correo):
     cursor.execute(
         """ SELECT  Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas,
 	                LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas,
-	                LastUpdateCallaoMultas
+	                LastUpdateCallaoMultas, LastUpdateMaquinariasMantenimiento
             FROM InfoPlacas
             WHERE IdMember_FK = ?
         """,
@@ -73,6 +73,7 @@ def generar_data_servicios(cursor, correo):
             "sutran": i["LastUpdateSutranMultas"],
             "satmultas": i["LastUpdateSatMultas"],
             "callaomultas": i["LastUpdateCallaoMultas"],
+            "maqmant": i["LastUpdateMaquinariasMantenimiento"],
         }
         for i in datos_placas
     }
@@ -209,59 +210,47 @@ def generar_data_servicios(cursor, correo):
     # -------- MANTENIMIENTOS -------- #
     mantenimientos = []
 
-    fake_from_db = [
-        {
-            "Placa": "ABC123",
-            "previos": [],
-            "Proximos": [
-                {
-                    "km": "35,000 km.",
-                    "FechaHasta": "2026-01-27",
-                }
-            ],
-            "ultima_revision": "2026-01-15",
-        },
-        {
-            "Placa": "XYZ999",
-            "previos": [],
-            "Proximos": [
-                {
-                    "km": "15,000 km.",
-                    "FechaHasta": "2027-05-22",
-                },
-                {
-                    "km": "20,000 km.",
-                    "FechaHasta": "2027-08-12",
-                },
-            ],
-            "ultima_revision": "2026-01-15",
-        },
-        {
-            "Placa": "RJK874",
-            "previos": [],
-            "Proximos": [],
-            "ultima_revision": "2026-01-15",
-        },
-    ]
+    cursor.execute(
+        """ SELECT Placa, FechaUltimoServicio, UltimoServicioDetalle, FechaProximoServicio, ProximoServicioDetalle
+            FROM InfoPlacas a
+            LEFT JOIN DataMaquinariasMantenimiento b
+            ON b.PlacaValidate = a.Placa
+            WHERE IdMember_FK = ?
+        """,
+        (id_miembro,),
+    )
 
-    for mant in fake_from_db:
-        estado_bg = STATUS_BG["ok"]
+    estado_bg = STATUS_BG["ok"]
+
+    for mant in cursor.fetchall():
         manto = []
         placa = mant["Placa"]
-        for proximo in mant["Proximos"]:
-            plazos = calculo_plazos(
-                fecha_vigencia=proximo["FechaHasta"],
-                fecha_actualizacion="2026-01-21",  # ultimas_actualizaciones_placas[placa]["soat"]
-            )
-            manto.append(plazos | {"km": proximo["km"]})
 
-            # definir color de toda la fila: cualquier rojo en subfila hace que toda la fila sea roja
-            if plazos.get("estado_bg") != STATUS_BG["ok"]:
-                estado_bg = plazos.get("estado_bg")
+        # ultimo (anterior)
+        km = mant["UltimoServicioDetalle"]
+        if km:
+            plazo = calculo_plazos(
+                fecha_vigencia=mant["FechaUltimoServicio"],
+                fecha_actualizacion=ultimas_actualizaciones_placas[placa]["maqmant"],
+                pasado_vacio=False,
+            )
+            plazo["estado"] = "Último"
+            plazo["estado_bg"] = STATUS_BG["info"]
+            manto.append(plazo | {"km": km})
+
+        # proximo (futuro)
+        km = mant["ProximoServicioDetalle"]
+        if km:
+            plazo = calculo_plazos(
+                fecha_vigencia=mant["FechaProximoServicio"],
+                fecha_actualizacion=ultimas_actualizaciones_placas[placa]["maqmant"],
+            )
+            plazo["estado"] = "Próximo"
+            manto.append(plazo | {"km": km})
 
         # definir color de todas la fila: si no hay infomracion pone color info
-        if not mant["Proximos"]:
-            estado_bg = STATUS_BG["info"]
+        # if not mant["Proximos"]:
+        #     estado_bg = STATUS_BG["info"]
 
         mantenimientos.append(
             {
@@ -574,7 +563,7 @@ def generar_data_servicios(cursor, correo):
     return payload
 
 
-def calculo_plazos(fecha_vigencia, fecha_actualizacion):
+def calculo_plazos(fecha_vigencia, fecha_actualizacion, pasado_vacio=True):
     STATUS_BG = {
         "ok": "#d1e7dd",
         "advertencia": "#fff3cd",
@@ -609,9 +598,17 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion):
         fecha_vigencia = (
             date_to_user_format(fecha_vigencia) if fecha_vigencia else "N/A"
         )
-        dias_restantes = (
-            f"{dias_v:,} {'día' if dias_v == 1 else 'días'} " if dias_v >= 0 else ""
-        )
+
+        # si dias restantes es positivo: "n dia(s)"
+        if dias_v >= 0:
+            dias_restantes = f"{dias_v:,} {'día' if dias_v == 1 else 'días'}"
+
+        # si dias restantes es negativo: "hace n dia(s)" (si no seleccionado pasado_vacío)
+        elif not pasado_vacio:
+            dias_restantes = f"hace {-dias_v:,} {'día' if dias_v == 1 else 'días'}"
+
+        else:
+            dias_restantes = ""
 
         return {
             "estado": estado,

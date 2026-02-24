@@ -16,7 +16,7 @@ from src.utils.constants import TIMEOUT_RECOLECTOR
 logger = logging.getLogger(__name__)
 
 
-def recolector(db, data_actualizar, queue_respuesta, lock):
+def recolector(db, data_actualizar, queue_respuesta, lock, headless):
     """
     Asigna cada registro que necesita ser actualizado al scraper que corresponde en threads.
     Controla el maximo numero de scrapers activados en paralelo.
@@ -40,7 +40,7 @@ def recolector(db, data_actualizar, queue_respuesta, lock):
         if sum(t.is_alive() for t in active_threads) < MAX_SIMULTANEOUS_SCRAPERS:
             thread = Thread(
                 target=extrae_data_thread,
-                args=(db, queue_data, queue_respuesta, lock),
+                args=(db, queue_data, queue_respuesta, lock, headless),
             )
             active_threads.append(thread)
             thread.start()
@@ -50,7 +50,7 @@ def recolector(db, data_actualizar, queue_respuesta, lock):
             time.sleep(1)
 
 
-def extrae_data_thread(db, queue_data, queue_respuesta, lock):
+def extrae_data_thread(db, queue_data, queue_respuesta, lock, headless):
     """
     Crea una thread individual que llama al scraper que corresponde, envia la data y procesa el resultado.
     Usa los datos de configuracion_scrapers para determinar datos requeridos y modelo de respuesta
@@ -81,7 +81,7 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock):
             respuesta_scraper = func_timeout(
                 config["timeout"],
                 func_scraper.browser,
-                args=(dato, webdriver),
+                args=(dato, webdriver, headless),
             )
         logger.debug(f"Respuesta scraper: {pformat(respuesta_scraper)}")
 
@@ -139,7 +139,7 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock):
         webdriver.quit()
 
 
-def main(db, data_actualizar):
+def main(db, data_actualizar, headless=True):
     """
     Punto de Entrada para Iniciar Proceso de Scraping.
     Controla el timeout general de todo el proceso.
@@ -156,7 +156,7 @@ def main(db, data_actualizar):
         func_timeout(
             TIMEOUT_RECOLECTOR,
             recolector,
-            args=(db, data_actualizar, queue_respuesta, lock),
+            args=(db, data_actualizar, queue_respuesta, lock, headless),
         )
         logger.info(
             f"Final normal de Recolector. Tiempo = {time.perf_counter() - inicio}"

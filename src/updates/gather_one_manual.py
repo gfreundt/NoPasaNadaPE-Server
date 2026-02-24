@@ -1,5 +1,4 @@
 from func_timeout import func_timeout
-from func_timeout.exceptions import FunctionTimedOut
 from src.scrapers import configuracion_scrapers
 from src.utils.utils import date_to_db_format
 from src.utils.webdriver import ChromeUtils
@@ -19,40 +18,34 @@ def main(dato, headless=True):
     )
 
     # lanzar scraper dentro de un wrapper para timeout
-    try:
-        func_scraper = config["funcion_scraper"]
-        logger.info(f"Prueba Scraper {dato['Categoria']}: Indice: {dato}.")
-        if config["api"]:
-            respuesta_scraper = func_scraper.api(datos=dato, timeout=config["timeout"])
-        else:
-            respuesta_scraper = func_timeout(
-                config["timeout"],
-                func_scraper.browser,
-                args=(dato, webdriver),
-            )
-        logger.debug(
-            f"Respuesta Prueba Scraper {dato['Categoria']}: {pformat(respuesta_scraper)}"
-        )
+    func_scraper = config["funcion_scraper"]
+    logger.info(f"Prueba Scraper {dato['Categoria']}: Indice: {dato}.")
+    if config["api"]:
+        respuesta_scraper = func_scraper.api(datos=dato, timeout=config["timeout"])
+    else:
+        respuesta_scraper = func_scraper.browser(dato, webdriver)
 
-        # si respuesta es texto, hubo un error -- reponer dato a cola y vuelve sin actualizar acumulador
-        if isinstance(respuesta_scraper, str):
-            return False
+    logger.debug(
+        f"Respuesta Prueba Scraper {dato['Categoria']}: {pformat(respuesta_scraper)}"
+    )
 
-        # en caso respuesta tenga data - armar payload como lista de respuestas de scraper
-        payload = []
-        for item in respuesta_scraper:
-            item_formateado = date_to_db_format(item)
-            parte_payload = {
-                key: item_formateado[pos] if pos is not None else ""
-                for key, pos in config["estructura_respuesta"].items()
-            }
-            payload.append(parte_payload)
+    # si respuesta es texto, hubo un error -- reponer dato a cola y vuelve sin actualizar acumulador
+    if isinstance(respuesta_scraper, str):
+        print(respuesta_scraper)
+        return []
 
-        # cierra webdriver y regresa True si no han habido errores
-        time.sleep(1)
-        webdriver.quit()
-        return True
+    # en caso respuesta tenga data - armar payload como lista de respuestas de scraper
+    payload = []
+    for item in respuesta_scraper:
+        item_formateado = date_to_db_format(item)
+        parte_payload = {
+            key: item_formateado[pos] if pos is not None else ""
+            for key, pos in config["estructura_respuesta"].items()
+        }
+        parte_payload.update({"Categoria": dato["Categoria"]})
+        payload.append(parte_payload)
 
-    # scraper no termino a tiempo, se devuelve dato a la cola y regresa al recolector
-    except FunctionTimedOut:
-        return False
+    # cierra webdriver y regresa True si no han habido errores
+    time.sleep(1)
+    webdriver.quit()
+    return payload

@@ -199,7 +199,7 @@ def boletines(db):
 
         return True
 
-    except Exception as e:
+    except KeyboardInterrupt:  # Exception as e:
         logger.warning(f"Error generando boletines: {e}")
         return False
 

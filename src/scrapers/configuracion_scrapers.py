@@ -180,6 +180,8 @@ def config(indice):
                 "UltimoServicioDetalle": 1,
                 "FechaProximoServicio": 2,
                 "ProximoServicioDetalle": 3,
+                "PlacaValidate": 4,
+                "IdPlaca_FK": None,
             },
             "campo_fecha_hasta": "FechaProximoServicio",
             "alerta_dias": "-10, -5, -1, 0, 1, 2, 3",

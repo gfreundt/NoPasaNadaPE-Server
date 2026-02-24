@@ -170,62 +170,53 @@
                 
                 
                 <tbody>
-                    {% for row in payload.mantenimientos %}
+                    {% for mantenimiento in payload.mantenimientos %}
                         <tr>
                              <!-- Titulo y subtitulo -->
                             <td class="fw-medium">
-                                {{ row.placa }}
-                                {% if row.subtitulo %}
+                                {{ mantenimiento.placa }}
+                                <!-- {% if mantenimiento.subtitulo %}
                                     <br>
-                                    <span class="small text-muted">{{ row.subtitulo }}</span>
-                                {% endif %}
+                                    <span class="small text-muted">{{ mantenimiento.subtitulo }}</span>
+                                {% endif %} -->
                             </td>
 
                             <!-- Tabla Interior -->
                             <td class="p-0">
-                                {% if row.actividades %}
+                                {% if mantenimiento.info %}
                                     <div class="p-2">
                                         <table class="table table-sm table-borderless text-center align-middle mb-0">
                                             <thead>
                                                 <tr class="border-bottom">
-                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Status</th>
+                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Estado</th>
                                                     <th class="small text-uppercase text-secondary fw-bold py-2">Kilometraje</th>
                                                     <th class="small text-uppercase text-secondary fw-bold py-2">Fecha</th>
-                                                    <th class="small text-uppercase text-secondary fw-bold py-2">Detalle</th>
                                                 </tr>
                                             </thead>
 
                                             <tbody>
-                                                {% for actividad in row.actividades %}
-                                                    <tr class="border-bottom">
+                                                {% for manto in mantenimiento.info %}
+                                                    <tr class="border-bottom" style="background-color: {{ manto.estado_bg }};">
                                                         <!-- Status -->
-                                                        <td class="fw-medium py-2">
-                                                            {{ actividad.status }}
+                                                        <td class="fw-medium py-2" style="background-color: {{ manto.estado_bg }};">
+                                                            {{ manto.estado }}
                                                         </td>
 
                                                         <!-- Kilometraje -->
-                                                        <td class="py-2">
-                                                            <span class="{{ actividad.km_class }}">{{ actividad.km }}</span>
+                                                        <td class="py-2" style="background-color: {{ manto.estado_bg }};">
+                                                            <span class="{{ manto.km_class }}">{{ manto.km }}</span>
                                                         </td>
 
                                                         <!-- Fecha -->
-                                                        <td class="py-2">
-                                                            <span>{{ actividad.fecha }}</span>
-                                                        </td>
-
-                                                        <!-- Boton de Detalle -->
-                                                        <td class="py-2">
-                                                            {% if actividad.boton_detalle %}
-                                                                <button type="button"
-                                                                        class="btn btn-link p-0"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#vencimientosDetalleModal"
-                                                                        aria-label="Ver detalles">
-                                                                    <i class="bi bi-info-circle-fill" style="font-size: 1.2rem;"></i>
-                                                                </button>
-                                                            {% else %}
-                                                                <span class="text-secondary">—</span>
-                                                            {% endif %}
+                                                        <td style="background-color: {{ manto.estado_bg }};">
+                                                            <span class="fw-bold text-dark" >
+                                                                {{ manto.vigencia.fecha }}
+                                                            </span>
+                                                            <br>
+                                                            <!-- Segunda fila: igual que columna 1 -->
+                                                            <span class="text-secondary" style="font-size: 0.85rem;">
+                                                                {{ manto.vigencia.dias_restantes }}
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
@@ -240,7 +231,15 @@
 
                             <!-- Actualizado -->
                             <td>
-                                <span class="{{ row.ultima_revision_class }}">{{ row.ultima_revision }}</span>
+                                <!-- Primera fila -->
+                                <span class="fw-bold text-dark">
+                                    {{ mantenimiento.ultima_actualizacion.fecha }}
+                                </span>
+                                <br>
+                                <!-- Segunda fila -->
+                                <span class="text-secondary" style="font-size: 0.85rem;">
+                                    {{ mantenimiento.ultima_actualizacion.dias_desde }}
+                                </span>
                             </td>
                         </tr>
                     {% endfor %}
@@ -248,7 +247,6 @@
             </table>
             {% endif %}
         </div>
-
 
         
         <!--========== MULTAS ===========-->
