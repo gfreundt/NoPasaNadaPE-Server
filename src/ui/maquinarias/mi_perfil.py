@@ -1,15 +1,15 @@
 import re
+from datetime import datetime as dt
 from flask import current_app, redirect, request, render_template, url_for, session
 
+from src.ui.maquinarias import login
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import compare_text_to_hash, hash_text
-from src.ui.maquinarias import mis_servicios
+from src.ui.maquinarias import mis_servicios, registro
 
 
 # login endpoint
 def main():
-
-    db = current_app.db
 
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
@@ -22,9 +22,6 @@ def main():
     session["perfil_muestra_password"] = False
     session.permanent = True
 
-    cursor = db.cursor()
-    conn = db.conn
-
     if request.method == "GET":
         return render_template(
             "ui-maquinarias-mi-perfil.html",
@@ -36,7 +33,14 @@ def main():
 
     # POST — form submitted
     elif request.method == "POST":
+        # define punteros de base de datos
+        db = current_app.db
+        cursor = db.cursor()
+        conn = db.conn
+
+        # extraer data de formulario
         forma = dict(request.form)
+        print(forma)
 
         # procesar texto ingresados de placas lo mejor que se pueda
         if forma.get("placas"):
@@ -51,10 +55,17 @@ def main():
             "tipo_documento": forma.get("tipo_documento"),
             "numero_documento": forma.get("numero_documento"),
             "celular": forma.get("celular"),
-            "placas": forma.get("placas"),
+            "placa1": forma.get("placa1"),
+            "placa2": forma.get("placa2"),
+            "placa3": forma.get("placa3"),
+            "ano_fabricacion1": forma.get("ano_fabricacion1"),
+            "ano_fabricacion2": forma.get("ano_fabricacion2"),
+            "ano_fabricacion3": forma.get("ano_fabricacion3"),
+            "password1": "",
+            "password2": "",
         }
 
-        errores = validaciones(db, forma)
+        errores = registro.validaciones(db, forma, mi_perfil=True)
 
         if errores:
             return render_template(
@@ -64,9 +75,8 @@ def main():
                 show_password_field=session["perfil_muestra_password"],
             )
 
-        # No errors → proceed
+        # sin errores --> proceder a actualizar datos de usuario
         actualizar(cursor=cursor, conn=conn, forma=forma)
-        session["usuario"].update(usuario)
         return mis_servicios.main()
 
 
@@ -97,8 +107,17 @@ def actualizar(cursor, conn, forma):
         cursor.execute(
             """
             INSERT INTO InfoPlacas
-            (IdMember_FK, Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas, LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas, AnoFabricacion)
-            VALUES (?,?,?,?,?,?,?,?)
+            (   IdMember_FK,
+                Placa,
+                LastUpdateApesegSoats,
+                LastUpdateMtcRevisionesTecnicas,
+                LastUpdateSunarpFichas,
+                LastUpdateSutranMultas,
+                LastUpdateSatMultas,
+                LastUpdateCallaoMultas,
+                LastUpdateMaquinariasMantenimiento,
+                AnoFabricacion)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(Placa) DO
                 UPDATE SET IdMember_FK = excluded.IdMember_FK
             """,
@@ -110,15 +129,20 @@ def actualizar(cursor, conn, forma):
                 fecha_base,
                 fecha_base,
                 fecha_base,
+                fecha_base,
+                fecha_base,
                 forma.get(f"ano_fabricacion{k}"),
             ),
         )
 
     conn.commit()
 
+    # volver a extraer data de usuario para actualizar session con nuevos datos
+    login.extraer_data_usuario(cursor, correo=forma["correo"])
+
 
 # ==================================================================
-# VALIDATION
+# VALIDACION
 # ==================================================================
 def validaciones(db, forma):
 
@@ -128,7 +152,9 @@ def validaciones(db, forma):
         "nombre": "",
         "documento": "",
         "celular": "",
-        "placas": "",
+        "placa1": "",
+        "placa2": "",
+        "placa3": "",
         "acepta_legales": "",
         "password1": "",
         "password2": "",
@@ -156,38 +182,58 @@ def validaciones(db, forma):
             errors["celular"] = "Celular ya está registrado"
 
     # --------------------------------------------------------------
-    # placas
+    # placas y año de fabricacion (los 3 individualmente)
     # --------------------------------------------------------------
-    if forma.get("placas"):
-        _placas = forma["placas"].split(", ")
+    acum = []
+    for n in range(1, 4):
+        placa = forma.get(f"placa{n}", "").upper().strip()
 
-        if any(len(i) != 6 for i in _placas):
-            errors["placas"] = "Todas las placas deben tener 6 caracteres."
+        if placa:
+            # error: placa no cumple 6 digitos
+            if len(placa) != 6:
+                errors[f"placa{n}"] = "Placa invalida"
 
-        elif len(_placas) > 3:
-            errors["placas"] = "Se pueden inscribir un máximo de 3 placas."
+            # error: placa no cumple con minimo 2 numeros y 2 letras
+            elif not re.match(
+                "^(?=(?:.*[A-Za-z]){2,})(?=(?:.*\d){2,})[A-Za-z\d]{6}$", placa
+            ):
+                errors[f"placa{n}"] = "Placa invalida"
 
-        # placa inscrita por otro usuario
-        cur.execute(
-            f"""
-                SELECT 1 
-                FROM InfoPlacas 
-                WHERE 
-                    Placa IN ({", ".join(["?"] * len(_placas))}) 
-                    AND IdMember_FK != 0 
-                    AND IdMember_FK != ? 
-                LIMIT 1
-             """,
-            tuple(_placas) + (session["usuario"]["id_member"],),
-        )
+            # error: placa duplicada en el mismo formulario
+            elif placa in acum:
+                errors[f"placa{n}"] = "Placa duplicada"
+            acum.append(placa)
 
-        if cur.fetchone():
-            errors["placas"] = "Al menos una placa ya está inscrita por otro usuario."
+            # error: placa inscrita por otro usuario
+            cmd = """
+                    SELECT 1 
+                    FROM InfoPlacas 
+                    WHERE 
+                        Placa = ?
+                        AND IdMember_FK != 0 
+                        AND IdMember_FK != ? 
+                    LIMIT 1
+                """
+            cur.execute(
+                cmd,
+                (placa, session["usuario"]["id_member"]),
+            )
+            if cur.fetchone():
+                errors[f"placa{n}"] = "Placa asociada a otro usuario"
+
+            # error: año de fabricacion no cumple formato o rango (1970 - año actual + 1)
+            ano = forma.get(f"ano_fabricacion{n}")
+            if ano:
+                if (
+                    len(ano) != 4
+                    or not ano.isdigit()
+                    or not (1970 <= int(ano) <= dt.now().year + 1)
+                ):
+                    errors[f"ano_fabricacion{n}"] = "Año de fabricación inválido"
 
     # --------------------------------------------------------------
     # password
     # --------------------------------------------------------------
-
     if forma.get("current_password"):
         session["perfil_muestra_password"] = True
 
@@ -209,4 +255,5 @@ def validaciones(db, forma):
     # --------------------------------------------------------------
     # limpieza final
     # --------------------------------------------------------------
+    print(errors)
     return {k: v for k, v in errors.items() if v}

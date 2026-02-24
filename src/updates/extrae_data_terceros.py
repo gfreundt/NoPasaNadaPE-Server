@@ -69,7 +69,9 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock, headless):
     chromedriver = ChromeUtils()
 
     # webdriver residencial o no (datacenter)
-    webdriver = chromedriver.proxy_driver(residential=config["residential_proxy"])
+    webdriver = chromedriver.proxy_driver(
+        residential=config["residential_proxy"], headless=headless
+    )
 
     # lanzar scraper dentro de un wrapper para timeout
     try:

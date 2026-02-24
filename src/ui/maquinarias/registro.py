@@ -4,7 +4,7 @@ from datetime import datetime as dt
 from flask import current_app, request, render_template, session, redirect, url_for
 
 from src.utils.constants import FORMATO_PASSWORD
-from src.utils.utils import hash_text, send_pushbullet
+from src.utils.utils import hash_text, send_pushbullet, compare_text_to_hash
 from src.comms import enviar_correo_inmediato
 from src.ui.maquinarias import mis_servicios
 
@@ -63,7 +63,9 @@ def main():
             "tipo_documento": forma.get("tipo_documento"),
             "numero_documento": forma.get("numero_documento"),
             "celular": forma.get("celular"),
-            "placas": forma.get("placas"),
+            "placa1": forma.get("placa1", "").upper().strip(),
+            "placa2": forma.get("placa2", "").upper().strip(),
+            "placa3": forma.get("placa3", "").upper().strip(),
         }
 
         errores = validaciones(db, forma)
@@ -82,7 +84,9 @@ def main():
             db,
             correo=forma.get("correo"),
             nombre=forma.get("nombre"),
-            placas=forma.get("placas").split(" ,"),
+            placas=forma.get("placa1", "")
+            + forma.get("placa2", "")
+            + forma.get("placa3", ""),
         )
         session["etapa"] = "validado"
         send_pushbullet(
@@ -134,25 +138,37 @@ def inscribir(cursor, conn, forma):
     id_member = cursor.lastrowid
 
     # crear placas para nuevo miembro si no existe, si placa ya existe, asignar a este usuario
-    for placa in forma.get("placas").split(", "):
-        cursor.execute(
-            """
+    for p in range(1, 4):
+        placa = forma.get(f"placa{p}", "").upper().strip()
+        if placa:
+            cursor.execute(
+                """
             INSERT INTO InfoPlacas
-            (IdMember_FK, Placa, LastUpdateApesegSoats, LastUpdateMtcRevisionesTecnicas, LastUpdateSunarpFichas, LastUpdateSutranMultas, LastUpdateSatMultas)
+                (IdMember_FK,
+                Placa,
+                LastUpdateApesegSoats, 
+                LastUpdateMtcRevisionesTecnicas, 
+                LastUpdateSunarpFichas, 
+                LastUpdateSutranMultas, 
+                LastUpdateSatMultas, 
+                LastUpdateCallaoMultas, 
+                LastUpdateSatImpuestos)
             VALUES (?,?,?,?,?,?,?)
             ON CONFLICT(Placa) DO UPDATE SET 
             IdMember_FK = excluded.IdMember_FK
             """,
-            (
-                id_member,
-                placa,
-                fecha_base,
-                fecha_base,
-                fecha_base,
-                fecha_base,
-                fecha_base,
-            ),
-        )
+                (
+                    id_member,
+                    placa,
+                    fecha_base,
+                    fecha_base,
+                    fecha_base,
+                    fecha_base,
+                    fecha_base,
+                    fecha_base,
+                    fecha_base,
+                ),
+            )
 
     conn.commit()
 
@@ -160,11 +176,11 @@ def inscribir(cursor, conn, forma):
 
 
 # ==================================================================
-# VALIDATION
+# VALIDACIONES PARA REGISTRO Y MI PERFIL
 # ==================================================================
 
 
-def validaciones(db, forma):
+def validaciones(db, forma, mi_perfil=False):
 
     cur = db.cursor()
 
@@ -172,7 +188,9 @@ def validaciones(db, forma):
         "nombre": "",
         "documento": "",
         "celular": "",
-        "placas": "",
+        "placa1": "",
+        "placa2": "",
+        "placa3": "",
         "acepta_legales": "",
         "password1": "",
         "password2": "",
@@ -180,79 +198,146 @@ def validaciones(db, forma):
 
     # --------------------------------------------------------------
     # nombre
+    # todos: mínimo 4 caracteres, máximo 50 caracteres
     # --------------------------------------------------------------
     if len(forma["nombre"]) < 4:
         errors["nombre"] = "Nombre debe tener un mínimo de 4 caracteres."
     elif len(forma["nombre"]) > 50:
         errors["nombre"] = "Nombre debe tener un máximo de 50 caracteres."
 
-    # --------------------------------------------------------------
-    # documentos (validacion depende de tipo de documento)
-    # --------------------------------------------------------------
-    if len(forma["numero_documento"]) < 5:
-        errors["documento"] = "Número de documento inválido."
+    # ---------------------------------------------------------------------------------
+    # documento
+    # registro: validar que número de documento tenga formato correcto (depende del tipo)
+    #           validar que combinación tipo+numero no esté registrada
+    # mi perfil: no validar porque no se puede modificar
+    # ---------------------------------------------------------------------------------
+    if not mi_perfil:
+        if len(forma["numero_documento"]) < 5:
+            errors["documento"] = "Número de documento inválido."
 
-    if forma["tipo_documento"] == "DNI" and not re.match(
-        r"^[0-9]{8}$", forma["numero_documento"]
-    ):
-        errors["documento"] = "DNI debe tener 8 dígitos."
+        if forma["tipo_documento"] == "DNI" and not re.match(
+            r"^[0-9]{8}$", forma["numero_documento"]
+        ):
+            errors["documento"] = "DNI debe tener 8 dígitos."
 
-    cur.execute(
-        "SELECT 1 FROM InfoMiembros WHERE DocTipo = ? AND DocNum = ? LIMIT 1",
-        (forma["tipo_documento"], forma["numero_documento"]),
-    )
-    if cur.fetchone():
-        errors["documento"] = "Documento ya está asociado a otro usuario."
+        cur.execute(
+            "SELECT 1 FROM InfoMiembros WHERE DocTipo = ? AND DocNum = ? LIMIT 1",
+            (forma["tipo_documento"], forma["numero_documento"]),
+        )
+        if cur.fetchone():
+            errors["documento"] = "Documento ya está asociado a otro usuario."
 
     # --------------------------------------------------------------
     # celular
+    # todos:    debe tener 9 dígitos y solo números
+    #           validar que no esté registrado por otro usuario
     # --------------------------------------------------------------
     if not re.match(r"^[0-9]{9}$", forma.get("celular", "")):
         errors["celular"] = "Celular debe tener 9 dígitos."
     else:
         cur.execute(
-            "SELECT 1 FROM InfoMiembros WHERE Celular = ? LIMIT 1", (forma["celular"],)
+            """
+                    SELECT 1 FROM InfoMiembros
+                    WHERE Celular = ? AND Correo != ? 
+                    LIMIT 1
+                """,
+            (forma["celular"], forma["correo"]),
         )
         if cur.fetchone():
             errors["celular"] = "Celular ya está registrado"
 
     # --------------------------------------------------------------
-    # placas
+    # placas y año de fabricacion (los 3 individualmente)
     # --------------------------------------------------------------
-    if forma.get("placas"):
-        _placas = forma["placas"].split(", ")
+    acum = []
+    for n in range(1, 4):
+        placa = forma.get(f"placa{n}", "").upper().strip()
 
-        if any(len(i) != 6 for i in _placas):
-            errors["placas"] = "Todas las placas deben tener 6 caracteres."
+        if placa:
+            # error: placa no cumple 6 digitos
+            if len(placa) != 6:
+                errors[f"placa{n}"] = "Placa invalida"
 
-        elif len(_placas) > 3:
-            errors["placas"] = "Se pueden inscribir un máximo de 3 placas."
+            # error: placa no cumple con minimo 2 numeros y 2 letras
+            elif not re.match(
+                "^(?=(?:.*[A-Za-z]){2,})(?=(?:.*\d){2,})[A-Za-z\d]{6}$", placa
+            ):
+                errors[f"placa{n}"] = "Placa invalida"
 
-        # placa inscrita por otro usuario
-        cur.execute(
-            f"SELECT 1 FROM InfoPlacas WHERE Placa IN ({', '.join(['?'] * len(_placas))}) AND IdMember_FK != 0 LIMIT 1",
-            tuple(_placas),
-        )
+            # error: placa duplicada en el mismo formulario
+            elif placa in acum:
+                errors[f"placa{n}"] = "Placa duplicada"
+            acum.append(placa)
 
-        if cur.fetchone():
-            errors["placas"] = "Al menos una placa ya está inscrita por otro usuario."
+            # error: placa inscrita por otro usuario
+            cmd = """
+                    SELECT 1 
+                    FROM InfoPlacas 
+                    WHERE 
+                        Placa = ?
+                        AND IdMember_FK != 0 
+                        AND IdMember_FK != ? 
+                    LIMIT 1
+                """
+            cur.execute(
+                cmd,
+                (placa, session["usuario"].get("id_member", -1)),
+            )
+            if cur.fetchone():
+                errors[f"placa{n}"] = "Placa asociada a otro usuario"
 
-    # --------------------------------------------------------------
-    # password
-    # --------------------------------------------------------------
-    if not re.match(FORMATO_PASSWORD["regex"], forma.get("password1", "")):
-        errors["password1"] = FORMATO_PASSWORD["mensaje"]
+            # error: año de fabricacion no cumple formato o rango (1970 - año actual + 1)
+            ano = forma.get(f"ano_fabricacion{n}")
+            if ano:
+                if (
+                    len(ano) != 4
+                    or not ano.isdigit()
+                    or not (1970 <= int(ano) <= dt.now().year + 1)
+                ):
+                    errors[f"ano_fabricacion{n}"] = "Año de fabricación inválido"
 
-    elif forma.get("password1") != forma.get("password2"):
-        errors["password2"] = "Las contraseñas no coinciden."
+    # -------------------------------------------------------------------------------------------------
+    # contraseña
+    # registro: validar que contraseña cumpla formato y que password1 y password2 coincidan
+    # mi perfil: validar que contraseña actual se ingreso y sea correcta y si se ingresó
+    #            validar que nueva contraseña cumpla formato y que password1 y password2
+    # -------------------------------------------------------------------------------------------------
+    validar_nuevo_password = True
 
-    # --------------------------------------------------------------
-    # términos y condiciones + privacidad
-    # --------------------------------------------------------------
-    if forma.get("acepta_terminos") != "on" or forma.get("acepta_privacidad") != "on":
+    if mi_perfil:
+        current_password = forma.get("current_password")
+
+        if current_password:  # solo si el usuario lo ingresó
+            session["perfil_muestra_password"] = True
+
+            if not compare_text_to_hash(
+                text_string=current_password,
+                hash_string=session["usuario"]["password"],
+            ):
+                errors["current_password"] = "Contraseña equivocada"
+                validar_nuevo_password = False
+        else:
+            # mi_perfil=True pero campo vacío → no validar nada
+            validar_nuevo_password = False
+
+    if validar_nuevo_password:
+        if not re.match(FORMATO_PASSWORD["regex"], forma.get("password1", "")):
+            errors["password1"] = FORMATO_PASSWORD["mensaje"]
+        elif forma.get("password1") != forma.get("password2"):
+            errors["password2"] = "Las contraseñas no coinciden."
+
+    # ------------------------------------------------------------------------------
+    # términos y condiciones + privacidad + tratamiento de datos personales
+    # registro: ambos campos deben ser "on"
+    # mi perfil: no validar porque no se pueden modificar
+    # -------------------------------------------------------------------------------
+    if not mi_perfil and (
+        forma.get("acepta_terminos") != "on" or forma.get("acepta_privacidad") != "on"
+    ):
         errors["acepta_legales"] = "Es necesario aceptar ambos para poder continuar."
 
-    # Remove empty error fields
-    final_errors = {k: v for k, v in errors.items() if v}
-
-    return final_errors
+    # --------------------------------------------------------------
+    # eliminar blancos y devolver solo errores
+    # --------------------------------------------------------------
+    print("--------", {k: v for k, v in errors.items() if v})
+    return {k: v for k, v in errors.items() if v}
