@@ -132,6 +132,7 @@ def extraer_data_usuario(cursor, correo):
         (a["IdMember"],),
     )
     p = cursor.fetchall()
+
     # agrega tres blancos para cubir en caso usuario tenga menos de tres placas
     placas = [(i["Placa"], i["AnoFabricacion"] or "") for i in p] + [("", "")] * 3
 
@@ -150,8 +151,6 @@ def extraer_data_usuario(cursor, correo):
         "ano_fabricacion3": placas[2][1],
         "password": a["Password"],
     }
-
-    print(session["usuario"])
 
 
 def resetear_logins_fallidos(cursor, conn, correo):

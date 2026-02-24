@@ -66,13 +66,18 @@ def main():
             "placa1": forma.get("placa1", "").upper().strip(),
             "placa2": forma.get("placa2", "").upper().strip(),
             "placa3": forma.get("placa3", "").upper().strip(),
+            "ano_fabricacion1": forma.get("ano_fabricacion1", ""),
+            "ano_fabricacion2": forma.get("ano_fabricacion2", ""),
+            "ano_fabricacion3": forma.get("ano_fabricacion3", ""),
         }
 
         errores = validaciones(db, forma)
 
         if errores:
             return render_template(
-                "ui-maquinarias-registro.html", errors=errores, usuario=usuario
+                "ui-maquinarias-registro.html",
+                errors=errores,
+                usuario=usuario,
             )
 
         # No errors → proceed
@@ -92,7 +97,7 @@ def main():
         send_pushbullet(
             title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get('correo')})"
         )
-        return mis_servicios.main(db)
+        return mis_servicios.main()
 
 
 # ==================================================================
@@ -140,26 +145,31 @@ def inscribir(cursor, conn, forma):
     # crear placas para nuevo miembro si no existe, si placa ya existe, asignar a este usuario
     for p in range(1, 4):
         placa = forma.get(f"placa{p}", "").upper().strip()
+        ano_fabricacion = forma.get(f"ano_fabricacion{p}", "").strip()
+
         if placa:
             cursor.execute(
                 """
             INSERT INTO InfoPlacas
                 (IdMember_FK,
                 Placa,
+                AnoFabricacion,
                 LastUpdateApesegSoats, 
                 LastUpdateMtcRevisionesTecnicas, 
                 LastUpdateSunarpFichas, 
                 LastUpdateSutranMultas, 
                 LastUpdateSatMultas, 
                 LastUpdateCallaoMultas, 
-                LastUpdateSatImpuestos)
-            VALUES (?,?,?,?,?,?,?)
-            ON CONFLICT(Placa) DO UPDATE SET 
-            IdMember_FK = excluded.IdMember_FK
+                LastUpdateMaquinariasMantenimiento)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(Placa) DO 
+                UPDATE SET  IdMember_FK = excluded.IdMember_FK,
+                            AnoFabricacion = excluded.AnoFabricacion
             """,
                 (
                     id_member,
                     placa,
+                    ano_fabricacion,
                     fecha_base,
                     fecha_base,
                     fecha_base,
