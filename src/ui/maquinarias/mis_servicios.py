@@ -404,6 +404,7 @@ def generar_data_servicios(cursor, correo):
     if not [i for i in existentes if i["titulo"] == "Municipalidad del Callao"]:
         if datos_placas:
             d = ultimas_actualizaciones_placas.get(datos_placas[0]["Placa"])
+            print("888888888", d)
             fecha = calculo_plazos(None, d["callaomultas"])["ultima_actualizacion"]
         else:
             fecha["fecha"] = {"fecha": "N/A", "dias_desde": ""}
