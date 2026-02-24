@@ -6,7 +6,11 @@ from selenium.webdriver.support.ui import Select
 from src.utils.utils import use_truecaptcha
 
 
-def browser(doc, webdriver):
+def browser(datos, webdriver):
+
+    doc_tipo = datos["DocTipo"]
+    doc_num = datos["DocNum"]
+
     # cargar pagina inicial solo si es la primera vez
     if "data" in webdriver.current_url:
         url_inicial = "https://www.sat.gob.pe/WebSitev8/IncioOV2.aspx"
@@ -45,13 +49,13 @@ def browser(doc, webdriver):
 
         # select tipo documento (DNI/CE) from dropdown
         drop = Select(webdriver.find_element(By.ID, "ctl00_cplPrincipal_ddlTipoDocu"))
-        drop.select_by_value("4" if doc[0] == "CE" else "2")
+        drop.select_by_value("4" if doc_tipo == "CE" else "2")
         time.sleep(0.5)
 
         # clear field and enter DNI/CE
         _dnice = webdriver.find_element(By.ID, "ctl00_cplPrincipal_txtDocumento")
         _dnice.clear()
-        _dnice.send_keys(doc[1])
+        _dnice.send_keys(doc_num)
 
         # clear field and enter captcha
         _captcha_field = webdriver.find_element(By.ID, "ctl00_cplPrincipal_txtCaptcha")

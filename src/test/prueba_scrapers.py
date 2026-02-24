@@ -9,12 +9,12 @@ from src.updates import gather_one_manual
 logger = logging.getLogger(__name__)
 
 
-def main(self, size=1):
+def main(size=1):
 
     logger.info(f"Iniciando prueba de scrapers con {size} registro(s) cada uno.")
 
     # generar data de prueba
-    pruebas = get_test_data_new(1)
+    pruebas = get_test_data_new(size)
 
     # iterar todas las pruebas
     positivo, negativo = [], []
@@ -24,7 +24,7 @@ def main(self, size=1):
         )
         start_time = time.perf_counter()
         try:
-            respuesta = gather_one_manual.main(self, data, headless=True)
+            respuesta = gather_one_manual.main(data, headless=True)
             if respuesta:
                 end_time = time.perf_counter()
                 logger.info(
@@ -42,15 +42,21 @@ def main(self, size=1):
             logger.warning(
                 f"Prueba Scraper {data['Categoria']} fallo total: {str(e)[:60]}..."
             )
-            negativo.append({data["Categoria"]})
+            negativo.append(data["Categoria"])
 
     resultado = f"Prueba de scrapers completa (Total: {len(pruebas)}). Exitos: {len(positivo)}. Fallos: {len(negativo)}."
+    resultado = (
+        resultado + "\nScrapers con fallos: {', '.join(negativo)}"
+        if negativo
+        else resultado
+    )
     logger.info(resultado)
 
     titulo = {
         "titulo": "Resultado Prueba de Scrapers",
         "subtitulo": str(dt.now())[:19],
     }
+    print(resultado)
     enviar_correo_interno.prueba_scrapers(titulo=titulo, mensaje=resultado)
 
 

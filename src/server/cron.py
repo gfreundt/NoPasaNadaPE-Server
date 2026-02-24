@@ -23,13 +23,18 @@ def ejecutar_scheduler(db):
     6. Mantenimiento (cada dia) a las 02:05am
     """
 
+    # TEST: todo el proceso de mensajes con alertas y boletines
+    # do_mensajes.main(db, "alertas")
+    # do_mensajes.main(db, "boletines")
+    # return
+
     # TEST: generar boletin fijo
     # from src.test import crear_boletin
-    # crear_boletin.main(self, idmember="25", correo="gabfre@gmail.com")
+    # crear_boletin.main(db, idmember="25", correo="gabfre@gmail.com")
     # return
 
     # TEST: prueba scrapers
-    # prueba_scrapers.main(self, 1)
+    # prueba_scrapers.main()
     # return
 
     # TEST: ocr de sunarp
@@ -51,13 +56,13 @@ def ejecutar_scheduler(db):
     schedule.every().day.at("01:00").do(resumen_diario.main, db).tag("resumen_diario")
 
     # 4. Prueba de scrapers diariamente a las 6:30am
-    schedule.every().day.at("06:30").do(prueba_scrapers.main, db).tag("prueba_scrapers")
+    schedule.every().day.at("06:30").do(prueba_scrapers.main).tag("prueba_scrapers")
 
     # 5. Mantenimiento (cada hora) a las hh:45
-    for hour in range(0, 24):
-        schedule.every().day.at(f"{hour:02d}:45").do(mantenimiento.cada_hora, db).tag(
-            "mantenimiento_horario"
-        )
+    # for hour in range(0, 24):
+    #     schedule.every().day.at(f"{hour:02d}:45").do(mantenimiento.cada_hora, db).tag(
+    #         "mantenimiento_horario"
+    #     )
 
     # 6. Mantenimiento (cada dia) a las 02:05am
     schedule.every().day.at("02:05").do(mantenimiento.cada_dia, db).tag(

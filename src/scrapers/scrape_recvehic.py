@@ -11,7 +11,10 @@ from src.utils.utils import use_truecaptcha
 from src.utils.constants import NETWORK_PATH
 
 
-def browser(doc_num, webdriver):
+def browser(datos, webdriver):
+
+    doc_num = datos["DocNum"]
+
     url = "https://recordconductor.mtc.gob.pe/"
 
     intentos_captcha = 0
@@ -122,7 +125,7 @@ def browser(doc_num, webdriver):
             time.sleep(1)
 
         # si no se encontro imagen, retornar error
-        return "@No Se Puedo Bajar Archivo"
+        return "No Se Puedo Bajar Archivo"
 
     # demasiados intentos de captcha errados consecutivos
     return "Excede Intentos de Captcha"

@@ -5,7 +5,9 @@ from selenium.webdriver.common.by import By
 from src.utils.utils import use_truecaptcha
 
 
-def browser(placa, webdriver):
+def browser(datos, webdriver):
+
+    placa = datos["Placa"]
 
     url = "https://pagopapeletascallao.pe/"
 

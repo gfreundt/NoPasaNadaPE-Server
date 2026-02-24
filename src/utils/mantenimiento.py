@@ -29,7 +29,7 @@ def cada_hora(db):
         cursor.execute(cmd)
         conn.commit()
 
-        logger.info("Mantenimiento cada hora: Actualizacion AnoFabricacion completa.")
+        logger.info("[MANTENIMIENTO HORARIO] Actualizacion AnoFabricacion completa.")
 
     except Exception as e:
         logger.error(f"Error en mantenimiento de cada hora: {e}")
@@ -50,7 +50,7 @@ def cada_dia(db):
         cursor.execute(cmd)
         conn.commit()
 
-        logger.info("Mantenimiento cada dia: Control de placas huerfanas completa.")
+        logger.info("[MANTENIMIENTO DIARIO] Control de placas huerfanas completa.")
 
     except Exception as e:
         logger.error(f"Error en mantenimiento de cada dia: {e}")

@@ -10,9 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def main(self, dato, headless=True):
-
-    print(dato)
+def main(dato, headless=True):
 
     config = configuracion_scrapers.config(dato["Categoria"])
     chromedriver = ChromeUtils()
@@ -20,19 +18,18 @@ def main(self, dato, headless=True):
         residential=config["residential_proxy"], headless=headless
     )
 
-    # definir datos necesarios para el scraper
-    if config["indice_placa"]:
-        datos_scraper = dato["Placa"]
-    else:
-        datos_scraper = (dato["DocTipo"], dato["DocNum"])
-
     # lanzar scraper dentro de un wrapper para timeout
     try:
         func_scraper = config["funcion_scraper"]
-        logger.info(f"Prueba Scraper {dato['Categoria']}: Indice: {datos_scraper}.")
-        respuesta_scraper = func_timeout(
-            config["timeout"], func_scraper.browser, args=(datos_scraper, webdriver)
-        )
+        logger.info(f"Prueba Scraper {dato['Categoria']}: Indice: {dato}.")
+        if config["api"]:
+            respuesta_scraper = func_scraper.api(datos=dato, timeout=config["timeout"])
+        else:
+            respuesta_scraper = func_timeout(
+                config["timeout"],
+                func_scraper.browser,
+                args=(dato, webdriver),
+            )
         logger.debug(
             f"Respuesta Prueba Scraper {dato['Categoria']}: {pformat(respuesta_scraper)}"
         )

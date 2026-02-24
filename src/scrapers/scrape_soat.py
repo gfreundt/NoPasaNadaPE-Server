@@ -12,7 +12,10 @@ import io
 from src.utils.utils import use_truecaptcha
 
 
-def browser(placa, webdriver):
+def browser(datos, webdriver):
+
+    placa = datos["Placa"]
+
     intentos_captcha = 0
     while intentos_captcha < 5:
         # abrir url

@@ -7,7 +7,9 @@ from selenium.common.exceptions import NoAlertPresentException
 from src.utils.utils import use_truecaptcha
 
 
-def browser(placa, webdriver):
+def browser(datos, webdriver):
+
+    placa = datos["Placa"]
 
     url = "https://rec.mtc.gob.pe/Citv/ArConsultaCitv"
 

@@ -9,7 +9,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from src.utils.constants import MTC_CAPTCHAS
 
 
-def browser(doc, webdriver):
+def browser(datos, webdriver):
+    doc_num = datos["DocNum"]
 
     url = "https://licencias.mtc.gob.pe/#/index"
     webdriver.set_page_load_timeout(60)
@@ -38,7 +39,7 @@ def browser(doc, webdriver):
     time.sleep(1)
 
     # ingresar documento (solo numero)
-    webdriver.find_element(By.ID, "mat-input-0").send_keys(doc[1])
+    webdriver.find_element(By.ID, "mat-input-0").send_keys(doc_num)
     time.sleep(1)
 
     # click on "Si, acepto"

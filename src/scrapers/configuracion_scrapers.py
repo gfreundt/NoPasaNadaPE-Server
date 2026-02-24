@@ -8,12 +8,14 @@ from src.scrapers import (
     scrape_satmul,
     scrape_soat,
     scrape_calmul,
+    scrape_maqmant,
 )
 
 
 def config(indice):
     return {
         "DataMtcRecordsConductores": {
+            "api": False,
             "residential_proxy": False,
             "indice_placa": False,
             "funcion_scraper": scrape_recvehic,
@@ -21,8 +23,10 @@ def config(indice):
             "estructura_respuesta": {
                 "ImageBytes": 0,
             },
+            "campo_fecha_hasta": "",
         },
         "DataMtcBrevetes": {
+            "api": False,
             "residential_proxy": True,
             "indice_placa": False,
             "funcion_scraper": scrape_brevete,
@@ -38,8 +42,11 @@ def config(indice):
                 "Puntos": 7,
                 "Record": 8,
             },
+            "campo_fecha_hasta": "FechaHasta",
+            "alerta_dias": "-45, -25, -5, 0, 1, 2, 3",
         },
         "DataSatMultas": {
+            "api": False,
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_satmul,
@@ -62,8 +69,10 @@ def config(indice):
                 "ImageBytes1": 13,
                 "ImageBytes2": 14,
             },
+            "campo_fecha_hasta": "",
         },
         "DataSatImpuestos": {
+            "api": False,
             "residential_proxy": False,
             "indice_placa": False,
             "funcion_scraper": scrape_satimp,
@@ -76,8 +85,11 @@ def config(indice):
                 "TotalAPagar": 4,
                 "FechaHasta": 5,
             },
+            "campo_fecha_hasta": "FechaHasta",
+            "alerta_dias": "-10, -5, -1, 0, 1, 2, 3",
         },
         "DataMtcRevisionesTecnicas": {
+            "api": False,
             "residential_proxy": True,
             "indice_placa": True,
             "funcion_scraper": scrape_revtec,
@@ -92,8 +104,11 @@ def config(indice):
                 "Resultado": 6,
                 "Vigencia": 7,
             },
+            "campo_fecha_hasta": "FechaHasta",
+            "alerta_dias": "-25, -15, -5, 0, 1, 2, 3",
         },
         "DataSutranMultas": {
+            "api": False,
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_sutran,
@@ -105,14 +120,17 @@ def config(indice):
                 "CodigoInfrac": 3,
                 "Clasificacion": 4,
             },
+            "campo_fecha_hasta": "",
         },
         "DataSunarpFichas": {
+            "api": False,
             "residential_proxy": True,
             "indice_placa": True,
             "funcion_scraper": scrape_sunarp,
             "timeout": 90,
         },
         "DataApesegSoats": {
+            "api": False,
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_soat,
@@ -131,8 +149,11 @@ def config(indice):
                 "FechaVenta": 9,
                 "ImageBytes": None,
             },
+            "campo_fecha_hasta": "",
+            "alerta_dias": "-10, -5, -1, 0, 1, 2, 3",
         },
         "DataCallaoMultas": {
+            "api": False,
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_calmul,
@@ -146,5 +167,21 @@ def config(indice):
                 "TotalBeneficio": 5,
                 "ImageBytes": None,
             },
+            "campo_fecha_hasta": "",
+        },
+        "DataMaquinariasMantenimiento": {
+            "api": True,
+            "residential_proxy": False,
+            "indice_placa": True,
+            "funcion_scraper": scrape_maqmant,
+            "timeout": 15,
+            "estructura_respuesta": {
+                "FechaUltimoServicio": 0,
+                "UltimoServicioDetalle": 1,
+                "FechaProximoServicio": 2,
+                "ProximoServicioDetalle": 3,
+            },
+            "campo_fecha_hasta": "FechaProximoServicio",
+            "alerta_dias": "-10, -5, -1, 0, 1, 2, 3",
         },
     }[indice]

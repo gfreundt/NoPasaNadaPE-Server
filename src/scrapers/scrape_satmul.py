@@ -8,7 +8,9 @@ from selenium.common.exceptions import NoSuchElementException
 from security.keys import TWOCAPTCHA_API_KEY
 
 
-def browser(placa, webdriver):
+def browser(datos, webdriver):
+
+    placa = datos["Placa"]
 
     # abrir url
     url_inicial = "https://www.sat.gob.pe/WebSitev8/IncioOV2.aspx"

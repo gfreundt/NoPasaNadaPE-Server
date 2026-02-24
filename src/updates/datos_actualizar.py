@@ -1,56 +1,38 @@
+from src.scrapers import configuracion_scrapers
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 def get_datos_alertas(db, premensaje):
-    cte1_estructura = [
-        {
-            "tabla": "DataApesegSoats",
-            "placa_select": True,
-            "dias": "-10, -5, -1, 0, 1, 2, 3",
-            "last_update": "LastUpdateApesegSoats",
-        },
-        {
-            "tabla": "DataMtcRevisionesTecnicas",
-            "placa_select": True,
-            "dias": "-25, -15, -5, 0, 1, 2, 3",
-            "last_update": "LastUpdateMtcRevisionesTecnicas",
-        },
-        {
-            "tabla": "DataMtcBrevetes",
-            "placa_select": False,
-            "dias": "-45, -25, -5, 0, 1, 2, 3",
-            "last_update": "LastUpdateMtcBrevetes",
-        },
-        {
-            "tabla": "DataSatImpuestos",
-            "placa_select": False,
-            "dias": "-10, -5, -1, 0, 1, 2, 3",
-            "last_update": "LastUpdateSatImpuestos",
-        },
+    tablas = [
+        "DataApesegSoats",
+        "DataMtcRevisionesTecnicas",
+        "DataMtcBrevetes",
+        "DataSatImpuestos",
+        "DataMaquinariasMantenimiento",
     ]
 
-    cte1 = []
-
     # crear sub-query para cada tabla
-    for tabla in cte1_estructura:
-        last_update = tabla["tabla"].replace("Data", "LastUpdate")
+    cte1 = []
+    for tabla in tablas:
+        config = configuracion_scrapers.config(tabla)
+        last_update = tabla.replace("Data", "LastUpdate")
 
-        cmd = f"""  SELECT '{tabla["tabla"]}' as Categoria, 
-                    {"PlacaValidate" if tabla.get("placa_select") else "NULL"} as Placa,
-                    {"(SELECT IdMember_FK FROM InfoPlacas WHERE PlacaValidate = Placa)" if tabla.get("placa_select") else "IdMember_FK"} as IdMember,
-                    FechaHasta,
-                    {f"(SELECT {last_update} FROM InfoPlacas WHERE PlacaValidate = Placa)" if tabla.get("placa_select") else "IdMember_FK"} as LastUpdate
-                    FROM {tabla["tabla"]} 
+        cmd = f"""  SELECT '{tabla}' as Categoria, 
+                    {"PlacaValidate" if config.get("indice_placa") else "NULL"} as Placa,
+                    {"(SELECT IdMember_FK FROM InfoPlacas WHERE PlacaValidate = Placa)" if config.get("indice_placa") else "IdMember_FK"} as IdMember,
+                    {config["campo_fecha_hasta"]},
+                    {f"(SELECT {last_update} FROM InfoPlacas WHERE PlacaValidate = Placa)" if config.get("indice_placa") else "LastUpdate"} as LastUpdate
+                    FROM {tabla} 
                     WHERE
                 """
 
         cmd += (
-            f" DATE ({'FechaHasta'}) IN ("
+            f" DATE ({config['campo_fecha_hasta']}) IN ("
             + ",\n ".join(
                 f"DATE('now','localtime', '{-int(n):+d} days')"
-                for n in tabla["dias"].split(", ")
+                for n in config["alerta_dias"].split(", ")
             )
             + ")"
         )
@@ -64,34 +46,34 @@ def get_datos_alertas(db, premensaje):
                 WHERE
                 TipoMensaje = "ALERTA" AND
                 DATE(FechaEnvio) = DATE('now','localtime')
-                
-             """
+            """
 
     select = f"""
-        SELECT 
-        c.Categoria, 
-        c.Placa, 
-        c.IdMember,
-        c.FechaHasta,
-        c.LastUpdate,
-        m.DocNum, 
-        m.DocTipo,
-        m.Correo
-    FROM TodasAlertas c
-    JOIN Infomiembros m ON c.IdMember = m.Idmember
-    WHERE c.IdMember NOT IN AlertasRecientes
-    {"AND DATE(c.LastUpdate) < DATE('now','localtime')" if premensaje else ""}; """
+                SELECT 
+                c.Categoria, 
+                c.Placa, 
+                c.IdMember,
+                c.FechaHasta,
+                c.LastUpdate,
+                m.DocNum, 
+                m.DocTipo,
+                m.Correo
+                FROM TodasAlertas c
+                JOIN Infomiembros m ON c.IdMember = m.Idmember
+                WHERE c.IdMember NOT IN AlertasRecientes
+                {"AND DATE(c.LastUpdate) < DATE('now','localtime')" if premensaje else ""};
+            """
 
     # consolidar query final
-    query = f"""WITH TodasAlertas AS ({cte1}), 
+    query = f"""
+                    WITH TodasAlertas AS ({cte1}), 
                     AlertasRecientes AS ({cte2})
-                    {select}"""
+                    {select}
+                 """
 
     # extrae informacion de base de datos
     cursor = db.cursor()
     cursor.execute(query)
-    # resultado = cursor.fetchall()
-
     return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
 
 
@@ -100,67 +82,37 @@ def get_datos_boletines(db, premensaje):
     if premensaje:
         cmds = []
 
-        select_estructura = [
-            {
-                "tabla": "DataApesegSoats",
-                "placa_select": True,
-                "fecha_hasta": True,
-            },
-            {
-                "tabla": "DataMtcRevisionesTecnicas",
-                "placa_select": True,
-                "fecha_hasta": True,
-            },
-            {
-                "tabla": "DataMtcBrevetes",
-                "fecha_hasta": True,
-                "placa_select": False,
-            },
-            {
-                "tabla": "DataSatImpuestos",
-                "fecha_hasta": False,
-                "placa_select": False,
-            },
-            {
-                "tabla": "DataSatMultas",
-                "fecha_hasta": False,
-                "placa_select": True,
-            },
-            {
-                "tabla": "DataSutranMultas",
-                "fecha_hasta": False,
-                "placa_select": True,
-            },
-            {
-                "tabla": "DataMtcRecordsConductores",
-                "fecha_hasta": False,
-                "placa_select": False,
-            },
-            {
-                "tabla": "DataCallaoMultas",
-                "fecha_hasta": False,
-                "placa_select": True,
-            },
+        tablas = [
+            "DataApesegSoats",
+            "DataMtcRevisionesTecnicas",
+            "DataMtcBrevetes",
+            "DataSatImpuestos",
+            "DataMaquinariasMantenimiento",
+            "DataSatMultas",
+            "DataSutranMultas",
+            "DataMtcRecordsConductores",
+            "DataCallaoMultas",
         ]
 
-        for tabla in select_estructura:
-            last_update = tabla["tabla"].replace("Data", "LastUpdate")
+        for tabla in tablas:
+            config = configuracion_scrapers.config(tabla)
+            last_update = tabla.replace("Data", "LastUpdate")
 
             cola = (
                 f""" AND NOT EXISTS (
                         SELECT 1
-                        FROM {tabla["tabla"]} s
-                        WHERE {"s.PlacaValidate = p.Placa" if tabla["placa_select"] else "s.IdMember_FK = m.IdMember"}
-                        AND DATE(s.FechaHasta) >= DATE('now','localtime', '+30 days')
+                        FROM {tabla} s
+                        WHERE {"s.PlacaValidate = p.Placa" if config["indice_placa"] else "s.IdMember_FK = m.IdMember"}
+                        AND DATE(s.{config["campo_fecha_hasta"]}) >= DATE('now','localtime', '+30 days')
                         )
                     """
-                if tabla["fecha_hasta"]
+                if config["campo_fecha_hasta"]
                 else ""
             )
 
             cmd = f"""  SELECT DISTINCT
-                        '{tabla["tabla"]}' AS Categoria,
-                        {"p.Placa" if tabla.get("placa_select") else "NULL"} as Placa,
+                        '{tabla}' AS Categoria,
+                        {"p.Placa" if config["indice_placa"] else "NULL"} as Placa,
                         m.IdMember
                         FROM InfoMiembros m
                         JOIN InfoPlacas p
@@ -175,18 +127,16 @@ def get_datos_boletines(db, premensaje):
         cmds = "\n\nUNION ALL\n\n".join(cmds)
 
         query = f"""SELECT 
-                            c.Categoria, 
-                            c.Placa, 
-                            c.IdMember,
-                            m.DocNum, 
-                            m.DocTipo,
-                            m.Correo
-                            FROM (
-                                (
-                            {cmds}
-                                    ) c 
-                                JOIN Infomiembros m 
-                                ON c.IdMember = m.Idmember);"""
+                    c.Categoria, 
+                    c.Placa, 
+                    c.IdMember,
+                    m.DocNum, 
+                    m.DocTipo,
+                    m.Correo
+                    FROM (
+                           ({cmds}) c 
+                            JOIN Infomiembros m 
+                            ON c.IdMember = m.Idmember);"""
 
         cursor = db.cursor()
         cursor.execute(query)

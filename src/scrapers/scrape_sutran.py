@@ -5,7 +5,9 @@ from selenium.common.exceptions import TimeoutException
 import time
 
 
-def browser(placa, webdriver):
+def browser(datos, webdriver):
+
+    placa = datos["Placa"]
 
     url = "https://www.sutran.gob.pe/consultas/record-de-infracciones/record-de-infracciones/"
     webdriver.get(url)

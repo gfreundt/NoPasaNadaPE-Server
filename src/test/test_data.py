@@ -18,6 +18,15 @@ def get_test_data_new(s):
                     "DocNum": x[2],
                 }
             )
+        elif len(x) == 2:
+            p.update(
+                {
+                    "IdMember": None,
+                    "Placa": x[0],
+                    "DocTipo": None,
+                    "DocNum": x[1],
+                }
+            )
         else:
             p.update({"IdMember": None, "Placa": x, "DocTipo": None, "DocNum": None})
         fina.append(p)
@@ -321,5 +330,11 @@ def get_test_data():
             "CTR270",
             "CFV251",
             "CJP227",
+        ],
+        "DataMaquinariasMantenimiento": [
+            ["CHO571", "40080207"],
+            ["CHS662", "42393412"],
+            ["AXT081", "42393412"],
+            ["CJP227", "10059261"],
         ],
     }

@@ -3,7 +3,9 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
 
-def browser(placa, webdriver):
+def browser(datos, webdriver):
+
+    placa = datos["Placa"]
 
     # abrir url
     url = "https://servicios.sbs.gob.pe/reportesoat/"

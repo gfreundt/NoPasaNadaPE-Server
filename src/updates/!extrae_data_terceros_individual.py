@@ -31,20 +31,23 @@ def main(db, queue_data, queue_respuesta, lock):
     webdriver = chromedriver.proxy_driver(residential=config["residential_proxy"])
 
     # definir datos necesarios para el scraper
-    if config["indice_placa"]:
-        datos_scraper = dato["Placa"]
-    else:
-        datos_scraper = (dato["DocTipo"], dato["DocNum"])
+    # if config["indice_placa"]:
+    #     datos_scraper = dato["Placa"]
+    # else:
+    #     datos_scraper = (dato["DocTipo"], dato["DocNum"])
 
     # lanzar scraper dentro de un wrapper para timeout
     try:
         func_scraper = config["funcion_scraper"]
-        logger.info(
-            f"Enviado dato a scraper {dato['Categoria']}: Indice: {datos_scraper}."
-        )
-        respuesta_scraper = func_timeout(
-            config["timeout"], func_scraper.browser, args=(datos_scraper, webdriver)
-        )
+        logger.info(f"Enviado dato a scraper {dato['Categoria']}: Indice: {dato}.")
+        if config["api"]:
+            respuesta_scraper = func_scraper.api(datos=dato, timeout=config["timeout"])
+        else:
+            respuesta_scraper = func_timeout(
+                config["timeout"],
+                func_scraper.browser,
+                args=(dato, webdriver),
+            )
         logger.debug(f"Respuesta scraper: {pformat(respuesta_scraper)}")
 
         # si respuesta es texto, hubo un error -- reponer dato a cola y vuelve sin actualizar acumulador
@@ -86,16 +89,14 @@ def main(db, queue_data, queue_respuesta, lock):
 
     # scraper no termino a tiempo, se devuelve dato a la cola y regresa al recolector
     except FunctionTimedOut:
-        logger.warning(
-            f"Timeout de scraper {dato['Categoria']}. Indice: {datos_scraper}"
-        )
+        logger.warning(f"Timeout de scraper {dato['Categoria']}. Indice: {dato}")
         queue_data.put(dato)
         time.sleep(1)
 
     # error generico - NO devolver el dato a la cola y regresar al recolector
     except Exception as e:
         logger.warning(
-            f"Error general de scraper: {dato['Categoria']}. Indice: {datos_scraper} \n{e}"
+            f"Error general de scraper: {dato['Categoria']}. Indice: {dato} \n{e}"
         )
         time.sleep(1)
 
