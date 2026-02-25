@@ -1,5 +1,4 @@
 import re
-from tkinter import INSERT
 import uuid
 from datetime import datetime as dt
 from flask import current_app, request, render_template, session, redirect, url_for
