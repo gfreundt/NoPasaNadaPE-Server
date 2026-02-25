@@ -1,6 +1,7 @@
 from src.test import prueba_scrapers, prueba_un_scraper_no_headless
 from src.comms import generar_mensajes
 from src.updates import datos_actualizar
+from src.utils.mantenimiento import recalcula_fechahasta_revtec_de_tabla
 
 from pprint import pprint
 
@@ -30,5 +31,7 @@ def main(db):
 
     # generar_mensajes.boletines(db)
 
-    a = datos_actualizar.get_datos_nunca_actualizados(db)
-    pprint(a)
+    # a = datos_actualizar.get_datos_nunca_actualizados(db)
+    # pprint(a)
+
+    recalcula_fechahasta_revtec_de_tabla(db)

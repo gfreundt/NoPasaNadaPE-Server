@@ -162,6 +162,7 @@ def recalcula_fechahasta_revtec_de_tabla(db):
 
     cursor = db.cursor()
     cursor.execute(cmd)
+    db.conn.commit()
 
     logger.info(
         f"[MANTENIMIENTO DIARIO] Recalculo de FechaHasta de DataMtcRevisionesTecnicas. Registros modificados: {cursor.rowcount}"
