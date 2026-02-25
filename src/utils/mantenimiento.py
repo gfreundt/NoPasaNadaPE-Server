@@ -128,7 +128,7 @@ def recalcula_fechahasta_revtec_de_tabla(db):
                                 PlacaValidate,
                                 (SELECT ip.AnoFabricacion
                                     FROM InfoPlacas ip
-                                    WHERE ip.Placa = DataMtcRevisionesTecnicas.PlacaValidate
+                                    WHERE ip.Placa = PlacaValidate
                                     AND ip.AnoFabricacion IS NOT NULL
                                     LIMIT 1)
                                 ),
@@ -140,7 +140,7 @@ def recalcula_fechahasta_revtec_de_tabla(db):
                 EXISTS (
                     SELECT 1
                     FROM InfoPlacas ip
-                    WHERE ip.Placa = DataMtcRevisionesTecnicas.PlacaValidate
+                    WHERE ip.Placa = PlacaValidate
                       AND ip.AnoFabricacion IS NOT NULL
                 )
 
