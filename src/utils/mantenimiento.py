@@ -119,7 +119,8 @@ def recalcula_fechahasta_revtec_de_tabla(db):
                 esta con flag calculada o FechaHasta esta vacia
     """
 
-    db.conn.create_function("CPR", 2, calcula_primera_revtec)
+    conn = db.connection()
+    conn.create_function("CPR", 2, calcula_primera_revtec)
     cmd = """
             UPDATE DataMtcRevisionesTecnicas
             SET

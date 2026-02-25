@@ -37,6 +37,10 @@ class Database:
             self.conn.row_factory = sqlite3.Row
             self._pid = current_pid
 
+    def connection(self):
+        self._ensure_conn()
+        return self.conn
+
     def cursor(self):
         self._ensure_conn()
         return self.conn.cursor()

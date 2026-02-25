@@ -35,6 +35,7 @@ def iniciar_base_de_datos():
     # inicia la base de datos
     db = database.Database()
     db._lock_file_handle = None
+
     return db
 
 
