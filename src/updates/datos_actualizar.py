@@ -3,19 +3,32 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+tablas_todas = [
+    "DataApesegSoats",
+    "DataMtcRevisionesTecnicas",
+    "DataMtcBrevetes",
+    "DataSatImpuestos",
+    "DataMaquinariasMantenimiento",
+    "DataSatMultas",
+    "DataSutranMultas",
+    "DataMtcRecordsConductores",
+    "DataCallaoMultas",
+]
+
+tablas_solo_alertas = [
+    "DataApesegSoats",
+    "DataMtcRevisionesTecnicas",
+    "DataMtcBrevetes",
+    "DataSatImpuestos",
+    "DataMaquinariasMantenimiento",
+]
+
 
 def get_datos_alertas(db, premensaje):
-    tablas = [
-        "DataApesegSoats",
-        "DataMtcRevisionesTecnicas",
-        "DataMtcBrevetes",
-        "DataSatImpuestos",
-        "DataMaquinariasMantenimiento",
-    ]
 
     # crear sub-query para cada tabla
     cte1 = []
-    for tabla in tablas:
+    for tabla in tablas_solo_alertas:
         config = configuracion_scrapers.config(tabla)
         last_update = tabla.replace("Data", "LastUpdate")
 
@@ -82,19 +95,7 @@ def get_datos_boletines(db, premensaje):
     if premensaje:
         cmds = []
 
-        tablas = [
-            "DataApesegSoats",
-            "DataMtcRevisionesTecnicas",
-            "DataMtcBrevetes",
-            "DataSatImpuestos",
-            "DataMaquinariasMantenimiento",
-            "DataSatMultas",
-            "DataSutranMultas",
-            "DataMtcRecordsConductores",
-            "DataCallaoMultas",
-        ]
-
-        for tabla in tablas:
+        for tabla in tablas_todas:
             config = configuracion_scrapers.config(tabla)
             last_update = tabla.replace("Data", "LastUpdate")
 
@@ -152,3 +153,65 @@ def get_datos_boletines(db, premensaje):
         cursor = db.cursor()
         cursor.execute(cmd)
         return [dict(i) for i in cursor.fetchall()]
+
+
+def get_datos_registro(data_registro):
+
+    updates = []
+    for tabla in tablas_todas:
+        config = configuracion_scrapers.config(tabla)
+        if config["indice_placa"]:
+            for placa in data_registro["placas"]:
+                updates.append(
+                    {
+                        "Categoria": tabla,
+                        "Correo": data_registro["correo"],
+                        "DocNum": data_registro["doc_num"],
+                        "DocTipo": data_registro["doc_tipo"],
+                        "IdMember": data_registro["idmember"],
+                        "Placa": placa,
+                    }
+                )
+        else:
+            updates.append(
+                {
+                    "Categoria": tabla,
+                    "Correo": data_registro["correo"],
+                    "DocNum": data_registro["doc_num"],
+                    "DocTipo": data_registro["doc_tipo"],
+                    "IdMember": data_registro["idmember"],
+                    "Placa": None,
+                }
+            )
+
+    return updates
+
+
+def get_datos_nunca_actualizados(db):
+
+    cursor = db.cursor()
+
+    updates = []
+    for tabla in tablas_todas:
+        cmd = f"""
+                    SELECT IdMember, Correo, DocTipo,DocNum, IdMember, Placa from InfoMiembros
+                    JOIN InfoPlacas
+                    ON IdMember = IdMember_fk
+                    WHERE {tabla.replace("Data", "LastUpdate")} = "2020-01-01"
+               """
+
+        cursor.execute(cmd)
+        resultados = cursor.fetchall()
+        for resultado in resultados:
+            updates.append(
+                {
+                    "Categoria": tabla,
+                    "Correo": resultado["Correo"],
+                    "DocNum": resultado["DocNum"],
+                    "DocTipo": resultado["DocTipo"],
+                    "IdMember": resultado["IdMember"],
+                    "Placa": resultado["Placa"],
+                }
+            )
+
+    return updates

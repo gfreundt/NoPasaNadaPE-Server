@@ -1,5 +1,8 @@
 from src.test import prueba_scrapers, prueba_un_scraper_no_headless
 from src.comms import generar_mensajes
+from src.updates import datos_actualizar
+
+from pprint import pprint
 
 
 def main(db):
@@ -25,4 +28,7 @@ def main(db):
     # prueba_un_scraper_no_headless.main(db)
     # return
 
-    generar_mensajes.boletines(db)
+    # generar_mensajes.boletines(db)
+
+    a = datos_actualizar.get_datos_nunca_actualizados(db)
+    pprint(a)

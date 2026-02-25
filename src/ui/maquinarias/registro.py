@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime as dt
 from flask import current_app, request, render_template, session, redirect, url_for
 
+from src.updates import datos_actualizar, extrae_data_terceros
 from src.utils.constants import FORMATO_PASSWORD
 from src.utils.utils import (
     hash_text,
@@ -85,18 +86,24 @@ def main():
                 usuario=usuario,
             )
 
-        # No errors → proceed
-        cursor = db.cursor()
-        conn = db.conn
-        inscribir(cursor, conn, forma)
+        # sin errores, proceder con inscripcion y enviar correo de confirmacion a usuario
+        inscribir(db, forma)
         session["usuario"].update(usuario)
         enviar_correo_inmediato.inscripcion(
             db,
             correo=forma.get("correo"),
             nombre=forma.get("nombre"),
-            placas=forma.get("placa1", "")
-            + forma.get("placa2", "")
-            + forma.get("placa3", ""),
+            placas=", ".join(
+                [
+                    i
+                    for i in [
+                        forma.get("placa1", ""),
+                        forma.get("placa2", ""),
+                        forma.get("placa3", ""),
+                    ]
+                    if i
+                ]
+            ),
         )
         session["etapa"] = "validado"
         send_pushbullet(
@@ -105,12 +112,16 @@ def main():
         return mis_servicios.main()
 
 
-# ==================================================================
-# INSCRIBIR NUEVO MIEMBRO EN BASE DE DATOS
-# ==================================================================
+def inscribir(db, forma):
+    """
+    1. Crear nuevo registro en InfoMiembros con la información del nuevo usuario
+    2. Crear registros en InfoPlacas para las placas ingresadas y asigarlas al nuevo usuario (o asigna placa ya existente al nuevo usuario)
+    3. Crear registros en DataMtcRevisionesTecnicas para cada placa con fecha de vencimiento calculada (solo si hay información de año de fabricación y si la placa no estaba antes en la tabla)
+    4. Hacer un primer scrape con los datos recién ingresados para llenar la información de terceros lo antes posible
+    5. Activar usuario en session
+    """
 
-
-def inscribir(cursor, conn, forma):
+    cursor, conn = db.cursor(), db.conn
 
     # extraer CodigoMiembroExterno de la informacion enviada por cliente externo
     cursor.execute(
@@ -148,11 +159,13 @@ def inscribir(cursor, conn, forma):
     id_member = cursor.lastrowid
 
     # crear placas para nuevo miembro si no existe, si placa ya existe, asignar a este usuario
+    placas = []
     for p in range(1, 4):
         placa = forma.get(f"placa{p}", "").upper().strip()
         ano_fabricacion = forma.get(f"ano_fabricacion{p}", "").strip()
 
         if placa:
+            placas.append(placa)
             cursor.execute(
                 """
             INSERT INTO InfoPlacas
@@ -211,6 +224,19 @@ def inscribir(cursor, conn, forma):
 
     conn.commit()
 
+    # hacer un primer scrape con los datos recien ingresados
+    data_registro = {
+        "correo": forma.get("correo"),
+        "doc_tipo": forma.get("tipo_documento"),
+        "doc_num": forma.get("numero_documento"),
+        "idmember": id_member,
+        "placas": placas,
+    }
+
+    pendientes = datos_actualizar.get_datos_registro(data_registro)
+    extrae_data_terceros.main(db, pendientes)
+
+    # activa usuario en session
     session["usuario"]["id_member"] = id_member
 
 
@@ -236,7 +262,7 @@ def validaciones(db, forma, mi_perfil=False):
     }
 
     # --------------------------------------------------------------
-    # nombre
+    # NOMBRE
     # todos: mínimo 4 caracteres, máximo 50 caracteres
     # --------------------------------------------------------------
     if len(forma["nombre"]) < 4:
@@ -245,7 +271,7 @@ def validaciones(db, forma, mi_perfil=False):
         errors["nombre"] = "Nombre debe tener un máximo de 50 caracteres."
 
     # ---------------------------------------------------------------------------------
-    # documento
+    # DOCUMENTO DE IDENTIDAD
     # registro: validar que número de documento tenga formato correcto (depende del tipo)
     #           validar que combinación tipo+numero no esté registrada
     # mi perfil: no validar porque no se puede modificar
@@ -267,7 +293,7 @@ def validaciones(db, forma, mi_perfil=False):
             errors["documento"] = "Documento ya está asociado a otro usuario."
 
     # --------------------------------------------------------------
-    # celular
+    # CELULAR
     # todos:    debe tener 9 dígitos y solo números
     #           validar que no esté registrado por otro usuario
     # --------------------------------------------------------------
@@ -299,7 +325,7 @@ def validaciones(db, forma, mi_perfil=False):
 
             # error: placa no cumple con minimo 2 numeros y 2 letras
             elif not re.match(
-                "^(?=(?:.*[A-Za-z]){2,})(?=(?:.*\d){2,})[A-Za-z\d]{6}$", placa
+                r"^(?=(?:.*[A-Za-z]){2,})(?=(?:.*\d){2,})[A-Za-z\d]{6}$", placa
             ):
                 errors[f"placa{n}"] = "Placa invalida"
 
@@ -336,7 +362,7 @@ def validaciones(db, forma, mi_perfil=False):
                     errors[f"ano_fabricacion{n}"] = "Año de fabricación inválido"
 
     # -------------------------------------------------------------------------------------------------
-    # contraseña
+    # CONTRASEÑA
     # registro: validar que contraseña cumpla formato y que password1 y password2 coincidan
     # mi perfil: validar que contraseña actual se ingreso y sea correcta y si se ingresó
     #            validar que nueva contraseña cumpla formato y que password1 y password2

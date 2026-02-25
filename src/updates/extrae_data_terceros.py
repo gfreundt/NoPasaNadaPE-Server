@@ -83,7 +83,7 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock, headless):
             respuesta_scraper = func_timeout(
                 config["timeout"],
                 func_scraper.browser,
-                args=(dato, webdriver, headless),
+                args=(dato, webdriver),
             )
         logger.debug(f"Respuesta scraper: {pformat(respuesta_scraper)}")
 
@@ -145,8 +145,7 @@ def main(db, data_actualizar, headless=True):
     """
     Punto de Entrada para Iniciar Proceso de Scraping.
     Controla el timeout general de todo el proceso.
-    Al completar el proceso (todos los registros o timeout) actualiza la base de datos.
-    Retorna True si se actualizaron todos los registros, False si no se actualizaron todos.
+    Retorna los pendientes que no pudieron ser actualizados (quedaron en la cola)
     """
 
     lock = Lock()

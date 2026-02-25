@@ -1,5 +1,6 @@
 import logging
 
+from src.updates import datos_actualizar, extrae_data_terceros
 from src.utils.utils import calcula_primera_revtec
 
 
@@ -26,6 +27,7 @@ def cada_dia(db):
     try:
         recalcula_fechahasta_revtec_de_tabla(db)
         control_placas_huerfanas(db)
+        actualiza_datos_nunca_actualizados(db)
 
     except Exception as e:
         logger.error(f"Error en mantenimiento de cada dia: {e}")
@@ -163,4 +165,18 @@ def recalcula_fechahasta_revtec_de_tabla(db):
 
     logger.info(
         f"[MANTENIMIENTO DIARIO] Recalculo de FechaHasta de DataMtcRevisionesTecnicas. Registros modificados: {cursor.rowcount}"
+    )
+
+
+def actualiza_datos_nunca_actualizados(db):
+    """
+    Busca todos los datos en InfoMiembros e InfoPlacas que nunca han sido actualizados (fecha default)
+    y los manda a actualizar
+    """
+
+    pendientes = datos_actualizar.get_datos_nunca_actualizados(db)
+    extrae_data_terceros.main(db, pendientes)
+
+    logger.info(
+        "[MANTENIMIENTO DIARIO] Actualizando Datos Nunca Actualizados (LastUpdate = '2020-01-01')"
     )
