@@ -379,17 +379,19 @@ def calcula_primera_revtec(placa, ano_fabricacion):
     Usando la tabla del MTC, calcula la fecha de la primera revision tecnica de una placa
     segun su ano de fabricacion y ultimo digito de placa
     """
-
-    cronograma = {
-        0: "02-28",
-        1: "03-31",
-        2: "04-30",
-        3: "05-31",
-        4: "06-30",
-        5: "08-31",
-        6: "09-30",
-        7: "10-31",
-        8: "11-30",
-        9: "12-31",
-    }
-    return f"{int(ano_fabricacion) + 4}-{cronograma[int(placa[-1])]}"
+    try:
+        cronograma = {
+            0: "02-28",
+            1: "03-31",
+            2: "04-30",
+            3: "05-31",
+            4: "06-30",
+            5: "08-31",
+            6: "09-30",
+            7: "10-31",
+            8: "11-30",
+            9: "12-31",
+        }
+        return f"{int(ano_fabricacion) + 4}-{cronograma[int(placa[-1])]}"
+    except:
+        return None

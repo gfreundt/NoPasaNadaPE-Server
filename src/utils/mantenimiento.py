@@ -113,60 +113,81 @@ def elimina_revtec_calculada_placas_sin_miembro(db):
 
 def recalcula_fechahasta_revtec_de_tabla(db):
     """
-    Revisa todas las placas de la tabla DataMtcRevisionesTecnicas y recalcula la FechaHasta en caso se cumpla lo
-    siguiente:  hay un año de fabricacion asociado a la placa,
-                no se ha extraido la FechaHasta del MTC previamente,
-                esta con flag calculada o FechaHasta esta vacia
+    1. Crea un registro en DataMtcRevisionesTecnicas para todas las placas que tienen Año de Fabricacion en InfoPlacas
+        y aun no tienen registro
+    2. Revisa todas las placas de la tabla DataMtcRevisionesTecnicas y recalcula la FechaHasta en caso se cumpla lo
+        siguiente:  hay un año de fabricacion asociado a la placa,
+                    no se ha extraido la FechaHasta del MTC previamente,
+                    esta con flag calculada o FechaHasta esta vacia
+    3. Limpia todos los registros de DataMtcRevisionesTecnicas que tienen FechaHasta en blanco y FechaHastaFueCalculada = 1
     """
 
     conn = db.connection()
     conn.create_function("CPR", 2, calcula_primera_revtec)
+
     cmd = """
-            UPDATE DataMtcRevisionesTecnicas
-            SET
-                FechaHasta = CPR(
-                                PlacaValidate,
-                                (SELECT ip.AnoFabricacion
-                                    FROM InfoPlacas ip
-                                    WHERE ip.Placa = PlacaValidate
-                                    AND ip.AnoFabricacion IS NOT NULL
-                                    LIMIT 1)
-                                ),
-                             FechaHastaFueCalculada = 1
-
-            WHERE
-                
-                -- debe tener AnoFabricacion
-                EXISTS (
+                INSERT INTO DataMtcRevisionesTecnicas
+                    (IdPlaca_FK, PlacaValidate, FechaHasta, FechaHastaFueCalculada)
+                SELECT
+                    999,
+                    ip.Placa,
+                    CPR(ip.Placa, ip.AnoFabricacion),
+                    1
+                FROM InfoPlacas ip
+                WHERE ip.AnoFabricacion IS NOT NULL
+                AND NOT EXISTS (
                     SELECT 1
-                    FROM InfoPlacas ip
-                    WHERE ip.Placa = PlacaValidate
-                      AND ip.AnoFabricacion IS NOT NULL
-                )
-
-                AND
-                
-                -- saltarse FechaHasta extraido 
-                NOT (
-                    FechaHasta IS NOT NULL
-                    AND (FechaHastaFueCalculada = 0 OR FechaHastaFueCalculada IS NULL)
-                )
-                
-                AND
-                
-                -- flag calculada o FechaHasta vacia
-                (
-                    FechaHasta IS NULL
-                    OR FechaHastaFueCalculada = 1
-                )
+                    FROM DataMtcRevisionesTecnicas d
+                    WHERE d.PlacaValidate = ip.Placa
+                );
             """
 
     cursor = db.cursor()
     cursor.execute(cmd)
+    t = cursor.rowcount
+
+    cmd = """
+            UPDATE DataMtcRevisionesTecnicas
+            SET
+                FechaHasta = CPR(
+                    PlacaValidate,
+                    (SELECT ip.AnoFabricacion
+                    FROM InfoPlacas ip
+                    WHERE ip.Placa = DataMtcRevisionesTecnicas.PlacaValidate
+                    AND ip.AnoFabricacion IS NOT NULL
+                    LIMIT 1)
+                ),
+                FechaHastaFueCalculada = 1
+            WHERE
+                EXISTS (
+                    SELECT 1
+                    FROM InfoPlacas ip
+                    WHERE ip.Placa = DataMtcRevisionesTecnicas.PlacaValidate
+                    AND ip.AnoFabricacion IS NOT NULL
+                )
+                AND NOT (
+                    FechaHasta IS NOT NULL
+                    AND (FechaHastaFueCalculada = 0 OR FechaHastaFueCalculada IS NULL)
+                )
+                AND (
+                    FechaHasta IS NULL
+                    OR FechaHastaFueCalculada = 1
+                );
+            """
+
+    cursor.execute(cmd)
+
+    cmd = """
+            DELETE FROM DataMtcRevisionesTecnicas
+            WHERE FechaHasta IS NULL
+            AND FechaHastaFueCalculada = 1;
+            """
+
+    cursor.execute(cmd)
     db.conn.commit()
 
     logger.info(
-        f"[MANTENIMIENTO DIARIO] Recalculo de FechaHasta de DataMtcRevisionesTecnicas. Registros modificados: {cursor.rowcount}"
+        f"[MANTENIMIENTO DIARIO] Recalculo de FechaHasta de DataMtcRevisionesTecnicas. Registros modificados: {t + cursor.rowcount}"
     )
 
 

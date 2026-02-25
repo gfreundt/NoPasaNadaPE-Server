@@ -160,8 +160,8 @@ def insertar_fechahasta_revtec(cursor, placa, ano_fabricacion):
         # FechaHasta fue calculada previamente --> eliminar FechaHasta y resetear flag de calculada
         cmd = """
                     UPDATE DataMtcRevisionesTecnicas
-                    SET FechaHasta = NULL,
-                        FechaHastaFueCalculada = 0
+                       SET FechaHasta = NULL,
+                           FechaHastaFueCalculada = 0
                     WHERE  PlacaValidate = ?
                       AND  FechaHastaFueCalculada = 1
                 """
@@ -181,8 +181,8 @@ def insertar_fechahasta_revtec(cursor, placa, ano_fabricacion):
     if not resultado:
         cmd = """
                 INSERT INTO DataMtcRevisionesTecnicas
-                   (IdPlaca_FK, PlacaValidate, FechaHasta, FechaHastaFueCalculada)
-                   VALUES (?, ?, ?, 1)
+                       (IdPlaca_FK, PlacaValidate, FechaHasta, FechaHastaFueCalculada)
+                       VALUES (?, ?, ?, 1)
                 """
         cursor.execute(
             cmd, (999, placa, calcula_primera_revtec(placa, ano_fabricacion))
