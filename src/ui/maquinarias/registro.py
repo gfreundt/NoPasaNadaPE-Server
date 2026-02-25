@@ -1,10 +1,16 @@
 import re
+from tkinter import INSERT
 import uuid
 from datetime import datetime as dt
 from flask import current_app, request, render_template, session, redirect, url_for
 
 from src.utils.constants import FORMATO_PASSWORD
-from src.utils.utils import hash_text, send_pushbullet, compare_text_to_hash
+from src.utils.utils import (
+    hash_text,
+    send_pushbullet,
+    compare_text_to_hash,
+    calcula_primera_revtec,
+)
 from src.comms import enviar_correo_inmediato
 from src.ui.maquinarias import mis_servicios
 
@@ -179,6 +185,30 @@ def inscribir(cursor, conn, forma):
                     fecha_base,
                 ),
             )
+
+            # crear manualmente el registro en DataMtcRevisionesTecnicas con la fecha calculada de vencimiento para cada placa
+            # solo se hace si hay informacion de año de fabricación y si la placa no estaba antes en la tabla
+            if ano_fabricacion:
+                cmd = """
+                        INSERT INTO DataMtcRevisionesTecnicas
+                            (IdPlaca_FK, PlacaValidate, FechaHasta, FechaHastaFueCalculada)
+                            SELECT ?, ?, ?, ?
+                            WHERE NOT EXISTS (
+                                SELECT 1
+                                FROM DataMtcRevisionesTecnicas
+                                WHERE PlacaValidate = ?
+                            );
+                      """
+                cursor.execute(
+                    cmd,
+                    (
+                        999,
+                        placa,
+                        calcula_primera_revtec(placa, ano_fabricacion),
+                        1,
+                        placa,
+                    ),
+                )
 
     conn.commit()
 

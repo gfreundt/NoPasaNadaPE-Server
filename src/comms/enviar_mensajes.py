@@ -4,14 +4,14 @@ import json
 import logging
 
 from src.utils.email import Email
-from src.utils.constants import NETWORK_PATH
+from src.utils.constants import NETWORK_PATH, AMBIENTE_PRODUCCION
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 
 logger = logging.getLogger(__name__)
 
 
-def main(db, tipo_mensaje, simulation=False):
+def main(db, tipo_mensaje, simulation=not AMBIENTE_PRODUCCION):
 
     cursor = db.cursor()
     conn = db.conn

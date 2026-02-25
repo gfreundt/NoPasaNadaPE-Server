@@ -2,7 +2,7 @@ import re
 from flask import current_app, redirect, request, render_template, url_for, session
 
 from src.ui.maquinarias import login
-from src.utils.utils import hash_text
+from src.utils.utils import hash_text, calcula_primera_revtec
 from src.ui.maquinarias import mis_servicios, registro
 
 
@@ -104,8 +104,7 @@ def actualizar(cursor, conn, forma):
         i for i in (forma.get("placa1"), forma.get("placa2"), forma.get("placa3")) if i
     ]
     for k, placa in enumerate(placas, start=1):
-        c = forma.get(f"ano_fabricacion{k}")
-        print("&&&&&&", c)
+        ano_fabricacion = forma.get(f"ano_fabricacion{k}")
         cursor.execute(
             """
             INSERT INTO InfoPlacas
@@ -134,11 +133,71 @@ def actualizar(cursor, conn, forma):
                 fecha_base,
                 fecha_base,
                 fecha_base,
-                c,
+                ano_fabricacion,
             ),
         )
+
+        #
+        insertar_fechahasta_revtec(cursor, placa, ano_fabricacion)
 
     conn.commit()
 
     # volver a extraer data de usuario para actualizar session con nuevos datos
     login.extraer_data_usuario(cursor, correo=forma["correo"])
+
+
+def insertar_fechahasta_revtec(cursor, placa, ano_fabricacion):
+    """
+    Calcula FechaHasta en DataMtcRevisionesTecnicas usando tabla del MTC si no hay data previa
+    Casos que no sean cubiertos por esta logica se actualizaran en Mantenimiento
+    """
+
+    placa = placa.upper()
+
+    # caso A: usuario no ingreso año de fabricacion
+    if not ano_fabricacion:
+        # FechaHasta fue extraida previamente --> no hacer nada
+        # FechaHasta fue calculada previamente --> eliminar FechaHasta y resetear flag de calculada
+        cmd = """
+                    UPDATE DataMtcRevisionesTecnicas
+                    SET FechaHasta = NULL,
+                        FechaHastaFueCalculada = 0
+                    WHERE  PlacaValidate = ?
+                      AND  FechaHastaFueCalculada = 1
+                """
+        cursor.execute(cmd, (placa,))
+        return
+
+    # caso B: usuario si ingreso año de fabricacion
+    cmd = """   
+            SELECT 1
+            FROM DataMtcRevisionesTecnicas
+            WHERE PlacaValidate = ?
+            """
+    cursor.execute(cmd, (placa.upper(),))
+    resultado = cursor.fetchone()
+
+    # caso B1: no existe la placa en DataMtcRevisionesTecnicas --> crearla y calcular FechaHasta con nuevo año de fabricacion
+    if not resultado:
+        cmd = """
+                INSERT INTO DataMtcRevisionesTecnicas
+                   (IdPlaca_FK, PlacaValidate, FechaHasta, FechaHastaFueCalculada)
+                   VALUES (?, ?, ?, 1)
+                """
+        cursor.execute(
+            cmd, (999, placa, calcula_primera_revtec(placa, ano_fabricacion))
+        )
+        return
+
+    # caso B2: si existe la placa en DataMtcRevisionesTecnicas
+    # tiene FechaHasta extraida --> ignorar
+    # tiene FechaHasta calculada --> recalcular FechaHasta con nuevo año de fabricacion
+    cmd = """
+                UPDATE DataMtcRevisionesTecnicas
+                    SET   FechaHasta = ?,
+                          FechaHastaFueCalculada = 1
+                    WHERE PlacaValidate = ?
+                      AND FechaHastaFueCalculada = 1
+                """
+    cursor.execute(cmd, (calcula_primera_revtec(placa, ano_fabricacion), placa))
+    return

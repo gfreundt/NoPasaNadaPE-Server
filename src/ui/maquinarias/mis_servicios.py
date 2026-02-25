@@ -144,7 +144,7 @@ def generar_data_servicios(cursor, correo):
 
     # Revisiones Tecnicas
     cursor.execute(
-        """ SELECT Placa, FechaHasta, AnoFabricacion
+        """ SELECT Placa, FechaHasta
             FROM InfoPlacas a
             LEFT JOIN DataMtcRevisionesTecnicas b
             ON b.PlacaValidate = a.Placa
@@ -155,12 +155,6 @@ def generar_data_servicios(cursor, correo):
 
     for revtec in cursor.fetchall():
         placa = revtec["Placa"]
-        ano_fabricacion = revtec["AnoFabricacion"]
-
-        if ano_fabricacion:
-            fpr = fecha_primera_revtec(ano_fabricacion, placa)
-            if dt.strptime(fpr, "%Y-%m-%d") > dt.now():
-                pass
 
         plazos = calculo_plazos(
             revtec["FechaHasta"],
@@ -637,19 +631,3 @@ def calculo_plazos(fecha_vigencia, fecha_actualizacion, pasado_vacio=True):
                 "dias_desde": dias_desde,
             },
         }
-
-
-def fecha_primera_revtec(ano_fabricacion, placa):
-    cronograma = {
-        0: "02-28",
-        1: "03-31",
-        2: "04-30",
-        3: "05-31",
-        4: "06-30",
-        5: "08-31",
-        6: "09-30",
-        7: "10-31",
-        8: "11-30",
-        9: "12-31",
-    }
-    return f"{int(ano_fabricacion) + 4}-{cronograma[int(placa[-1])]}"

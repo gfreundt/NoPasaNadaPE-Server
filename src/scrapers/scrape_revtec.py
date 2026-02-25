@@ -1,10 +1,11 @@
 import time
 import io
 import copy
+from flask import current_app
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoAlertPresentException
 
-from src.utils.utils import use_truecaptcha
+from src.utils.utils import use_truecaptcha, calcula_primera_revtec
 
 
 def browser(datos, webdriver):
@@ -67,15 +68,13 @@ def browser(datos, webdriver):
         for pos in range(1, 9):
             response.append(webdriver.find_element(By.ID, f"Spv1_{pos}").text)
 
+        # ajuste nanual en caso de que el resultado sea DESAPROBADO, para que se pueda calcular la fecha de vencimientto
         if response[6] == "DESAPROBADO":
             response[5] = copy.deepcopy(response[4])
             response[7] = "VENCIDO"
 
-        # proceso completo -- dejar la pagina lista para la siguiente placa
-        btn = webdriver.find_element(By.ID, "btnLimpiar")
-        webdriver.execute_script("arguments[0].click();", btn)
-
-        time.sleep(1)
+        # campo de FechaHastaFueCalculado es Falso (0)
+        response.append(0)
         return [response]
 
     return "Exceso Reintentos Captcha"

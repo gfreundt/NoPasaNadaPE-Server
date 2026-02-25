@@ -103,6 +103,7 @@ def config(indice):
                 "FechaHasta": 5,
                 "Resultado": 6,
                 "Vigencia": 7,
+                "FechaHastaFueCalculada": 8,
             },
             "campo_fecha_hasta": "FechaHasta",
             "alerta_dias": "-25, -15, -5, 0, 1, 2, 3",

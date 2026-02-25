@@ -42,7 +42,8 @@ else:
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
 
-LOCAL = "Salita-TV" in platform.node()
+# flag True/False de si esta corriendo en produccion
+AMBIENTE_PRODUCCION = "srv" in platform.node() and "-dev" not in BASE_DIR
 
 # 3-letter months
 MONTHS_3_LETTERS = (
