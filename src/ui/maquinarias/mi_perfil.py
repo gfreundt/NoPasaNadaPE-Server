@@ -9,13 +9,13 @@ from src.ui.maquinarias import mis_servicios, registro
 # login endpoint
 def main():
 
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "validado" or not session.get("usuario"):
+        return redirect(url_for("maquinarias"))
+
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
-
-    # seguridad: evitar navegacion directa a url
-    if session.get("etapa") != "validado":
-        return redirect(url_for("maquinarias"))
 
     session["perfil_muestra_password"] = False
     session.permanent = True

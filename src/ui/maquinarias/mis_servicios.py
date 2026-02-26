@@ -6,15 +6,15 @@ from src.utils.utils import date_to_user_format
 
 def main():
 
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "validado" or not session.get("usuario"):
+        return redirect(url_for("maquinarias"))
+
     db = current_app.db
 
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
-
-    # seguridad: evitar navegacion directa a url
-    if session.get("etapa") != "validado":
-        return redirect(url_for("maquinarias"))
 
     # extraer toda la data relevante de la base de datos
     cursor = db.cursor()

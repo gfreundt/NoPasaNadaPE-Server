@@ -4,11 +4,11 @@ from flask import current_app, session, redirect, url_for, Response
 
 def main(tipo, id):
 
-    db = current_app.db
-
     # seguridad: evitar navegacion directa a url
-    if session.get("etapa") != "validado":
+    if session.get("etapa") != "validado" or not session.get("usuario"):
         return redirect(url_for("maquinarias"))
+
+    db = current_app.db
 
     # extraer string base64 de la base de datos
     cursor = db.cursor()

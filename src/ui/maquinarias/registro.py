@@ -1,5 +1,6 @@
 import re
 import uuid
+from threading import Thread
 from datetime import datetime as dt
 from flask import current_app, request, render_template, session, redirect, url_for
 
@@ -12,20 +13,19 @@ from src.utils.utils import (
     calcula_primera_revtec,
 )
 from src.comms import enviar_correo_inmediato
-from src.ui.maquinarias import mis_servicios
 
 
 def main():
+
+    # seguridad: evitar navegacion directa a url
+    if session.get("etapa") != "registro" or not session.get("usuario"):
+        return redirect(url_for("maquinarias"))
 
     db = current_app.db
 
     # respuesta a pings para medir uptime
     if request.method == "HEAD":
         return ("", 200)
-
-    # seguridad: evitar navegacion directa a url
-    if session.get("etapa") != "registro":
-        return redirect(url_for("maquinarias"))
 
     # Initial page load
     if request.method == "GET" or not session["usuario"].get("correo"):
@@ -109,7 +109,7 @@ def main():
         send_pushbullet(
             title=f"NoPasaNadaPE - Usuario Inscrito ({forma.get('correo')})"
         )
-        return mis_servicios.main()
+        return redirect(url_for("maquinarias_logout"))
 
 
 def inscribir(db, forma):
@@ -234,7 +234,10 @@ def inscribir(db, forma):
     }
 
     pendientes = datos_actualizar.get_datos_registro(data_registro)
-    extrae_data_terceros.main(db, pendientes)
+
+    # correr en thread para no bloquear al usuario
+    t = Thread(target=extrae_data_terceros.main, args=(db, pendientes))
+    t.start()
 
     # activa usuario en session
     session["usuario"]["id_member"] = id_member
@@ -246,8 +249,6 @@ def inscribir(db, forma):
 
 
 def validaciones(db, forma, mi_perfil=False):
-
-    print(forma)
 
     cur = db.cursor()
 
@@ -406,5 +407,4 @@ def validaciones(db, forma, mi_perfil=False):
     # --------------------------------------------------------------
     # eliminar blancos y devolver solo errores
     # --------------------------------------------------------------
-    print("--------", {k: v for k, v in errors.items() if v})
     return {k: v for k, v in errors.items() if v}

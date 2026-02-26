@@ -23,8 +23,8 @@ def ejecutar_scheduler(db):
     """
 
     # TEST TEST TEST TEST
-    test_script_from_cron.main(db)
-    return
+    # test_script_from_cron.main(db)
+    # return
 
     # 1. Boletines a las hh:05 entre 7am y 8pm (inclusive)
     for hour in range(7, 21):

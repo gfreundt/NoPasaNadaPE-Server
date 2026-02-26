@@ -15,6 +15,10 @@ def main():
     envia un correo al usuario con el url unico que incluye el nuevo token
     """
 
+    # seguridad: evitar navegacion directa a url
+    if not session.get("usuario"):
+        return redirect(url_for("login"))
+
     db = current_app.db
 
     token = uuid.uuid4().hex
