@@ -21,7 +21,9 @@ Mi Perfil | No Pasa Nada PE
     <div class="notion-login w-100" style="max-width: 360px; font-weight: 400;">
         <div class="d-flex flex-column">
 
-            <form action="{{ url_for('maquinarias-mi-perfil') }}" method="POST">
+            <form action="{{ url_for('maquinarias-mi-perfil') }}" method="POST" autocomplete="off">
+                <input type="text" name="fakeusernameremembered" autocomplete="username" style="display:none">
+                <input type="password" name="fakepasswordremembered" autocomplete="current-password" style="display:none">
                 
                 <div class="form-group mb-3"> <label for="correo_display" class="form-label small fw-medium text-secondary d-flex align-items-center mb-1">
                         <img src="/static/images/email-icon.png" alt="Email Icon" style="height: 22px; width: 22px; margin-right: 5px;">
@@ -32,7 +34,7 @@ Mi Perfil | No Pasa Nada PE
                           id="correo_display">
                         {{ usuario.correo }}
                     </div>
-                    <input type="hidden" name="correo" value="{{ usuario.correo }}">
+                    <input type="hidden" name="correo" value="{{ usuario.correo }}" autocomplete="username">
                 </div>
 
                 {# --- Eliminar Cuenta Button (Triggers Modal) --- #}
@@ -327,9 +329,11 @@ Mi Perfil | No Pasa Nada PE
                                 <img src="/static/images/password-icon.png" alt="Password Icon" style="height: 22px; width: 22px; margin-right: 5px;">
                                 Contraseña actual
                             </label>
-                            <input id="current-password-input" 
-                                    name="current_password" 
-                                    type="password" class="form-control" 
+                            <input  id="current-password-input"
+                                    name="current_password"
+                                    type="password"
+                                    class="form-control"
+                                    autocomplete="current-password"
                                     style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
                             {% if errors.current_password %}
@@ -346,9 +350,10 @@ Mi Perfil | No Pasa Nada PE
                             <img src="/static/images/password-icon.png" alt="Password Icon" style="height: 22px; width: 22px; margin-right: 5px;">
                             Nueva contraseña
                         </label>
-                        <input id="password1-input" 
+                        <input  id="password1-input" 
                                 name="password1" 
-                                type="password" class="form-control" 
+                                type="password" class="form-control"
+                                autocomplete="new-password"
                                 {% if third_party_login %} disabled {% endif %}
                                 style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
@@ -365,12 +370,12 @@ Mi Perfil | No Pasa Nada PE
                             <img src="/static/images/password-icon.png" alt="Password Icon" style="height: 22px; width: 22px; margin-right: 5px;">
                             Confirmar nueva contraseña
                         </label>
-                        <input id="password2-input" 
+                        <input  id="password2-input" 
                                 name="password2" 
-                                type="password" class="form-control" 
+                                type="password" class="form-control"
+                                autocomplete="new-password"
                                 {% if third_party_login %} disabled {% endif %}
                                 style="height: 48px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-
                         {% if errors.password2 %}
                             <div class="invalid-feedback text-center mb-1" style="display: block;">
                                 {{ errors.password2 }}
