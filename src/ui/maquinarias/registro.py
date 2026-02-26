@@ -54,7 +54,7 @@ def main():
 
     # POST — form submitted
     elif request.method == "POST":
-        forma = dict(request.form)
+        forma = request.form.to_dict(flat=True)
 
         # procesar texto ingresados de placas lo mejor que se pueda
         if forma.get("placas"):

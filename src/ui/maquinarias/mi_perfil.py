@@ -37,8 +37,7 @@ def main():
         conn = db.conn
 
         # extraer data de formulario
-        forma = dict(request.form)
-        print(forma)
+        forma = request.form.to_dict(flat=True)
 
         # procesar texto ingresados de placas lo mejor que se pueda
         if forma.get("placas"):
