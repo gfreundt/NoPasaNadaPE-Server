@@ -247,6 +247,8 @@ def inscribir(db, forma):
 
 def validaciones(db, forma, mi_perfil=False):
 
+    print(forma)
+
     cur = db.cursor()
 
     errors = {
