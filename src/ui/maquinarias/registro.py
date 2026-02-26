@@ -371,7 +371,7 @@ def validaciones(db, forma, mi_perfil=False):
 
     if mi_perfil:
         current_password = forma.get("current_password")
-
+        print("---------- current_password:", current_password)  # DEBUG
         if current_password:  # solo si el usuario lo ingresó
             session["perfil_muestra_password"] = True
 
