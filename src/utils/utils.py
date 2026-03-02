@@ -158,10 +158,7 @@ def stop_vpn():
     Requires sudo privileges.
     """
     try:
-        if not LOCAL:
-            subprocess.run(["/usr/bin/pkill", "openvpn"], check=False)
-        else:
-            subprocess.run(["sudo", "pkill", "openvpn"], check=False)
+        subprocess.run(["sudo", "pkill", "openvpn"], check=False)
         time.sleep(1.5)
         logger.info("VPN detenido.")
         return True

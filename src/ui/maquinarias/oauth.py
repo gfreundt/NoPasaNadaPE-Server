@@ -23,10 +23,10 @@ def google_authorize():
         return terminar_login_terceros(correo, nombre, proveedor="Google")
     except (AuthlibBaseError, requests.exceptions.RequestException):
         flash("Error de credenciales.")
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
     except Exception as e:
         flash(f"Error general: {e}. Intente otra vez.")
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
 
 
 def facebook_login():
@@ -43,10 +43,10 @@ def facebook_authorize():
         return current_app.terminar_login_terceros(correo, nombre, proveedor="Facebook")
     except (AuthlibBaseError, requests.exceptions.RequestException):
         flash("Error de credenciales.")
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
     except Exception as e:
         flash(f"Error general: {e}. Intente otra vez.")
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
 
 
 def terminar_login_terceros(correo, nombre, proveedor):
@@ -60,7 +60,7 @@ def terminar_login_terceros(correo, nombre, proveedor):
             "provider": proveedor,
             "name": nombre,
         }
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
 
     # revisar si miembro suscrito -- si no, flujo de registro antes
     suscrito = login.validar_suscripcion(correo)
@@ -95,10 +95,10 @@ def microsoft_authorize(app):
         return app.terminar_login_terceros(correo, nombre, proveedor="Facebook")
     except (AuthlibBaseError, requests.exceptions.RequestException):
         flash("Error de credenciales.")
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
     except Exception as e:
         flash(f"Error general: {e}. Intente otra vez.")
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
 
 
 def instagram_login(app):

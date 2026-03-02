@@ -2,14 +2,13 @@ from datetime import timedelta as td
 from flask import render_template
 from werkzeug.exceptions import HTTPException
 from authlib.integrations.flask_client import OAuth
+
 from security.keys import (
     FLASK_SECRET_KEY,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     FACEBOOK_CLIENT_ID,
     FACEBOOK_CLIENT_SECRET,
-    MICROSOFT_CLIENT_ID,
-    MICROSOFT_CLIENT_SECRET,
 )
 from src.server import (
     autorizar_nueva_contrasena,
@@ -30,6 +29,14 @@ from src.ui.maquinarias import (
 
 
 def definir_rutas(app):
+    """
+    Define las rutas de la aplicacion:
+        - Landing: punto de entrada.
+        - Rutas UI (dinamicas): requieren procesamiento de backend (manejo de formularios, etc.)
+        - Rutas UI (texto fijo): solo muestran contenido estatico, sin necesidad de procesamiento en backend.
+        - Rutas de APIs
+        - Rutas para login de terceros (OAuth).
+    """
 
     # ------------- Landing
     app.add_url_rule(
@@ -42,7 +49,7 @@ def definir_rutas(app):
     # ------------- Rutas UI (dinamicas)
     app.add_url_rule(
         rule="/maquinarias",
-        endpoint="maquinarias",
+        endpoint="maquinarias-login",
         view_func=login.main,
         methods=["GET", "POST"],
     )
@@ -142,6 +149,8 @@ def definir_rutas(app):
     )
 
     # Login de terceros
+    # ACTIVOS: Google, Facebook
+    # PENDIENTES: Microsoft, Instagram, Apple
     app.add_url_rule(
         rule="/google_login",
         endpoint="google_login",
@@ -164,6 +173,7 @@ def definir_rutas(app):
         view_func=oauth.facebook_authorize,
         methods=["GET", "POST"],
     )
+    """
     app.add_url_rule(
         rule="/instagram_login",
         endpoint="instagram_login",
@@ -197,9 +207,17 @@ def definir_rutas(app):
         view_func=oauth.apple_authorize,
         methods=["GET", "POST"],
     )
+    """
 
 
 def configurar_flask(app):
+    """
+    Configura la aplicacion de Flask, definiendo:
+        - Clave secreta para sesiones.
+        - Configuraciones de seguridad para cookies.
+        - Manejo de errores HTTP y excepciones no manejadas.
+    """
+
     app.jinja_env.add_extension("jinja2.ext.do")
     app.secret_key = FLASK_SECRET_KEY
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -222,6 +240,16 @@ def configurar_flask(app):
 
 
 def configurar_oauth(app):
+    """
+    Configura OAuth para login de terceros, definiendo:
+        ACTIVOS:
+            - Google
+            - Facebook
+        PENDIENTES:
+            - Microsoft
+            - Instagram
+            - Apple
+    """
 
     app.oauth = OAuth(app)
 
@@ -243,6 +271,7 @@ def configurar_oauth(app):
         client_kwargs={"scope": "email,public_profile"},
     )
 
+    """
     # === MICROSOFT OPENID CONFIGURATION ADDED HERE ===
     app.oauth.register(
         name="microsoft",
@@ -255,7 +284,7 @@ def configurar_oauth(app):
     )
     # =================================================
 
-    """
+    
     app.oauth.register(
         name="linkedin",
         client_id=LINKEDIN_CLIENT_ID,

@@ -19,7 +19,7 @@ def main():
 
     # seguridad: evitar navegacion directa a url
     if session.get("etapa") != "registro" or not session.get("usuario"):
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
 
     db = current_app.db
 

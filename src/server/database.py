@@ -1,8 +1,8 @@
 import os
 import sqlite3
 import logging
-from src.utils.constants import DB_NETWORK_PATH
 
+from src.utils.constants import DB_NETWORK_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -12,11 +12,13 @@ class Database:
     Crea una clase que permite generar conexiones independientes a la misma base de datos.
     Necesario para trabajar con multiples workers en Gunicorn.
     La conexion es inicializada con Row Factory (acceder a resultado de query como diccionario).
+    El atributo _lock_file_handle sirve para definir mas adelante cual worker de Gunicorn es el "master"
     """
 
     def __init__(self):
         self.conn = None
         self._pid = None
+        self._lock_file_handle = None
 
     def _ensure_conn(self):
         """Asegura que cada worker tenga su propia conexion de SQLite."""

@@ -9,6 +9,8 @@ def get_test_data_new(s):
     for key, value in cruda.items():
         p = {"Categoria": key}
         x = random.choice(value)
+
+        # datos: idmember, doctipo, docnum
         if len(x) == 3:
             p.update(
                 {
@@ -18,6 +20,8 @@ def get_test_data_new(s):
                     "DocNum": x[2],
                 }
             )
+
+        # datos: placa, docnum
         elif len(x) == 2:
             p.update(
                 {
@@ -27,8 +31,18 @@ def get_test_data_new(s):
                     "DocNum": x[1],
                 }
             )
+
+        # datos: placa
         else:
-            p.update({"IdMember": None, "Placa": x, "DocTipo": None, "DocNum": None})
+            p.update(
+                {
+                    "IdMember": None,
+                    "Placa": x,
+                    "DocTipo": None,
+                    "DocNum": None,
+                }
+            )
+
         fina.append(p)
 
     return fina
@@ -36,7 +50,7 @@ def get_test_data_new(s):
 
 def get_test_data():
 
-    # brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans
+    # brevetes, recvehic, revtecs, satimps, satmuls, soats, sunarps, sutrans, callaomuls, maquinarias
     return {
         "DataMtcBrevetes": [
             [79, "DNI", "09878584"],

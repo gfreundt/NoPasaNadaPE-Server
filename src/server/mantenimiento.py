@@ -1,4 +1,5 @@
 import logging
+import time
 
 from src.updates import datos_actualizar, extrae_data_terceros
 from src.utils.utils import calcula_primera_revtec
@@ -17,9 +18,6 @@ def cada_hora(db):
     except Exception as e:
         logger.error(f"Error en mantenimiento de cada hora: {e}")
 
-    finally:
-        db.conn.commit()
-
 
 def cada_dia(db):
     """Scripts que se ejecutaran una vez al dia"""
@@ -32,14 +30,12 @@ def cada_dia(db):
     except Exception as e:
         logger.error(f"Error en mantenimiento de cada dia: {e}")
 
-    finally:
-        db.conn.commit()
-
 
 def control_placas_huerfanas(db):
     """
     Modifica el IdMember_FK = 0 para todas las placas que no tienen un miembro asociado
     """
+    s = time.perf_counter()
 
     cmd = """
                 UPDATE InfoPlacas
@@ -51,9 +47,10 @@ def control_placas_huerfanas(db):
 
     cursor = db.cursor()
     cursor.execute(cmd)
+    db.conn.commit()
 
     logger.info(
-        f"[MANTENIMIENTO DIARIO] Control de placas huerfanas completa. Regsitros modificados: {cursor.rowcount}"
+        f"[MANTENIMIENTO] Control de placas huerfanas completa. Registros: {cursor.rowcount}. Tiempo: {time.perf_counter() - s:.2f} segundos"
     )
 
 
@@ -62,6 +59,7 @@ def actualiza_ano_de_fabricacion_de_ficha_sunarp(db):
     Actualiza el campo AnoFabricacion en InfoPlacas con el valor del campo Ano de DataSunarpFichas
     para aquellas placas que no tienen un valor previo de AnoFabricacion pero si tienen un valor en DataSunarpFichas
     """
+    s = time.perf_counter()
 
     cmd = """   UPDATE InfoPlacas
                 SET AnoFabricacion = (
@@ -83,9 +81,10 @@ def actualiza_ano_de_fabricacion_de_ficha_sunarp(db):
 
     cursor = db.cursor()
     cursor.execute(cmd)
+    db.conn.commit()
 
     logger.info(
-        f"[MANTENIMIENTO HORARIO] Actualizacion AnoFabricacion de fichas SUNARP. Regsitros modificados: {cursor.rowcount}"
+        f"[MANTENIMIENTO] Actualizacion AnoFabricacion de fichas SUNARP. Registros: {cursor.rowcount}. Tiempo: {time.perf_counter() - s:.2f} segundos"
     )
 
 
@@ -94,6 +93,7 @@ def elimina_revtec_calculada_placas_sin_miembro(db):
     Si encuentra un placa que no tiene asociado un miembro, elimina el valor de FechaHasta para esa placa
     si la fecha fue calculada y no obtenida de la pagina web del MTC
     """
+    s = time.perf_counter()
 
     cmd = """ 
             UPDATE DataMtcRevisionesTecnicas
@@ -105,9 +105,10 @@ def elimina_revtec_calculada_placas_sin_miembro(db):
 
     cursor = db.cursor()
     cursor.execute(cmd)
+    db.conn.commit()
 
     logger.info(
-        f"[MANTENIMIENTO HORARIO] Eliminacion de FechaHasta calculada en placas huerfanas. Registros modificados: {cursor.rowcount}"
+        f"[MANTENIMIENTO] Eliminacion de FechaHasta calculada en placas huerfanas. Registros: {cursor.rowcount}. Tiempo: {time.perf_counter() - s:.2f} segundos"
     )
 
 
@@ -121,9 +122,10 @@ def recalcula_fechahasta_revtec_de_tabla(db):
                     esta con flag calculada o FechaHasta esta vacia
     3. Limpia todos los registros de DataMtcRevisionesTecnicas que tienen FechaHasta en blanco y FechaHastaFueCalculada = 1
     """
+    s = time.perf_counter()
 
-    conn = db.connection()
-    conn.create_function("CPR", 2, calcula_primera_revtec)
+    cursor = db.cursor()
+    db.conn.create_function("CPR", 2, calcula_primera_revtec)
 
     cmd = """
                 INSERT INTO DataMtcRevisionesTecnicas
@@ -142,7 +144,6 @@ def recalcula_fechahasta_revtec_de_tabla(db):
                 );
             """
 
-    cursor = db.cursor()
     cursor.execute(cmd)
     t = cursor.rowcount
 
@@ -187,7 +188,7 @@ def recalcula_fechahasta_revtec_de_tabla(db):
     db.conn.commit()
 
     logger.info(
-        f"[MANTENIMIENTO DIARIO] Recalculo de FechaHasta de DataMtcRevisionesTecnicas. Registros modificados: {t + cursor.rowcount}"
+        f"[MANTENIMIENTO] Recalculo de FechaHasta de DataMtcRevisionesTecnicas. Registros: {t + cursor.rowcount}. Tiempo: {time.perf_counter() - s:.2f} segundos"
     )
 
 
@@ -201,5 +202,5 @@ def actualiza_datos_nunca_actualizados(db):
     extrae_data_terceros.main(db, pendientes)
 
     logger.info(
-        "[MANTENIMIENTO DIARIO] Actualizando Datos Nunca Actualizados (LastUpdate = '2020-01-01')"
+        "[MANTENIMIENTO] Actualizando Datos Nunca Actualizados (LastUpdate = '2020-01-01')"
     )

@@ -175,7 +175,7 @@ def config(indice):
             "residential_proxy": False,
             "indice_placa": True,
             "funcion_scraper": scrape_maqmant,
-            "timeout": 15,
+            "timeout": 20,
             "estructura_respuesta": {
                 "FechaUltimoServicio": 0,
                 "UltimoServicioDetalle": 1,

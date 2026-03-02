@@ -17,7 +17,7 @@ def main():
 
     # seguridad: evitar navegacion directa a url
     if not session.get("usuario"):
-        return redirect(url_for("login"))
+        return redirect(url_for("maquinarias-login"))
 
     db = current_app.db
 
@@ -56,4 +56,4 @@ def main():
         token=token,
     )
 
-    return redirect(url_for("maquinarias"))
+    return redirect(url_for("maquinarias-login"))

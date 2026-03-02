@@ -23,7 +23,12 @@ def api(datos, timeout):
     payload = {"Placa": placa, "Documento": doc_num}
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=timeout,
+        )
 
         # respuesta correcta
         if response.status_code == 200:

@@ -9,4 +9,4 @@ def main():
 
     logger.info(f"Logout: Id={session.get('id_member')} Correo={session.get('Correo')}")
     session.clear()
-    return redirect(url_for("maquinarias"))
+    return redirect(url_for("maquinarias-login"))

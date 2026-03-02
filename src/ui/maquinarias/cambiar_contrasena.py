@@ -98,7 +98,7 @@ def main(token):
             )
 
         session.clear()
-        return redirect(url_for("maquinarias"))
+        return redirect(url_for("maquinarias-login"))
 
 
 def validaciones(forma):

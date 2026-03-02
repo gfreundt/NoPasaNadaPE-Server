@@ -9,55 +9,55 @@ from src.updates import gather_one_manual
 logger = logging.getLogger(__name__)
 
 
-def main(size=1):
+def main():
+    """
+    Prueba todos los scrapers de forma secuencial.
+    Usa data elegida al azar de una lista de data de prueba.
+    """
 
-    logger.info(f"Iniciando prueba de scrapers con {size} registro(s) cada uno.")
+    titulo_log = "[PRUEBA SCRAPERS]"
+
+    logger.info(f"{titulo_log} Iniciando proceso con 1 registro cada uno.")
 
     # generar data de prueba
-    pruebas = get_test_data_new(size)
+    pruebas = get_test_data_new(s=1)
 
     # iterar todas las pruebas
-    positivo, negativo = [], []
+    positivo, negativo_simple, negativo_total = [], [], []
     for k, data in enumerate(pruebas, start=1):
-        logger.info(
-            f"Lanzando scraper prueba {k}/{len(pruebas)} -- {data['Categoria']}"
-        )
+        logger.info(f"{titulo_log} Probando {k}/{len(pruebas)} -- {data['Categoria']}")
         start_time = time.perf_counter()
+
         try:
             respuesta = gather_one_manual.main(data, headless=True)
+
             if respuesta:
                 end_time = time.perf_counter()
                 logger.info(
-                    f"Prueba Scraper {data['Categoria']}. Tiempo: {end_time - start_time:.2f} segundos"
+                    f"{titulo_log} {data['Categoria']} ok. Tiempo: {end_time - start_time:.2f} segundos"
                 )
                 positivo.append(data["Categoria"])
+
             else:
-                logger.warning(f"Prueba Scraper {data['Categoria']} fallo simple")
-                negativo.append(data["Categoria"])
+                logger.warning(f"{titulo_log} {data['Categoria']} fallo simple")
+                negativo_simple.append(data["Categoria"])
 
-        except KeyboardInterrupt:
-            pass
+        except Exception:
+            logger.exception(f"{titulo_log} {data['Categoria']} fallo total.")
+            negativo_total.append(data["Categoria"])
 
-        except Exception as e:
-            logger.warning(
-                f"Prueba Scraper {data['Categoria']} fallo total: {str(e)[:60]}..."
-            )
-            negativo.append(data["Categoria"])
-
-    resultado = f"Prueba de scrapers completa (Total: {len(pruebas)}). Exitos: {len(positivo)}. Fallos: {len(negativo)}."
-    resultado = (
-        resultado + "\nScrapers con fallos: {', '.join(negativo)}"
-        if negativo
-        else resultado
-    )
-    logger.info(resultado)
-
-    titulo = {
+    # armar texto con resultado y enviar por correo
+    resultado = f"{titulo_log} Completa (Total: {len(pruebas)}). Exitos: {len(positivo)}. Fallos Simples: {len(negativo_simple)}. Fallos Totales: {len(negativo_total)}"
+    resultado += f"\n Scrapers Ok: {','.join(positivo) or 'Ninguno'}."
+    resultado += f"\n Scrapers Fallo Simple: {','.join(negativo_simple) or 'Ninguno'}."
+    resultado += f"\n Scrapers Fallo Total: {','.join(negativo_total) or 'Ninguno'}."
+    titulo_correo = {
         "titulo": "Resultado Prueba de Scrapers",
-        "subtitulo": str(dt.now())[:19],
+        "subtitulo": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
-    print(resultado)
-    enviar_correo_interno.prueba_scrapers(titulo=titulo, mensaje=resultado)
+    enviar_correo_interno.prueba_scrapers(titulo=titulo_correo, mensaje=resultado)
+
+    logger.info(f"{titulo_log} Correo Enviado. Proceso completo. {resultado}")
 
 
 if __name__ == "__main__":
