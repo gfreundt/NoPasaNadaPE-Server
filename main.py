@@ -2,7 +2,7 @@ import os
 import fcntl
 import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
-from flask import Flask
+from flask import Flask, request
 
 from src.utils.constants import NETWORK_PATH
 from src.server import cron, database, configuraciones
@@ -42,6 +42,10 @@ def crea_flask_app():
         __name__,
         template_folder=os.path.join(NETWORK_PATH, "templates"),
         static_folder=os.path.join(NETWORK_PATH, "static"),
+    )
+
+    app.logger.warning(
+        "scheme=%s XFP=%s", request.scheme, request.headers.get("X-Forwarded-Proto")
     )
 
     configuraciones.configurar_flask(app)
