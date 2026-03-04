@@ -32,7 +32,6 @@ def main(db):
 
         # enviar mensaje con resultado del resumen diario
         exito = enviar_correo_interno.informe_diario(
-            cursor,
             titulo=f"Resumen Diario ({(dt.now() - td(days=1)).strftime('%Y-%m-%d')})",
             mensaje=resultado,
         )

@@ -4,9 +4,8 @@ import time
 import sys
 import logging
 
-from src.server import resumen_diario, mantenimiento
+from src.server import resumen_diario, mantenimiento, prueba_scrapers
 from src.comms import do_mensajes
-from src.test import prueba_scrapers
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from security.keys import ZEPTOMAIL_INTERNO_TOKEN
 logger = logging.getLogger(__name__)
 
 
-def informe_diario(cursor, mensaje, titulo):
+def informe_diario(mensaje, titulo):
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -60,4 +60,5 @@ def prueba_scrapers(mensaje, titulo):
     }
 
     # enviar
+    logger.info("Enviando Correo Prueba Scrapers")
     return email.send_zeptomail(msg)

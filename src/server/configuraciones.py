@@ -1,6 +1,7 @@
 from datetime import timedelta as td
 from flask import render_template
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth
 
 from security.keys import (
@@ -217,7 +218,7 @@ def configurar_flask(app):
         - Configuraciones de seguridad para cookies.
         - Manejo de errores HTTP y excepciones no manejadas.
     """
-
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
     app.jinja_env.add_extension("jinja2.ext.do")
     app.secret_key = FLASK_SECRET_KEY
     app.config["TEMPLATES_AUTO_RELOAD"] = True
