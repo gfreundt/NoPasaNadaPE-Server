@@ -44,10 +44,6 @@ def crea_flask_app():
         static_folder=os.path.join(NETWORK_PATH, "static"),
     )
 
-    app.logger.warning(
-        "scheme=%s XFP=%s", request.scheme, request.headers.get("X-Forwarded-Proto")
-    )
-
     configuraciones.configurar_flask(app)
     configuraciones.definir_rutas(app)
     configuraciones.configurar_oauth(app)
