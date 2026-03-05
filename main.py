@@ -4,7 +4,7 @@ import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 from flask import Flask
 
-from src.utils.constants import NETWORK_PATH, RUN_PATH, LOG_FILE
+from src.utils.constants import NETWORK_PATH, RUN_PATH, LOG_PATH
 from src.server import cron, database, configuraciones
 
 
@@ -20,7 +20,11 @@ def inicia_logger():
     if not logger.handlers:
         logger.setLevel(logging.INFO)
         handler = ConcurrentRotatingFileHandler(
-            os.path.join(LOG_FILE), "a", 10 * 1024 * 1024, 3
+            os.path.join(LOG_PATH, "app.log"),
+            mode="a",
+            maxBytes=10 * 1024 * 1024,
+            backupCount=3,
+            lock_file=os.path.join(RUN_PATH, ".__app.lock"),
         )
         handler.setFormatter(
             logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
