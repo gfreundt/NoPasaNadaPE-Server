@@ -24,7 +24,6 @@ def inicia_logger():
             mode="a",
             maxBytes=10 * 1024 * 1024,
             backupCount=3,
-            lock_file=os.path.join(RUN_PATH, ".__app.lock"),
         )
         handler.setFormatter(
             logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
