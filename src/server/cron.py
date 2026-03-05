@@ -4,6 +4,7 @@ import time
 import sys
 import logging
 
+from src.utils.constants import AMBIENTE_PRODUCCION
 from src.server import resumen_diario, mantenimiento, prueba_scrapers
 from src.comms import do_mensajes
 
@@ -87,6 +88,10 @@ def main(db):
     """
     Crea un thread que controla los procesos que se ejecutan de forma automatica segun horarios.
     """
+
+    if not AMBIENTE_PRODUCCION:
+        logger.warning("AMBIENTE_PRODUCCION no esta activo, cron no se iniciara")
+        return
 
     # SOLO PARA PRUEBAS: ejecutar script de prueba de scrapers y salir
     if "TEST" in sys.argv:
