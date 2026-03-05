@@ -1,12 +1,17 @@
 from src.test import prueba_scrapers, prueba_un_scraper_no_headless
 from src.comms import generar_mensajes
 from src.updates import datos_actualizar
-from src.utils.mantenimiento import recalcula_fechahasta_revtec_de_tabla
+from src.updates.datos_actualizar import get_datos_un_miembro
 
 from pprint import pprint
 
 
 def main(db):
+
+    a = get_datos_un_miembro(db, id_member="25")
+    print(a)
+    return
+
     # TEST: todo el proceso de mensajes con alertas y boletines
     # do_mensajes.main(db, "alertas")
     # do_mensajes.main(db, "boletines")

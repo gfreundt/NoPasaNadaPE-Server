@@ -41,6 +41,8 @@ else:
 
 
 DB_NETWORK_PATH = os.path.join(NETWORK_PATH, "data", "members.db")
+RUN_PATH = os.path.join(NETWORK_PATH, "run")
+LOG_FILE = os.path.join(RUN_PATH, "app.log")
 
 # flag True/False de si esta corriendo en produccion
 AMBIENTE_PRODUCCION = "srv" in platform.node() and "-dev" not in BASE_DIR

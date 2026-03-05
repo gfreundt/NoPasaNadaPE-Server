@@ -1,9 +1,12 @@
 import requests
+import logging
 from flask import current_app, session, redirect, url_for, flash
 from authlib.common.errors import AuthlibBaseError
 import requests.exceptions
 
 from src.ui.maquinarias import login, mis_servicios
+
+logger = logging.getLogger(__name__)
 
 # =========================================================
 #       Activos: GOOGLE, FACEBOOK
@@ -11,49 +14,74 @@ from src.ui.maquinarias import login, mis_servicios
 
 
 def google_login():
+    """
+    Punto de entrada para login con Google.
+    Redirige a Google para autenticación.
+    """
     redirect_uri = url_for("google_authorize", _external=True)
     return current_app.oauth.google.authorize_redirect(redirect_uri)
 
 
 def google_authorize():
+    """
+    Callback de Google después de autenticación.
+    Procesa respuesta de Google, obtiene correo y nombre, y termina login.
+    """
     try:
         token = current_app.oauth.google.authorize_access_token()
         correo = token.get("userinfo")["email"]
         nombre = token.get("name", "Usuario")
+        logger.info(f"Login exitoso de Google para correo: {correo}")
         return terminar_login_terceros(correo, nombre, proveedor="Google")
+
     except (AuthlibBaseError, requests.exceptions.RequestException):
-        flash("Error de credenciales.")
+        logger.exception("Error de credenciales en login de Google")
         return redirect(url_for("maquinarias-login"))
+
     except Exception as e:
-        flash(f"Error general: {e}. Intente otra vez.")
+        logger.exception("Error general en autorización de Google")
         return redirect(url_for("maquinarias-login"))
 
 
 def facebook_login():
+    """
+    Punto de entrada para login con Facebook.
+    Redirige a Facebook para autenticación.
+    """
     redirect_uri = url_for("facebook_authorize", _external=True)
     return current_app.oauth.facebook.authorize_redirect(redirect_uri)
 
 
 def facebook_authorize():
+    """
+    Callback de Facebook después de autenticación.
+    Procesa respuesta de Facebook, obtiene correo y nombre, y termina login.
+    """
     try:
         current_app.oauth.facebook.authorize_access_token()
         profile = current_app.oauth.facebook.get("me?fields=id,name,email").json()
         correo = profile.get("email")
         nombre = profile.get("name")
-        return current_app.terminar_login_terceros(correo, nombre, proveedor="Facebook")
+        return terminar_login_terceros(correo, nombre, proveedor="Facebook")
+
     except (AuthlibBaseError, requests.exceptions.RequestException):
-        flash("Error de credenciales.")
+        logger.exception("Error de credenciales en login de Facebook")
         return redirect(url_for("maquinarias-login"))
+
     except Exception as e:
-        flash(f"Error general: {e}. Intente otra vez.")
+        logger.exception("Error general en autorización de Facebook")
         return redirect(url_for("maquinarias-login"))
 
 
 def terminar_login_terceros(correo, nombre, proveedor):
-    # cursor = app.db.cursor()
+    """
+    Una vez autenticado por tercero, determina si usuario es valido en nuestro sistema.
+    Si esta autorizado pero no inscrito, redirige a registro.
+    Si esta autorizado e inscrito, redirige a mis servicios.
+    """
 
-    # revisar si miembro activo -- si no, popup advirtiendo y regresa
-    activo = login.validar_activacion(correo)
+    # revisar si miembro autorizado -- si no, popup advirtiendo y regresa
+    activo = login.validar_activacion(cursor=current_app.db.cursor(), correo=correo)
     if not activo:
         session["auth_error"] = {
             "email": correo,
@@ -63,17 +91,16 @@ def terminar_login_terceros(correo, nombre, proveedor):
         return redirect(url_for("maquinarias-login"))
 
     # revisar si miembro suscrito -- si no, flujo de registro antes
-    suscrito = login.validar_suscripcion(correo)
+    session["usuario"] = {"correo": correo}
+    suscrito = login.validar_suscripcion(cursor=current_app.db.cursor(), correo=correo)
     if not suscrito:
-        session["usuario"] = {"correo": correo}
         session["password_only"] = False
         session["third_party_login"] = True
         session["etapa"] = "registro"
         return redirect("/maquinarias/registro")
     else:
-        # login.extraer_data_usuario(cursor, correo=correo)
         session["etapa"] = "validado"
-        return mis_servicios.main(current_app.db)
+        return mis_servicios.main()
 
 
 # =========================================================

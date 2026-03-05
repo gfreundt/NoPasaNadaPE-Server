@@ -2,9 +2,9 @@ import os
 import fcntl
 import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
-from flask import Flask, request
+from flask import Flask
 
-from src.utils.constants import NETWORK_PATH
+from src.utils.constants import NETWORK_PATH, RUN_PATH, LOG_FILE
 from src.server import cron, database, configuraciones
 
 
@@ -20,7 +20,7 @@ def inicia_logger():
     if not logger.handlers:
         logger.setLevel(logging.INFO)
         handler = ConcurrentRotatingFileHandler(
-            os.path.join(NETWORK_PATH, "app.log"), "a", 10 * 1024 * 1024, 3
+            os.path.join(LOG_FILE), "a", 10 * 1024 * 1024, 3
         )
         handler.setFormatter(
             logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -56,7 +56,7 @@ def inicia_cron(db):
     En caso sea "master" activa actividades que corren de forma regular (cron.py)
     """
 
-    lock_path = os.path.join(NETWORK_PATH, "static", "cron_init.lock")
+    lock_path = os.path.join(RUN_PATH, "master_worker.lock")
     db._lock_file_handle = open(lock_path, "a")
 
     # intenta ganar acceso exclusivo al archivo, si no puede es que otro worker ya lo tiene y este no es el master

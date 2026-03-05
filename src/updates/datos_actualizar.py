@@ -194,7 +194,7 @@ def get_datos_nunca_actualizados(db):
     updates = []
     for tabla in tablas_todas:
         cmd = f"""
-                    SELECT IdMember, Correo, DocTipo,DocNum, IdMember, Placa from InfoMiembros
+                    SELECT IdMember, Correo, DocTipo,DocNum, Placa from InfoMiembros
                     JOIN InfoPlacas
                     ON IdMember = IdMember_fk
                     WHERE {tabla.replace("Data", "LastUpdate")} = "2020-01-01"
@@ -211,6 +211,58 @@ def get_datos_nunca_actualizados(db):
                     "DocTipo": resultado["DocTipo"],
                     "IdMember": resultado["IdMember"],
                     "Placa": resultado["Placa"],
+                }
+            )
+
+    return updates
+
+
+def get_datos_un_miembro(db, id_member):
+
+    cursor = db.cursor()
+
+    # exrae idmember, tipo y numero de documento para un miembro especifico
+    cmd = """
+                SELECT IdMember, Correo, DocTipo, DocNum from InfoMiembros
+                WHERE IdMember = ? LIMIT 1
+            """
+
+    cursor.execute(cmd, (id_member,))
+    miembro = cursor.fetchone()
+
+    # extrae placa
+    cmd = """
+                SELECT Placa from InfoPlacas
+                WHERE IdMember_FK = ?
+            """
+
+    cursor.execute(cmd, (id_member))
+    placas = cursor.fetchall()
+
+    updates = []
+    for tabla in tablas_todas:
+        config = configuracion_scrapers.config(tabla)
+        if config["indice_placa"]:
+            for placa in [i["Placa"] for i in placas]:
+                updates.append(
+                    {
+                        "Categoria": tabla,
+                        "Correo": miembro["Correo"],
+                        "DocNum": miembro["DocNum"],
+                        "DocTipo": miembro["DocTipo"],
+                        "IdMember": miembro["IdMember"],
+                        "Placa": placa,
+                    }
+                )
+        else:
+            updates.append(
+                {
+                    "Categoria": tabla,
+                    "Correo": miembro["Correo"],
+                    "DocNum": miembro["DocNum"],
+                    "DocTipo": miembro["DocTipo"],
+                    "IdMember": miembro["IdMember"],
+                    "Placa": None,
                 }
             )
 

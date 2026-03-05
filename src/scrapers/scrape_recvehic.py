@@ -120,7 +120,7 @@ def browser(datos, webdriver):
                 with open(_file, "rb") as f:
                     data = base64.b64encode(f.read()).decode("utf-8")
                 os.remove(_file)
-                return [data]
+                return [[data]]
 
             time.sleep(1)
 

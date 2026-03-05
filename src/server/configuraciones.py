@@ -1,5 +1,5 @@
 from datetime import timedelta as td
-from flask import app, render_template
+from flask import render_template
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 from authlib.integrations.flask_client import OAuth

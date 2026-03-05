@@ -131,7 +131,6 @@ def main():
         return jsonify(faltan), 200
 
     if solicitud == "force_update":
-        return
         id_member = payload.get("id_member")
         logger.info(
             f"Iniciando actualización forzada desde Admin. ID Member: {id_member}"
@@ -164,7 +163,6 @@ def main():
             "DataSutranMultas": placas,
             "DataMtcRecordsConductores": [(id_member, doc_tipo, doc_num)],
             "DataCallaoMultas": placas,
-            "DataSunarpFichas": placas,
         }
 
         logger.info(f"Datos a actualizar (forzado): \n{pformat(upd)}")

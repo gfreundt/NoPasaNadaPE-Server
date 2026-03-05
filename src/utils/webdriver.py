@@ -9,7 +9,7 @@ import json
 import warnings
 
 from security.keys import PROXY_DATACENTER, PROXY_RESIDENTIAL
-from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH
+from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH, RUN_PATH
 
 warnings.filterwarnings("ignore", message="pkg_resources*", category=UserWarning)
 from seleniumwire import webdriver as sw_webdriver
@@ -31,8 +31,10 @@ class ChromeUtils:
             self.driver_update()
 
         self.options = Options()
-        # Use log_path=os.devnull to keep your VPS logs clean
-        self.service = Service(CHROMEDRIVER_PATH, log_path=os.devnull)
+        self.service = Service(
+            CHROMEDRIVER_PATH,
+            log_output=os.devnull,
+        )
 
         prefs = {
             "download.default_directory": os.path.join(NETWORK_PATH, "static"),
@@ -72,25 +74,17 @@ class ChromeUtils:
         )
 
     def proxy_driver(self, residential=True, headless=True):
-        if residential:
-            proxy = PROXY_RESIDENTIAL
-            username = "LcL8ujXtMohd3ODu"
-            password = "Lm4lJIxiyRd9nNCp_country-pe"
-            proxy_url = "geo.iproyal.com"
-            proxy_url_port = "11201"
-        else:
-            proxy = PROXY_DATACENTER
-            username = "14ac34c1fcc08"
-            password = "4f480ab2ca"
-            proxy_url = "104.234.188.209"
-            proxy_url_port = "12323"
+        proxy = PROXY_RESIDENTIAL if residential else PROXY_DATACENTER
 
-        proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
+        # Put seleniumwire storage under a dedicated run subfolder
+        seleniumwire_path = os.path.join(RUN_PATH, "seleniumwire")
+        os.makedirs(seleniumwire_path, exist_ok=True)
 
-        proxy_options = {
+        seleniumwire_options = {
             "proxy": {"http": proxy, "https": proxy},
-            "disable_capture": False,
+            "disable_capture": True,
             "ssl_insecure": True,
+            "request_storage_base_dir": seleniumwire_path,
         }
 
         chrome_options = Options()
@@ -105,67 +99,17 @@ class ChromeUtils:
         chrome_options.add_argument("--ignore-certificate-errors")
         chrome_options.add_argument("--allow-insecure-localhost")
 
-        # Critical: unique profile per instance
-        # user_data_dir = tempfile.mkdtemp(prefix="chrome-profile-")
-        # chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
-
-        # Ensure HOME writable under systemd/gunicorn
-        os.environ.setdefault("HOME", "/tmp")
-        os.environ.setdefault("TMPDIR", "/tmp")
-
-        # Use the system chromedriver
-        service = Service(
-            executable_path="/usr/local/bin/chromedriver",  # adjust if needed
-            log_output="/tmp/chromedriver.log",
-        )
-
         return sw_webdriver.Chrome(
-            service=service,
+            service=self.service,
             options=chrome_options,
-            seleniumwire_options=proxy_options,
-        )
-
-    def proxy_driver1(self):
-        username = "LcL8ujXtMohd3ODu"
-        password = "Lm4lJIxiyRd9nNCp_country-pe"
-        proxy_url = "geo.iproyal.com"
-        proxy_url_port = "11201"
-        proxy = f"http://{username}:{password}@{proxy_url}:{proxy_url_port}"
-
-        # Configure options for Selenium Wire
-        proxy_options = {
-            "proxy": {
-                "http": proxy,
-                "https": proxy,
-            },
-            "disable_capture": False,
-            "ssl_insecure": True,
-        }
-
-        # --- SELENIUM SETUP ---
-        chrome_options = Options()
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_argument("--allow-insecure-localhost")
-        chrome_options.add_argument("--allow-running-insecure-content")
-        chrome_options.add_argument("--disable-web-security")
-        chrome_options.accept_insecure_certs = True
-        chrome_options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-
-        # Initialize the WebDriver
-        return sw_webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=chrome_options,
-            seleniumwire_options=proxy_options,
+            seleniumwire_options=seleniumwire_options,
         )
 
     def direct_driver(self):
-        return webdriver.Chrome(service=self.service, options=self.options)
+        return webdriver.Chrome(
+            service=self.service,
+            options=self.options,
+        )
 
     def driver_update(self, **kwargs):
         return
