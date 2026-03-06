@@ -60,3 +60,4 @@ def main():
     # reducir logging de apps de terceros
     logging.getLogger("werkzeug").setLevel(logging.ERROR)  # Flask server
     logging.getLogger("seleniumwire").setLevel(logging.WARNING)  # Selenium Wire
+    logging.getLogger("hpack").setLevel(logging.INFO)

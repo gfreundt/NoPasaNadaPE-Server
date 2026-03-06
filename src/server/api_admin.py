@@ -166,18 +166,14 @@ def main():
         if solicitud == "trigger_alertas":
             try:
                 do_actualizar.main(db, "alertas")
-                return jsonify(
-                    "Prueba de Scrapers Completa. Resultados por Correo."
-                ), 200
+                return jsonify("Proceso de Alertas Gatillado"), 200
             except Exception as e:
                 return jsonify(f"No se lanzo alertas: {e}"), 500
 
         if solicitud == "trigger_boletines":
             try:
                 do_actualizar.main(db, "boletines")
-                return jsonify(
-                    "Prueba de Scrapers Completa. Resultados por Correo."
-                ), 200
+                return jsonify("Proceso de Boletines Gatillado."), 200
             except Exception as e:
                 return jsonify(f"No se lanzo boletines: {e}"), 500
 

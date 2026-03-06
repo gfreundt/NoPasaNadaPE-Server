@@ -60,6 +60,7 @@ def main(dato, headless=True):
 
     # si respuesta de scraper es texto, hubo un error y se regresa False
     if isinstance(respuesta_scraper, str):
+        logger.debug(f"Fallo Simple Scraper: {respuesta_scraper}")
         return False
 
     # en caso respuesta tenga data - probar armar payload con estructura de configuracion del scraper
