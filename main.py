@@ -5,10 +5,10 @@ from concurrent_log_handler import ConcurrentRotatingFileHandler
 from flask import Flask
 
 from src.utils.constants import NETWORK_PATH, RUN_PATH, LOG_PATH
-from src.server import cron, database, configuraciones
+from src.server import cron, database, configuraciones, inicia_logger
 
 
-def inicia_logger():
+def inicia_loggerx():
     """
     Inicia dos loggers:
     - app.log con nivel INFO (tamaño 8Gb, maximo 3 archivos)
@@ -61,6 +61,9 @@ def inicia_logger():
     logging.getLogger("werkzeug").setLevel(logging.ERROR)  # Flask server
     logging.getLogger("seleniumwire").setLevel(logging.WARNING)  # Selenium Wire
 
+    # primer log para visualmente marcar el reinicio del sistema
+    logger.info("-" * 15 + " REINICIO " + "-" * 15)
+
 
 def crea_flask_app():
     """
@@ -107,7 +110,7 @@ def inicia_cron(db):
 # ---------------------------------------
 #       GUNICORN: punto de entrada
 # ---------------------------------------
-inicia_logger()
+inicia_logger.main()
 db = database.Database()
 app = crea_flask_app()
 app.db = db
