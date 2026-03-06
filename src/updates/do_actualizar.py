@@ -29,7 +29,9 @@ def main(db, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
 
         titulo = f"[ DO ACTUALIZAR {tipo_mensaje.upper()} ({cuenta_repeticiones}/{AUTOSCRAPER_REPETICIONES}) ]"
 
-        logger.info(f"{titulo} Pendientes Actualizar:\n {pformat(pendientes)}")
+        logger.info(
+            f"{titulo} Pendientes Actualizar: {'\n' + pformat(pendientes) if pendientes else 'Nada'}"
+        )
 
         # si ya no hay actualizaciones pendientes, regresar True si hubieron actualizaciones, False si no hubieron
         if not pendientes:
