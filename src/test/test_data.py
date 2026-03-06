@@ -7,8 +7,9 @@ def get_test_data_new(s):
 
     fina = []
     for key, value in cruda.items():
-        if key != "DataMtcRecordsConductores":
-            continue
+        # usar si se quiere probar uno solo
+        # if key != "DataMtcRecordsConductores":
+        #     continue
 
         p = {"Categoria": key}
         x = random.choice(value)
