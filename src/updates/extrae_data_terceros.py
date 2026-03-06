@@ -89,7 +89,7 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock, headless):
 
         # si respuesta es texto, hubo un error -- reponer dato a cola y vuelve sin actualizar acumulador
         if isinstance(respuesta_scraper, str):
-            queue_data.put(dato)
+            # queue_data.put(dato)
             logger.warning(f"Error de scraper: {respuesta_scraper}")
             return
 
