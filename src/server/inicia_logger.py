@@ -54,9 +54,9 @@ def main():
         logger.addHandler(debug_handler)
         logger.propagate = False
 
+        # primer log para visualmente marcar el reinicio del sistema
+        logger.info("-" * 25 + " REINICIO " + "-" * 25)
+
     # reducir logging de apps de terceros
     logging.getLogger("werkzeug").setLevel(logging.ERROR)  # Flask server
     logging.getLogger("seleniumwire").setLevel(logging.WARNING)  # Selenium Wire
-
-    # primer log para visualmente marcar el reinicio del sistema
-    logger.info("-" * 15 + " REINICIO " + "-" * 15)

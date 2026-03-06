@@ -7,7 +7,7 @@ from pprint import pformat, pprint
 from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text, NETWORK_PATH
 from src.server import do_updates, prueba_scrapers
-from src.updates import extrae_data_terceros, datos_actualizar
+from src.updates import extrae_data_terceros, datos_actualizar, do_actualizar
 
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 def main():
 
     try:
-
         db = current_app.db
 
         logger.info("Endpoint: admin accesado")
@@ -139,7 +138,9 @@ def main():
             )
 
             try:
-                datos = datos_actualizar.get_datos_un_miembro(db=db, id_member=id_member)
+                datos = datos_actualizar.get_datos_un_miembro(
+                    db=db, id_member=id_member
+                )
                 extrae_data_terceros.main(db, datos)
                 return jsonify(
                     f"Actualizacion Forzada Completa de IdMember: {id_member}"
@@ -155,11 +156,30 @@ def main():
 
         if solicitud == "prueba_scrapers":
             try:
-                print("hhhhhh")
                 prueba_scrapers.main()
-                return jsonify("Prueba de Scrapers Completa. Resultados por Correo."), 200
+                return jsonify(
+                    "Prueba de Scrapers Completa. Resultados por Correo."
+                ), 200
             except Exception as e:
                 return jsonify("No se lanzo prueba scrapers."), 500
+
+        if solicitud == "trigger_alertas":
+            try:
+                do_actualizar.main("alertas")
+                return jsonify(
+                    "Prueba de Scrapers Completa. Resultados por Correo."
+                ), 200
+            except Exception as e:
+                return jsonify(f"No se lanzo alertas: {e}"), 500
+
+        if solicitud == "trigger_boletines":
+            try:
+                do_actualizar.main("boletines")
+                return jsonify(
+                    "Prueba de Scrapers Completa. Resultados por Correo."
+                ), 200
+            except Exception as e:
+                return jsonify(f"No se lanzo boletines: {e}"), 500
 
         # solicitud no reconocida
         logger.warning("Solicitud no reconocida.")

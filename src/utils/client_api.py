@@ -176,6 +176,28 @@ def prueba_scrapers(url):
     )
 
 
+def trigger_alertas(url):
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "trigger_alertas",
+        },
+        json={},
+    )
+
+
+def trigger_boletines(url):
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "trigger_alertas",
+        },
+        json={},
+    )
+
+
 def main():
     url = "https://dev.nopasanadape.com"  # DEV
     url = "http://localhost:5000"  # TEST
@@ -232,6 +254,14 @@ def main():
 
     if args[1] == "SCRAPERS":
         f = prueba_scrapers(url)
+        pprint(json.loads(f.content.decode()))
+
+    if args[1] == "ALERTAS":
+        f = trigger_alertas(url)
+        pprint(json.loads(f.content.decode()))
+
+    if args[1] == "BOLETINES":
+        f = trigger_boletines(url)
         pprint(json.loads(f.content.decode()))
 
 
