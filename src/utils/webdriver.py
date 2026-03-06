@@ -97,6 +97,9 @@ class ChromeUtils:
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--disable-breakpad")
+        chrome_options.add_argument("--disable-crash-reporter")
+        chrome_options.add_argument("--remote-debugging-pipe")
 
         # Keep cert flags only if you truly need them
         chrome_options.add_argument("--ignore-certificate-errors")
