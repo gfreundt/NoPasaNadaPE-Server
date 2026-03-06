@@ -51,13 +51,11 @@ def main():
     resultado.append(
         f"{titulo_log} Completa (Total: {len(pruebas)}). Exitos: {len(positivo)}. Fallos Simples: {len(negativo_simple)}. Fallos Totales: {len(negativo_total)}"
     )
-    resultado.append(f"\n Scrapers Ok: {','.join(positivo) or 'Ninguno'}.")
+    resultado.append(f"Scrapers Ok: {','.join(positivo) or 'Ninguno'}.")
     resultado.append(
-        f"\n Scrapers Fallo Simple: {','.join(negativo_simple) or 'Ninguno'}."
+        f"Scrapers Fallo Simple: {','.join(negativo_simple) or 'Ninguno'}."
     )
-    resultado.append(
-        f"\n Scrapers Fallo Total: {','.join(negativo_total) or 'Ninguno'}."
-    )
+    resultado.append(f"Scrapers Fallo Total: {','.join(negativo_total) or 'Ninguno'}.")
     titulo_correo = {
         "titulo": "Resultado Prueba de Scrapers",
         "subtitulo": dt.now().strftime("%Y-%m-%d %H:%M:%S"),

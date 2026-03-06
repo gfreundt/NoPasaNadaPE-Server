@@ -54,7 +54,9 @@
             {{titulo.subtitulo}}
         </div>
         <div class="content">
-            {{mensaje}}
+            {% for m in mensaje %}
+                <p>{{ m }}</p>
+            {% endfor %}
         </div>
     </div>
 </body>
