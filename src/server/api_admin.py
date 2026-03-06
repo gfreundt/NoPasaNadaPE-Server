@@ -165,7 +165,7 @@ def main():
 
         if solicitud == "trigger_alertas":
             try:
-                do_actualizar.main("alertas")
+                do_actualizar.main(db, "alertas")
                 return jsonify(
                     "Prueba de Scrapers Completa. Resultados por Correo."
                 ), 200
@@ -174,7 +174,7 @@ def main():
 
         if solicitud == "trigger_boletines":
             try:
-                do_actualizar.main("boletines")
+                do_actualizar.main(db, "boletines")
                 return jsonify(
                     "Prueba de Scrapers Completa. Resultados por Correo."
                 ), 200
