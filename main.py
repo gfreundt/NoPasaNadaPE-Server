@@ -10,25 +10,51 @@ from src.server import cron, database, configuraciones
 
 def inicia_logger():
     """
-    Inicia el unico logger para toda la aplicacion.
+    Inicia dos loggers:
+    - app.log con nivel INFO (tamaño 8Gb, maximo 3 archivos)
+    - debug.log con nivel DEBUG (tamaño 8Gb, maximo 4 archivos)
     Usa ConcurrentRotatingFileHandler para que todos los workers puedan escribir al mismo archivo sin problemas de concurrencia.
     """
 
     logger = logging.getLogger()
 
+    # crea el path en caso no exista
+    os.makedirs(LOG_PATH, exist_ok=True)
+
     # Gunicorn: limitar a un solo worker creando un handler
     if not logger.handlers:
-        logger.setLevel(logging.INFO)
-        handler = ConcurrentRotatingFileHandler(
+        # definir nivel base, luego override por cada handler
+        logger.setLevel(logging.DEBUG)
+
+        # definir tamaño y formato del texto del log
+        log_size = 8 * 1024 * 1024
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+
+        # definir app.log de nivel INFO
+        info_handler = ConcurrentRotatingFileHandler(
             os.path.join(LOG_PATH, "app.log"),
             mode="a",
-            maxBytes=10 * 1024 * 1024,
+            maxBytes=log_size,
             backupCount=3,
         )
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        info_handler.setFormatter(formatter)
+        info_handler.setLevel(logging.INFO)
+
+        # definir debug.log de nivel DEBUG
+        debug_handler = ConcurrentRotatingFileHandler(
+            os.path.join(LOG_PATH, "debug.log"),
+            mode="a",
+            maxBytes=log_size,
+            backupCount=4,
         )
-        logger.addHandler(handler)
+        debug_handler.setFormatter(formatter)
+        debug_handler.setLevel(logging.DEBUG)
+
+        # agregar handler a logger y que no propaguen
+        logger.addHandler(info_handler)
+        logger.addHandler(debug_handler)
         logger.propagate = False
 
     # reducir logging de apps de terceros

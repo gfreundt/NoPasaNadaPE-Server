@@ -179,7 +179,7 @@ def prueba_scrapers(url):
 def main():
     url = "https://dev.nopasanadape.com"  # DEV
     url = "http://localhost:5000"  # TEST
-    # url = "https://nopasanadape.com"  # PROD
+    url = "https://nopasanadape.com"  # PROD
     args = sys.argv
 
     if len(args) < 2:

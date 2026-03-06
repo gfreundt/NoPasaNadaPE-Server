@@ -43,7 +43,7 @@ def main(db, tipo_mensaje, max_repeticiones=AUTOSCRAPER_REPETICIONES):
                 return True
 
         # realizar scraping
-        respuesta = extrae_data_terceros.main(db, pendientes)
+        respuesta = extrae_data_terceros.main(db, pendientes, headless=True)
 
         # actualizar base de datos con lo que haya sido devuelto (completo o parcial)
         logger.info(
