@@ -139,13 +139,13 @@ def definir_rutas(app):
     app.add_url_rule(
         rule="/api/<version>",
         endpoint="api_version",
-        view_func=api_externo,
+        view_func=api_externo.version_select,
         methods=["POST"],
     )
     app.add_url_rule(
         rule="/admin",
         endpoint="admin",
-        view_func=api_admin,
+        view_func=api_admin.main,
         methods=["POST"],
     )
 

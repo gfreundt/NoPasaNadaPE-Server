@@ -236,7 +236,7 @@ def get_datos_un_miembro(db, id_member):
                 WHERE IdMember_FK = ?
             """
 
-    cursor.execute(cmd, (id_member))
+    cursor.execute(cmd, (id_member,))
     placas = cursor.fetchall()
 
     updates = []

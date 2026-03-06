@@ -65,7 +65,3 @@ def main():
     enviar_correo_interno.prueba_scrapers(titulo=titulo_correo, mensaje=resultado)
 
     logger.info(f"{titulo_log} Correo Enviado. Proceso completo. {resultado}")
-
-
-if __name__ == "__main__":
-    main()

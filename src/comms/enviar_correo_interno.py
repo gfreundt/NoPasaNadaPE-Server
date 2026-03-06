@@ -1,7 +1,7 @@
 import logging
 from jinja2 import Environment, FileSystemLoader
 
-from src.utils.email import Email
+from src.utils.correo_electronico import Email
 from security.keys import ZEPTOMAIL_INTERNO_TOKEN
 
 

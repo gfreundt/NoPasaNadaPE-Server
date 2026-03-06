@@ -3,7 +3,7 @@ from datetime import datetime as dt
 import json
 import logging
 
-from src.utils.email import Email
+from src.utils.correo_electronico import Email
 from src.utils.constants import NETWORK_PATH, AMBIENTE_PRODUCCION
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 

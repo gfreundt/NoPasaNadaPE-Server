@@ -165,6 +165,17 @@ def kill_prueba(url, correo):
     )
 
 
+def prueba_scrapers(url):
+    return requests.post(
+        url=url + "/admin",
+        params={
+            "token": INTERNAL_AUTH_TOKEN,
+            "solicitud": "prueba_scrapers",
+        },
+        json={},
+    )
+
+
 def main():
     url = "https://dev.nopasanadape.com"  # DEV
     url = "http://localhost:5000"  # TEST
@@ -217,6 +228,10 @@ def main():
 
     if args[1] == "LOG":
         f = get_logger(url)
+        pprint(json.loads(f.content.decode()))
+
+    if args[1] == "SCRAPERS":
+        f = prueba_scrapers(url)
         pprint(json.loads(f.content.decode()))
 
 

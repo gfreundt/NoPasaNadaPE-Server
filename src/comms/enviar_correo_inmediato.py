@@ -2,7 +2,7 @@ from jinja2 import Environment, FileSystemLoader
 from datetime import datetime as dt
 import logging
 
-from src.utils.email import Email
+from src.utils.correo_electronico import Email
 from security.keys import ZEPTOMAIL_INFO_TOKEN
 
 logger = logging.getLogger(__name__)

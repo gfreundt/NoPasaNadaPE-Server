@@ -9,3 +9,4 @@ __pycache__/
 *.pyc
 *.lock
 app.log
+run/
