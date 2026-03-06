@@ -9,7 +9,7 @@ import json
 import warnings
 
 from security.keys import PROXY_DATACENTER, PROXY_RESIDENTIAL
-from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH, RUN_PATH
+from src.utils.constants import NETWORK_PATH, CHROMEDRIVER_PATH, RUN_PATH, LOG_PATH
 
 warnings.filterwarnings("ignore", message="pkg_resources*", category=UserWarning)
 from seleniumwire import webdriver as sw_webdriver
@@ -33,7 +33,7 @@ class ChromeUtils:
         self.options = Options()
         self.service = Service(
             CHROMEDRIVER_PATH,
-            log_output=os.devnull,
+            log_output=os.path.join(LOG_PATH, "chromedriver.log"),
         )
 
         prefs = {
