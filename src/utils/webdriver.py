@@ -56,6 +56,9 @@ class ChromeUtils:
         self.options.add_argument("--no-sandbox")
         self.options.add_argument("--disable-dev-shm-usage")
         self.options.add_argument("--disable-gpu")
+        self.options.add_argument("--disable-breakpad")
+        self.options.add_argument("--disable-crash-reporter")
+        self.options.add_argument("--remote-debugging-pipe")
 
         if parameters["incognito"]:
             self.options.add_argument("--incognito")
