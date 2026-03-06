@@ -150,7 +150,7 @@ def config(indice):
                 "FechaVenta": 9,
                 "ImageBytes": None,
             },
-            "campo_fecha_hasta": "",
+            "campo_fecha_hasta": "FechaHasta",
             "alerta_dias": "-10, -5, -1, 0, 1, 2, 3",
         },
         "DataCallaoMultas": {
