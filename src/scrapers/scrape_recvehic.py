@@ -118,7 +118,7 @@ def browser(datos, webdriver):
                     data = base64.b64encode(f.read()).decode("utf-8")
 
                 # borrar folder (y contenido) y devolver la imagen en bytes
-                shutil.rmtree(download_dir, ignore_errors=True)
+                # shutil.rmtree(download_dir, ignore_errors=True)
                 return [[data]]
 
             time.sleep(1)
