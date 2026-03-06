@@ -2,13 +2,14 @@ import os
 import io
 import base64
 import time
+import uuid
+import shutil
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
 from src.utils.utils import use_truecaptcha
-from src.utils.constants import NETWORK_PATH
 
 
 def browser(datos, webdriver):
@@ -80,14 +81,19 @@ def browser(datos, webdriver):
             time.sleep(3)
             return "No Carga Captcha"
 
-        # inicia extraccion de datos
+        # -- inicia extraccion de datos
 
-        # parametros necesarios para que no abra ventana de dialogo de "Guardar Como..."
+        # crear un directorio al azar dentro de /tmp para evitar conflictos entre
+        # workers bajando diferentes archivos con el mismo nombre a la vez
+        download_dir = os.path.join("/tmp", f"mtc_{uuid.uuid4().hex}")
+        os.makedirs(download_dir, exist_ok=True)
+
+        # parametros necesarios para que no abra ventana de dialogo de "Guardar Como..." y folder destino
         webdriver.execute_cdp_cmd(
             "Page.setDownloadBehavior",
             {
                 "behavior": "allow",
-                "downloadPath": os.path.join(NETWORK_PATH, "static"),
+                "downloadPath": download_dir,
             },
         )
 
@@ -101,25 +107,18 @@ def browser(datos, webdriver):
             webdriver.refresh()
             return "@No Hay Boton Download"
 
-        # si ha bajado un archivo copia porque no se borro el anterior generar error
-        if os.path.isfile(
-            os.path.join(NETWORK_PATH, "static", "RECORD DE CONDUCTOR (2).pdf")
-        ):
-            return "Multiples archivos de PDF."
-
         # esperar un tiempo hasta que baje el archivo
-        start_time = time.time()
-        _file = os.path.join(NETWORK_PATH, "static", "RECORD DE CONDUCTOR.pdf")
-        while time.time() - start_time < 12:
-            if os.path.isfile(_file):
-                # refrescar captcha (presionar boton) para siguiente iteracion
-                b = webdriver.find_element(By.ID, "idxRefreshCapcha")
-                webdriver.execute_script("arguments[0].click();", b)
+        archivo_descargado = os.path.join(download_dir, "RECORD DE CONDUCTOR.pdf")
 
-                # borrar download y devolver la imagen en bytes
-                with open(_file, "rb") as f:
+        start_time = time.time()
+        while time.time() - start_time < 12:
+            if os.path.isfile(archivo_descargado):
+                # cargar imagen en bytes en memoria
+                with open(archivo_descargado, "rb") as f:
                     data = base64.b64encode(f.read()).decode("utf-8")
-                os.remove(_file)
+
+                # borrar folder (y contenido) y devolver la imagen en bytes
+                shutil.rmtree(download_dir, ignore_errors=True)
                 return [[data]]
 
             time.sleep(1)

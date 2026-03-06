@@ -61,3 +61,4 @@ def main():
     logging.getLogger("werkzeug").setLevel(logging.ERROR)  # Flask server
     logging.getLogger("seleniumwire").setLevel(logging.WARNING)  # Selenium Wire
     logging.getLogger("hpack").setLevel(logging.INFO)
+    logging.getLogger("selenium.webdriver").setLevel(logging.INFO)
