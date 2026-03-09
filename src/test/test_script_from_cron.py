@@ -1,16 +1,21 @@
-from src.test import prueba_scrapers, prueba_un_scraper_no_headless
 from src.comms import generar_mensajes
 from src.updates import datos_actualizar
 from src.updates.datos_actualizar import get_datos_un_miembro
-
+from src.server import prueba_scrapers
 from pprint import pprint
+
+
+from src.scrapers.scrape_soat import generar_certificado
 
 
 def main(db):
 
-    a = get_datos_un_miembro(db, id_member="25")
-    print(a)
-    return
+    # print(generar_certificado("f")[:100])
+    # return
+
+    # a = get_datos_un_miembro(db, id_member="25")
+    # print(a)
+    # return
 
     # TEST: todo el proceso de mensajes con alertas y boletines
     # do_mensajes.main(db, "alertas")
@@ -31,8 +36,8 @@ def main(db):
     # ocrspace.main(self)
     # return
 
-    # prueba_un_scraper_no_headless.main(db)
-    # return
+    prueba_un_scraper_no_headless.main(db)
+    return
 
     # generar_mensajes.boletines(db)
 

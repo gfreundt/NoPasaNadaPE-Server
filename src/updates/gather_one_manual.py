@@ -17,7 +17,7 @@ def main(dato, headless=True):
     """
 
     # obtiene datos completos de configuraciones de scrapers
-    config = configuracion_scrapers.config(dato["Categoria"])
+    config = configuracion_scrapers.config()[dato["Categoria"]]
 
     # lanzar scraper via webdriver o API dependiendo de configuracion del scraper, con timeout definido en configuracion
     func_scraper = config["funcion_scraper"]

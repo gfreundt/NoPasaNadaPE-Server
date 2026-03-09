@@ -8,5 +8,5 @@ chromedriver*
 __pycache__/
 *.pyc
 *.lock
-app.log
 run/
+logs/

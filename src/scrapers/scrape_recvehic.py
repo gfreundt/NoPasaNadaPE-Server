@@ -20,7 +20,6 @@ def browser(datos, webdriver):
 
     intentos_captcha = 0
     while intentos_captcha < 5:
-        # abrir url
         if webdriver.current_url != url:
             webdriver.get(url)
             time.sleep(2)

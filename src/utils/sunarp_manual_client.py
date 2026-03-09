@@ -1,21 +1,26 @@
 from datetime import datetime as dt
 import os
 import re
+import io
 import sys
 import json
+import base64
 from tqdm import tqdm
 import requests
+from PIL import Image
 
 # local imports
 from security.keys import OCRSPACE_API_KEY
-from src.utils.utils import NETWORK_PATH
-from client_api import get_sunarp, manual_upload
+from src.utils.constants import NETWORK_PATH
+
+# from src.utils.utils import img_to_pdf
+from src.utils.client_api import get_sunarp, manual_upload
 from seleniumbase import SB
 
 
 def gather(data):
 
-    response = []
+    partial_response = []
 
     for placa in data:
         # send request to scraper
@@ -23,7 +28,7 @@ def gather(data):
 
         # respuesta es en blanco
         if not scraper_response:
-            response.append(
+            partial_response.append(
                 {
                     "Empty": True,
                     "PlacaValidate": placa,
@@ -33,10 +38,13 @@ def gather(data):
 
         _now = dt.now().strftime("%Y-%m-%d")
 
-        ocr = ocrspace_pdf_bytes(pdf_bytes=scraper_response, language="esp")
+        try:
+            ocr = ocrspace_pdf_bytes(pdf_bytes=scraper_response, language="eng")
+        except Exception:
+            ocr = {}
 
         # add foreign key and current date to response
-        response.append(
+        partial_response.append(
             {
                 "IdPlaca_FK": 999,
                 "PlacaValidate": placa,
@@ -53,16 +61,38 @@ def gather(data):
                 "Anotaciones": ocr.get("anotaciones"),
                 "Sede": ocr.get("sede"),
                 "Propietarios": ocr.get("propietarios"),
-                "ImageBytes": scraper_response,
+                "ImageBytes": img_to_pdf(scraper_response),
                 "LastUpdate": _now,
             }
         )
+
+    full_response = {"DataSunarpFichas": partial_response}
 
     with open(
         os.path.join(NETWORK_PATH, "security", "update_manual_sunarp.json"),
         mode="w",
     ) as outfile:
-        outfile.write(json.dumps({"DataSunarpFichas": response}))
+        outfile.write(json.dumps(full_response))
+
+    return full_response
+
+
+def img_to_pdf(base64_string):
+    """
+    Convierte una imagen JPG en base64 a bytes de PDF.
+    Retorna bytes del PDF.
+    """
+    image_bytes = base64.b64decode(base64_string)
+    image = Image.open(io.BytesIO(image_bytes))
+    image.load()
+
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+
+    pdf_buffer = io.BytesIO()
+    image.save(pdf_buffer, format="PDF")
+
+    return base64.b64encode(pdf_buffer.getvalue()).decode("utf-8")
 
 
 def scrape(placa):
@@ -218,8 +248,6 @@ def extract_values_from_text(text):
                 else:
                     resultado[hay.lower()] = ""
 
-    # post-procesamiento especifico
-
     # año sacado de VIN si no sale directo de imagen
     ano_vin = ano_segun_vin(resultado.get("vin"))
     if not resultado["año"].isdigit():
@@ -279,16 +307,9 @@ def ano_segun_vin(vin):
         return False
 
 
-def update(url):
-    manual_upload(url=url, filename="update_manual_sunarp.json")
-
-
 def main():
 
-    if len(sys.argv) > 1:
-        n = int(sys.argv[1])
-    else:
-        n = 3  # default number of placas to process
+    n = int(sys.argv[1]) if len(sys.argv) > 1 else 3
 
     url = "https://nopasanadape.com"  # PROD
 
@@ -297,10 +318,10 @@ def main():
     print(f"Before ({len(data)}):", data)
 
     # get the data from n placas
-    gather(data[:n])
+    payload = gather(data[:n])
 
     # update database
-    update(url)
+    manual_upload(url=url, payload=payload)
 
     # get placas that need updating (used to compare to original)
     data = get_sunarp(url).json().get("DataSunarpFichas")

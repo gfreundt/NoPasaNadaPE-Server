@@ -103,7 +103,7 @@ def inicia_cron(db):
     # ejecuta cron en try-except independiente para evitar que errores en cron afecten a la app
     try:
         cron.main(db)
-    except Exception as e:
+    except KeyboardInterrupt:  # Exception as e:
         logging.error(f"Error en cron: {e}")
 
 

@@ -181,12 +181,12 @@ def boletines(db):
                 logger.debug(f"Boletin generado: {mensaje}")
                 boletines.append(mensaje)
 
-                # solo para ver html
-                path = os.path.join(
-                    NETWORK_PATH, "outbound", "temp", f"bol_{uuid.uuid4().hex[:8]}.html"
-                )
-                with open(path, "w", encoding="utf-8") as file:
-                    file.write(mensaje["html"])
+                # solo para ver html (debug)
+                # path = os.path.join(
+                #     NETWORK_PATH, "outbound", "temp", f"bol_{uuid.uuid4().hex[:8]}.html"
+                # )
+                # with open(path, "w", encoding="utf-8") as file:
+                #     file.write(mensaje["html"])
 
         if boletines:
             # guardar data en archivo (reemplaza al anterior)
@@ -199,7 +199,7 @@ def boletines(db):
 
         return True
 
-    except KeyboardInterrupt:  # Exception as e:
+    except Exception as e:
         logger.warning(f"Error generando boletines: {e}")
         return False
 
@@ -210,10 +210,6 @@ def redactar_boletin(cursor, IdMember, template, subject, correo):
     """
 
     data_servicios = generar_data_servicios(cursor, correo)
-
-    from pprint import pprint
-
-    pprint(data_servicios)
 
     return {
         "to": correo,

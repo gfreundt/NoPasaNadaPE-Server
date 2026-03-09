@@ -14,12 +14,14 @@ def main(db, data):
     conn = db.conn
 
     HOY = dt.now().strftime("%Y-%m-%d")
+    configs = configuracion_scrapers.config()
 
     try:
         for dato in data:
             tabla = dato.get("Categoria")
 
-            if configuracion_scrapers.config(tabla)["indice_placa"]:
+            config = configs[tabla]
+            if config["indice_placa"]:
                 info_table = "InfoPlacas"
                 info_id = "Placa"
                 info_fk = "PlacaValidate"
@@ -54,8 +56,8 @@ def main(db, data):
             f"Base de datos correctamente actualizada con data de scrapers. Total registros = {len(data)}"
         )
 
-    except Exception as e:
-        logger.warning(f"No se pudo actualizar base de datos con data de scraper: {e}")
+    except Exception:
+        logger.exception("No se pudo actualizar base de datos con data de scraper")
 
         # intentar grabar en archivo local
         update_files = [

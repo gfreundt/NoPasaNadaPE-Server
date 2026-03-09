@@ -31,8 +31,29 @@ def browser(datos, webdriver):
     webdriver.execute_script("arguments[0].click();", btn_consultar)
     time.sleep(3)
 
-    tbody = webdriver.find_element(By.CSS_SELECTOR, "#listSoatPlacaVeh tbody")
-    first_row = tbody.find_elements(By.TAG_NAME, "tr")[0]
-    tds = first_row.find_elements(By.TAG_NAME, "td")
+    body = "/html/body/div[4]/div/div/div/form/div[3]/div/div[3]/div/div/div/div/table[2]/tbody"
+    if not webdriver.find_elements(By.XPATH, f"{body}[1]/tr/td[1]"):
+        return []
 
-    return [td.text.strip() for td in tds]
+    response = []
+    for i in range(1, 10):
+        x = webdriver.find_element(By.XPATH, f"{body}[1]/tr/td[{i}]")
+        response.append(x.text)
+
+    return response
+
+
+def main():
+    from src.utils.webdriver import ChromeUtils
+
+    chromedriver = ChromeUtils()
+    webdriver = chromedriver.proxy_driver(residential=False, headless=True)
+
+    datos = {"Placa": "AMQ073"}
+
+    f = browser(datos, webdriver)
+
+    print(f)
+
+
+main()

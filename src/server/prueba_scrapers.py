@@ -2,7 +2,7 @@ import time
 import logging
 from datetime import datetime as dt
 
-from src.test.test_data import get_test_data_new
+from src.server import genera_data_pruebas
 from src.comms import enviar_correo_interno
 from src.updates import gather_one_manual
 
@@ -20,7 +20,7 @@ def main():
     logger.info(f"{titulo_log} Iniciando proceso con 1 registro cada uno.")
 
     # generar data de prueba
-    pruebas = get_test_data_new(s=1)
+    pruebas = genera_data_pruebas.generar(tamano_muestra=1)
 
     # iterar todas las pruebas
     positivo, negativo_simple, negativo_total = [], [], []

@@ -13,33 +13,13 @@ import logging
 from requests.exceptions import Timeout, ConnectionError, RequestException
 from PIL import Image, ImageDraw, ImageFont
 from selenium.webdriver.common.by import By
-import fcntl
+import img2pdf
 
 from src.utils.constants import MONTHS_3_LETTERS, NETWORK_PATH, IPS_CONOCIDOS, RUN_PATH
 from security.keys import PUSHBULLET_API_TOKEN, TRUECAPTCHA_API_KEY, TWOCAPTCHA_API_KEY
 
 
 logger = logging.getLogger(__name__)
-
-
-# # --- GUNICORN ---
-# def soy_master_worker(db):
-#     """
-#     Funcion utilizada para darle status de "master" solamente al primer worker de Gunicorn.
-#     Intenta acceder a archivo y si esta siendo utilizado no da el status de master al worker
-#     """
-
-#     lock_path = os.path.join(RUN_PATH, "master_worker.lock")
-#     db._lock_file_handle = open(lock_path, "a")
-
-#     try:
-#         fcntl.flock(db._lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-#         return True
-
-#     except (OSError, BlockingIOError):
-#         db._lock_file_handle.close()
-#         db._lock_file_handle = None
-#         return False
 
 
 # ----- FORMATTING ----
@@ -148,7 +128,7 @@ def start_vpn(ip_original, pais="pe", con_tipo="udp"):
         return True
 
     except subprocess.CalledProcessError:
-        logger.error("Error iniciando VPN.")
+        logger.exception("Error iniciando VPN.")
         return False
 
 
@@ -162,8 +142,8 @@ def stop_vpn():
         time.sleep(1.5)
         logger.info("VPN detenido.")
         return True
-    except Exception as e:
-        logger.error(f"Error stopping VPN: {e}")
+    except Exception:
+        logger.exception("Error stopping VPN.")
         return False
 
 
@@ -198,6 +178,18 @@ def base64_to_image(base64_string, output_path):
             file.write(image_data)
     except Exception as e:
         print(f"An error occurred (base64_to_image): {e}")
+
+
+def img_to_pdf(image_bytes):
+    """
+    Convierte bytes en memoria de una imagen a bytes en memoria de un PDF
+    Autodetecta tipo de imagen (.PNG, .JPG, etc)
+    Retorna None es caso de error
+    """
+    try:
+        return img2pdf.convert(image_bytes)
+    except img2pdf.ImageOpenError:
+        return None
 
 
 def hash_text(text_string):
@@ -390,5 +382,5 @@ def calcula_primera_revtec(placa, ano_fabricacion):
             9: "12-31",
         }
         return f"{int(ano_fabricacion) + 4}-{cronograma[int(placa[-1])]}"
-    except:
+    except Exception:
         return None

@@ -89,15 +89,15 @@ def main(db):
     Crea un thread que controla los procesos que se ejecutan de forma automatica segun horarios.
     """
 
-    if not AMBIENTE_PRODUCCION:
-        logger.warning("AMBIENTE_PRODUCCION no esta activo, cron no se iniciara")
-        return
-
     # SOLO PARA PRUEBAS: ejecutar script de prueba de scrapers y salir
     if "TEST" in sys.argv:
         from src.test import test_script_from_cron
 
         test_script_from_cron.main(db)
+        return
+
+    if not AMBIENTE_PRODUCCION:
+        logger.warning("AMBIENTE_PRODUCCION no esta activo, cron no se iniciara")
         return
 
     logger.info("Iniciando cron en master worker")

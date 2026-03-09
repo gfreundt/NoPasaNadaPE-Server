@@ -24,6 +24,7 @@ def main():
         solicitud = (request.args.get("solicitud") or "").lower()
         correo = request.args.get("correo")
         payload = request.get_json(silent=True) or {}
+        id_member = payload.get("id_member")
 
         if token != INTERNAL_AUTH_TOKEN:
             logger.warning("Acceso no autorizado. Error en Token de Autorizacion.")
@@ -74,10 +75,11 @@ def main():
             logger.info("Iniciando VACUUM de la base de datos.")
             cursor.execute("VACUUM")
             conn.commit()
+            return jsonify("Vacuum completo."), 200
 
         if solicitud == "get_logger":
             logger.info("Generando logs del sistema.")
-            n = payload.get("limit", 500)
+            n = payload.get("limit", 200)
             with open(os.path.join(NETWORK_PATH, "app.log"), "r") as f:
                 logs = f.readlines()[-n:]
             return jsonify(logs), 200
@@ -132,7 +134,9 @@ def main():
             return jsonify(faltan), 200
 
         if solicitud == "force_update":
-            id_member = payload.get("id_member")
+            if not id_member:
+                return jsonify("No se especifico id_member."), 500
+
             logger.info(
                 f"Iniciando actualización forzada desde Admin. ID Member: {id_member}"
             )
@@ -146,9 +150,9 @@ def main():
                     f"Actualizacion Forzada Completa de IdMember: {id_member}"
                 ), 200
 
-            except Exception as e:
-                logger.error(
-                    f"Error al forzar actualización de IdMember: {id_member}, Error: {e}"
+            except Exception:
+                logger.exception(
+                    f"Error al forzar actualización de IdMember: {id_member}."
                 )
                 return jsonify(
                     f"Error al forzar actualización de IdMember: {id_member}"
@@ -179,7 +183,8 @@ def main():
 
         # solicitud no reconocida
         logger.warning("Solicitud no reconocida.")
-        return jsonify({}), 400
+        return jsonify({"Solicitud no reconocida."}), 400
 
-    except Exception as e:
-        print(e)
+    except KeyboardInterrupt:  # Exception as e:
+        print("xx")
+        return jsonify({f"Error general: {e}"}), 400

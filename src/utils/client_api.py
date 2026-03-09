@@ -63,11 +63,11 @@ def get_sunarp(url):
     )
 
 
-def manual_upload(url, filename):
-    target = os.path.join(NETWORK_PATH, "security", f"{filename}")
+def manual_upload(url, payload):
+    # target = os.path.join(NETWORK_PATH, "security", f"{filename}")
 
-    with open(target, "r") as f:
-        payload = json.load(f)
+    # with open(target, "r") as f:
+    #     payload = json.load(f)
 
     return requests.post(
         url=url + "/admin",

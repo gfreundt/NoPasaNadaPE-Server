@@ -3,9 +3,12 @@ import time
 
 from src.updates import datos_actualizar, extrae_data_terceros
 from src.utils.utils import calcula_primera_revtec
+from src.scrapers.scrape_soat import generar_certificado
 
 
 logger = logging.getLogger(__name__)
+
+# ---------- PROGRAMACION -----------
 
 
 def cada_hora(db):
@@ -15,8 +18,8 @@ def cada_hora(db):
         actualiza_ano_de_fabricacion_de_ficha_sunarp(db)
         elimina_revtec_calculada_placas_sin_miembro(db)
 
-    except Exception as e:
-        logger.error(f"Error en mantenimiento de cada hora: {e}")
+    except Exception:
+        logger.exception("Error en mantenimiento de cada hora.")
 
 
 def cada_dia(db):
@@ -26,9 +29,13 @@ def cada_dia(db):
         recalcula_fechahasta_revtec_de_tabla(db)
         control_placas_huerfanas(db)
         actualiza_datos_nunca_actualizados(db)
+        actualiza_certificados_soat(db)
 
-    except Exception as e:
-        logger.error(f"Error en mantenimiento de cada dia: {e}")
+    except Exception:
+        logger.exception("Error en mantenimiento de cada dia.")
+
+
+# ---------- PROCESOS -----------
 
 
 def control_placas_huerfanas(db):
@@ -204,3 +211,23 @@ def actualiza_datos_nunca_actualizados(db):
     logger.info(
         "[MANTENIMIENTO] Actualizando Datos Nunca Actualizados (LastUpdate = '2020-01-01')"
     )
+
+
+def actualiza_certificados_soat(db):
+    """
+    Busca todos los registros de SOATs que no hayan generado imagen (o sean JPG antiguas) y las genera.
+    En caso no se generaron al momento de la extraccion de data de SOAT.
+    """
+
+    cursor = db.cursor()
+    db.conn.create_function("GC", 10, generar_certificado)
+
+    cmd = """   UPDATE DataApesegSoats 
+                SET ImageBytes = GC(
+                    Aseguradora, 0, FechaInicio, FechaHasta, PlacaValidate, 0, Uso, Certificado, 0, Clase
+                    )
+                WHERE ImageBytes IS NULL 
+                   OR ImageBytes LIKE '/9j/%'
+            """
+
+    cursor.execute(cmd)

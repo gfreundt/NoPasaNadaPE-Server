@@ -3,33 +3,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-tablas_todas = [
-    "DataApesegSoats",
-    "DataMtcRevisionesTecnicas",
-    "DataMtcBrevetes",
-    "DataSatImpuestos",
-    "DataMaquinariasMantenimiento",
-    "DataSatMultas",
-    "DataSutranMultas",
-    "DataMtcRecordsConductores",
-    "DataCallaoMultas",
-]
-
-tablas_solo_alertas = [
-    "DataApesegSoats",
-    "DataMtcRevisionesTecnicas",
-    "DataMtcBrevetes",
-    "DataSatImpuestos",
-    "DataMaquinariasMantenimiento",
-]
-
 
 def get_datos_alertas(db, premensaje):
+    """
+    Arma y ejecuta el SQL que extrae la base de datos todos los registros que necesitan alerta.
+    Criteros:
+        todos los registros de servicios que si reciben alertas (los que tienen algun vencimiento)
+        la fecha de hoy debe coincidir con el critero de vencimiento de cada servicio
+        premensaje (= para actualizacion) ademas no deben haber sido actualizados hoy mismo
+    Retorna un diccionario de formato para actualizador.
+    """
+
+    configs = configuracion_scrapers.config()
 
     # crear sub-query para cada tabla
     cte1 = []
-    for tabla in tablas_solo_alertas:
-        config = configuracion_scrapers.config(tabla)
+    for tabla in configs.keys():
+        if not tabla.get("genera_alerta"):
+            continue
+
+        config = configs[tabla]
         last_update = tabla.replace("Data", "LastUpdate")
 
         cmd = f"""  SELECT '{tabla}' as Categoria, 
@@ -45,7 +38,7 @@ def get_datos_alertas(db, premensaje):
             f" DATE ({config['campo_fecha_hasta']}) IN ("
             + ",\n ".join(
                 f"DATE('now','localtime', '{-int(n):+d} days')"
-                for n in config["alerta_dias"].split(", ")
+                for n in config["alerta_dias"]
             )
             + ")"
         )
@@ -92,12 +85,24 @@ def get_datos_alertas(db, premensaje):
 
 
 def get_datos_boletines(db, premensaje):
+    """
+    Arma y ejecuta el SQL que extrae la base de datos todos los registros que necesitan boletines.
+    Criteros (premensaje = True --> para actualizar):
+        todos los registros cuyo ultimo boletin fue enviado hace 30+ dias.
+        todos los registros de servicios que tienen fecha de vencimiento que vence en los siguientes 30 dias
+        si el servicio tiene fecha de vencimiento pasado 30 dias no se selecciona
+        ademas no deben haber sido actualizados hoy mismo
+    Criterios (premensaje = False --> para envio)
+        solo todos los registros cuyo ultimo boletin fue enviado hace 30+ dias.
+    Retorna un diccionario de formato para actualizador.
+    """
 
     if premensaje:
         cmds = []
+        configs = configuracion_scrapers.config()
 
-        for tabla in tablas_todas:
-            config = configuracion_scrapers.config(tabla)
+        for tabla in configs.keys():
+            config = configs[tabla]
             last_update = tabla.replace("Data", "LastUpdate")
 
             cola = (
@@ -157,10 +162,16 @@ def get_datos_boletines(db, premensaje):
 
 
 def get_datos_registro(data_registro):
+    """
+    Arma el diccionario de un miembro que se acaba de registrar.
+    Retorna un diccionario de formato para actualizador.
+    """
+
+    configs = configuracion_scrapers.config()
 
     updates = []
-    for tabla in tablas_todas:
-        config = configuracion_scrapers.config(tabla)
+    for tabla in configs.keys():
+        config = configs[tabla]
         if config["indice_placa"]:
             for placa in data_registro["placas"]:
                 updates.append(
@@ -189,15 +200,22 @@ def get_datos_registro(data_registro):
 
 
 def get_datos_nunca_actualizados(db):
+    """
+    Arma y ejecuta el SQL que extrae de la base de datos todos los registros que nunca han sido actualizados
+    Criteros:
+        el campo LastUpdate... = 2020-01-01 (fecha default que asigna el sistema)
+    Retorna un diccionario de formato para actualizador.
+    """
 
     cursor = db.cursor()
 
+    configs = configuracion_scrapers.config()
     updates = []
-    for tabla in tablas_todas:
+    for tabla in configs.keys():
         cmd = f"""
                     SELECT IdMember, Correo, DocTipo,DocNum, Placa from InfoMiembros
                     JOIN InfoPlacas
-                    ON IdMember = IdMember_fk
+                    ON IdMember = IdMember_FK
                     WHERE {tabla.replace("Data", "LastUpdate")} = "2020-01-01"
                """
 
@@ -219,6 +237,11 @@ def get_datos_nunca_actualizados(db):
 
 
 def get_datos_un_miembro(db, id_member):
+    """
+    Arma y ejecuta el SQL que extrae de la base de datos todos los registros de un miembro.
+    Es decir: informacion del miembro y de todas sus placas asociadas sin considerar vencimientos.
+    Retorna un diccionario de formato para actualizador.
+    """
 
     cursor = db.cursor()
 
@@ -240,8 +263,10 @@ def get_datos_un_miembro(db, id_member):
     cursor.execute(cmd, (id_member,))
     placas = cursor.fetchall()
 
+    configs = configuracion_scrapers.config()
+
     updates = []
-    for tabla in tablas_todas:
+    for tabla in configs.keys():
         config = configuracion_scrapers.config(tabla)
         if config["indice_placa"]:
             for placa in [i["Placa"] for i in placas]:

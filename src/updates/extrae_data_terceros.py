@@ -61,7 +61,7 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock, headless):
         dato = queue_data.get_nowait()
         logger.debug(f"Obtenido dato de cola: {dato['Categoria']}")
 
-        config = configuracion_scrapers.config(indice=dato["Categoria"])
+        config = configuracion_scrapers.config()[dato["Categoria"]]
     except Empty:
         return
 
