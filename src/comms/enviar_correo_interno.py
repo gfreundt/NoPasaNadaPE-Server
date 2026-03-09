@@ -25,8 +25,7 @@ def informe_diario(mensaje, titulo):
 
     # crear contenido del correo
     msg = {
-        "to_address": "gfreundt@gmail.com",
-        "bcc": "gabfre@gmail.com",
+        "to_address": "gfreundt@nopasanadape.com",
         "subject": "Informe Diario NoPasaNadaPE",
         "html_content": template.render(titulo=titulo, mensaje=mensaje),
     }
@@ -53,8 +52,7 @@ def prueba_scrapers(mensaje, titulo):
 
     # crear contenido del correo
     msg = {
-        "to_address": "gfreundt@gmail.com",
-        "bcc": "gabfre@gmail.com",
+        "to_address": "gfreundt@nopasanadape.com",
         "subject": "Resultado de Scrapers",
         "html_content": template.render(titulo=titulo, mensaje=mensaje),
     }
