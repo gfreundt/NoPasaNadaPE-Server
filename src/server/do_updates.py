@@ -37,6 +37,8 @@ def main(db, data):
             cmd = f"UPDATE {info_table} SET {last_update_field} = ? WHERE {info_id} = ?"
             val = (HOY, value_id)
 
+            print(cmd)
+            print(val)
             cursor.execute(cmd, val)
 
             # borrar registros de IdMember / PlacaValidate previos de tabla correspondiente

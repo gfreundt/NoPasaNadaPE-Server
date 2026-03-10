@@ -164,7 +164,8 @@ def main():
                 return jsonify(
                     "Prueba de Scrapers Completa. Resultados por Correo."
                 ), 200
-            except Exception as e:
+            except Exception:
+                logger.exception("Error al forzar Prueba Scrapers.")
                 return jsonify("No se lanzo prueba scrapers."), 500
 
         if solicitud == "trigger_alertas":
@@ -183,8 +184,7 @@ def main():
 
         # solicitud no reconocida
         logger.warning("Solicitud no reconocida.")
-        return jsonify({"Solicitud no reconocida."}), 400
+        return jsonify("Solicitud no reconocida."), 400
 
-    except KeyboardInterrupt:  # Exception as e:
-        print("xx")
+    except Exception as e:
         return jsonify({f"Error general: {e}"}), 400

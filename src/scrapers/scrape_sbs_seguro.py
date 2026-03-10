@@ -29,7 +29,7 @@ def browser(datos, webdriver):
     webdriver.execute_script("arguments[0].click();", btn_seguro)
     time.sleep(1)
     webdriver.execute_script("arguments[0].click();", btn_consultar)
-    time.sleep(3)
+    time.sleep(1)
 
     body = "/html/body/div[4]/div/div/div/form/div[3]/div/div[3]/div/div/div/div/table[2]/tbody"
     if not webdriver.find_elements(By.XPATH, f"{body}[1]/tr/td[1]"):
@@ -37,10 +37,15 @@ def browser(datos, webdriver):
 
     response = []
     for i in range(1, 10):
-        x = webdriver.find_element(By.XPATH, f"{body}[1]/tr/td[{i}]")
+        print("********", i)
+        x = webdriver.find_element(By.XPATH, f"{body}[1]/tr/td[{i}]") or ""
         response.append(x.text)
+        print("++++++++++", x.text)
 
-    return response
+    print("-------------------")
+    print(response)
+
+    return [response]
 
 
 def main():

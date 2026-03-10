@@ -110,6 +110,7 @@ def extrae_data_thread(db, queue_data, queue_respuesta, lock, headless):
                 key: item_formateado[pos] if pos is not None else ""
                 for key, pos in config["estructura_respuesta"].items()
             }
+            print(f"{parte_payload=}")
             payload.append(parte_payload)
             logger.debug(f"Agregado a Payload: {parte_payload}")
 

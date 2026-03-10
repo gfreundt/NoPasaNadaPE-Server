@@ -69,7 +69,7 @@ def gather(data):
     full_response = {"DataSunarpFichas": partial_response}
 
     with open(
-        os.path.join(NETWORK_PATH, "security", "update_manual_sunarp.json"),
+        os.path.join(NETWORK_PATH, "security", "resultados_manual_sunarp.json"),
         mode="w",
     ) as outfile:
         outfile.write(json.dumps(full_response))

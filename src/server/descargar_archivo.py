@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime as dt
 from flask import current_app, session, redirect, url_for, Response
 
 
@@ -25,7 +26,7 @@ def main(tipo, id):
         },
         "DataMtcRecordsConductores": {
             "id_field": "IdMember_FK",
-            "filename": f"Record Conductor {id}.pdf",
+            "filename": f"Record Conductor {dt.now().strftime('%d-%m-%Y')}.pdf",
         },
     }
 
