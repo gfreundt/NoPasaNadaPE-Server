@@ -23,8 +23,7 @@ def main(db, tipo_mensaje):
     logger.info(f"{titulo} Paso 1: Actualizar Datos")
     continuar = do_actualizar.main(db, tipo_mensaje)
     if not continuar:
-        logger.info(f"{titulo} Actualizar Datos: Fin del Proceso.")
-        return False
+        logger.info(f"{titulo} Actualizar Datos: No hubieron actualizaciones.")
 
     # generar mensajes
     logger.info(f"{titulo} Paso 2: Generar Mensajes")
@@ -33,8 +32,7 @@ def main(db, tipo_mensaje):
     elif tipo_mensaje == "boletines":
         continuar = generar_mensajes.boletines(db)
     if not continuar:
-        logger.warning(f"{titulo} Generar Mensajes: Fin del Proceso.")
-        return False
+        logger.warning(f"{titulo} Generar Mensajes: No se generaron mensajes.")
 
     # enviar mensajes
     logger.info(f"{titulo} Paso 3: Enviar Mensajes")
@@ -42,7 +40,7 @@ def main(db, tipo_mensaje):
     if not continuar:
         logger.warning(f"{titulo} Enviar Mensajes: Fin del Proceso.")
         return False
-
-    # fin normal del proceso (con todos los pasos cumplidos)
-    logger.info(f"{titulo} Fin Normal del Proceso.")
-    return True
+    else:
+        # fin normal del proceso (con todos los pasos cumplidos)
+        logger.info(f"{titulo} Fin Normal del Proceso.")
+        return True

@@ -19,10 +19,10 @@ def get_datos_alertas(db, premensaje):
     # crear sub-query para cada tabla
     cte1 = []
     for tabla in configs.keys():
-        if not tabla.get("genera_alerta"):
+        config = configs[tabla]
+        if not config.get("genera_alerta"):
             continue
 
-        config = configs[tabla]
         last_update = tabla.replace("Data", "LastUpdate")
 
         cmd = f"""  SELECT '{tabla}' as Categoria, 
