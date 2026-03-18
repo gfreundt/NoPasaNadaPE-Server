@@ -84,7 +84,7 @@ def get_datos_alertas(db, premensaje):
     return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
 
 
-def get_datos_boletines(db, premensaje):
+def get_datos_boletines(db, premensaje, ajuste=0):
     """
     Arma y ejecuta el SQL que extrae la base de datos todos los registros que necesitan boletines.
     Criteros (premensaje = True --> para actualizar):
@@ -94,6 +94,7 @@ def get_datos_boletines(db, premensaje):
         ademas no deben haber sido actualizados hoy mismo
     Criterios (premensaje = False --> para envio)
         solo todos los registros cuyo ultimo boletin fue enviado hace 30+ dias.
+    Ajuste se usa para estimar cantidad de boletines futuros (se mide en dias)
     Retorna un diccionario de formato para actualizador.
     """
 
@@ -103,6 +104,11 @@ def get_datos_boletines(db, premensaje):
 
         for tabla in configs.keys():
             config = configs[tabla]
+
+            # si tabla no esta activa, saltar tabla
+            if not config["activo"]:
+                continue
+
             last_update = tabla.replace("Data", "LastUpdate")
 
             cola = (
@@ -124,7 +130,7 @@ def get_datos_boletines(db, premensaje):
                         FROM InfoMiembros m
                         JOIN InfoPlacas p
                             ON p.IdMember_FK = m.IdMember
-                        WHERE DATE(m.NextMessageSend) <= DATE('now','localtime')
+                        WHERE DATE(m.NextMessageSend) <= DATE('now','localtime','+{ajuste} days')
                         AND {last_update} < DATE('now','localtime')
                         {cola}
                     """
@@ -151,10 +157,10 @@ def get_datos_boletines(db, premensaje):
         return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]
 
     else:
-        cmd = """
+        cmd = f"""
                 SELECT IdMember, DocTipo, DocNum, Correo
                     FROM InfoMiembros 
-                    WHERE DATE(NextMessageSend) <= DATE('now','localtime')
+                    WHERE DATE(NextMessageSend) <= DATE('now','localtime','+{ajuste} days')
                 """
         cursor = db.cursor()
         cursor.execute(cmd)
@@ -172,6 +178,11 @@ def get_datos_registro(data_registro):
     updates = []
     for tabla in configs.keys():
         config = configs[tabla]
+
+        # si tabla no esta activa, saltar tabla
+        if not config["activo"]:
+            continue
+
         if config["indice_placa"]:
             for placa in data_registro["placas"]:
                 updates.append(

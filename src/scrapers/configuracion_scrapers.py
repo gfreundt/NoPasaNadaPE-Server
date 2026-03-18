@@ -144,6 +144,7 @@ def config():
             "funcion_scraper": scrape_sunarp,
             "timeout": 90,
             "genera_alerta": False,
+            "campo_fecha_hasta": None,
         },
         "DataApesegSoats": {
             "activo": True,

@@ -1,4 +1,5 @@
 from src.comms import enviar_correo_interno
+from src.updates import datos_actualizar
 from datetime import datetime as dt, timedelta as td
 import shutil
 from pprint import pformat
@@ -22,10 +23,9 @@ def main(db):
         logger.info(f"{titulo} Inciando")
 
         # correr todas las partes del resumen diario y guardar resultados en una lista
-        cursor = db.cursor()
         resultado = []
-        resultado += mensajes_enviados_ayer(cursor)
-        resultado += sunarps_pendientes(cursor)
+        resultado += mensajes_enviados_ayer(db)
+        resultado += sunarps_pendientes(db)
         resultado += espacio_disco()
 
         logger.info(f"{titulo} {pformat(resultado)}")
@@ -46,7 +46,7 @@ def main(db):
         logger.exception(f"{titulo} Error.")
 
 
-def mensajes_enviados_ayer(cursor):
+def mensajes_enviados_ayer(db):
     """
     Reporte: mensajes enviados el dia anterior (tipo y destinatario).
     """
@@ -57,17 +57,24 @@ def mensajes_enviados_ayer(cursor):
           WHERE FechaEnvio >= date('now', 'localtime', '-1 day')
             AND FechaEnvio < date('now', 'localtime');
           """
+    cursor = db.cursor()
     cursor.execute(cmd)
 
-    # elaborar mensaje, ponerle el titulo con el contador de incidencias
+    # elaborar mensaje, ponerle el titulo con el contador de incidencias y proyeccion estimada de mensajes que seran enviados hoy
     mensajes = [
         f"{i['TipoMensaje']} - {i['DireccionCorreo']}" for i in cursor.fetchall()
     ]
     mensajes.insert(0, f"----- MENSAJES: {len(mensajes)} -----")
+    mensajes.append(
+        f"Estimados Hoy: {len(datos_actualizar.get_datos_boletines(db=db, premensaje=False, ajuste=0))}"
+    )
+    mensajes.append(
+        f"Estimados Mañana: {len(datos_actualizar.get_datos_boletines(db=db, premensaje=False, ajuste=1))}"
+    )
     return mensajes
 
 
-def sunarps_pendientes(cursor):
+def sunarps_pendientes(db):
     """
     Reporte: SUNARPS con ultima fecha de actualizacion hace mas de un año o nunca actualizados.
              Aviso para hacer scraping manual de datos.
@@ -78,6 +85,7 @@ def sunarps_pendientes(cursor):
           WHERE LastUpdateSunarpFichas < DATE('now', 'localtime', '-1 year')
              OR LastUpdateSunarpFichas IS NULL
           """
+    cursor = db.cursor()
     cursor.execute(cmd)
 
     # elaborar mensaje, ponerle el titulo con el contador de incidencias

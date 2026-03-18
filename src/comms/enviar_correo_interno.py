@@ -35,7 +35,7 @@ def informe_diario(mensaje, titulo):
     return email.send_zeptomail(msg)
 
 
-def prueba_scrapers(mensaje, titulo):
+def prueba_scrapers(mensaje):
 
     # load HTML templates
     environment = Environment(loader=FileSystemLoader("templates/"))
@@ -54,7 +54,11 @@ def prueba_scrapers(mensaje, titulo):
     msg = {
         "to_address": "gfreundt@nopasanadape.com",
         "subject": "Resultado de Scrapers",
-        "html_content": template.render(titulo=titulo, mensaje=mensaje),
+        "html_content": template.render(
+            titulos=mensaje["titulos"],
+            resumen=mensaje["resumen"],
+            resultados=mensaje["resultados"],
+        ),
     }
 
     # enviar

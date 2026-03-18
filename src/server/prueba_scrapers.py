@@ -13,6 +13,7 @@ def main():
     """
     Prueba todos los scrapers de forma secuencial.
     Usa data elegida al azar de una lista de data de prueba.
+    Arma y envia datos para correo informativo.
     """
 
     titulo_log = "[PRUEBA SCRAPERS]"
@@ -46,20 +47,25 @@ def main():
             logger.exception(f"{titulo_log} {data['Categoria']} fallo total.")
             negativo_total.append(data["Categoria"])
 
-    # armar texto con resultado y enviar por correo
-    resultado = []
-    resultado.append(
-        f"{titulo_log} Completa (Total: {len(pruebas)}). Exitos: {len(positivo)}. Fallos Simples: {len(negativo_simple)}. Fallos Totales: {len(negativo_total)}"
-    )
-    resultado.append(f"Scrapers Ok: {','.join(positivo) or 'Ninguno'}.")
-    resultado.append(
-        f"Scrapers Fallo Simple: {','.join(negativo_simple) or 'Ninguno'}."
-    )
-    resultado.append(f"Scrapers Fallo Total: {','.join(negativo_total) or 'Ninguno'}.")
-    titulo_correo = {
+    # armar texto con titulo, resumen y resultados y enviar por correo
+    titulos = {
         "titulo": "Resultado Prueba de Scrapers",
         "subtitulo": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
-    enviar_correo_interno.prueba_scrapers(titulo=titulo_correo, mensaje=resultado)
+    resumen = {
+        "total": len(pruebas),
+        "exitos": len(positivo),
+        "fallos_simples": len(negativo_simple),
+        "fallos_totales": len(negativo_total),
+    }
+    resultados = {
+        "ok": positivo,
+        "fallos_simples": negativo_simple,
+        "fallos_totales": negativo_total,
+    }
 
-    logger.info(f"{titulo_log} Correo Enviado. Proceso completo. {resultado}")
+    enviar_correo_interno.prueba_scrapers(
+        mensaje={"titulos": titulos, "resumen": resumen, "resultados": resultados}
+    )
+
+    logger.info(f"{titulo_log} Correo Enviado. Proceso completo. {resultados}")
