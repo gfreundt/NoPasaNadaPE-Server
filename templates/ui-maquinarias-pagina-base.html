@@ -2,11 +2,22 @@
 <html>
   
   <head>
+    <!-- Google Analytics -->
+    <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-P1Y4RDZW69"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-P1Y4RDZW69');
+  </script>
+
     <!-- Configuracion y Bootstrap -->
     <meta charset="utf-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='ui-cuenta-style.css') }}">
-    
+    <script src="{{ url_for('static', filename='js/cookies.js') }}"></script>
+
+    <!-- Bloque Titulo de Pagina -->
     {% block head %}
     <title>
         {% block title %}
@@ -14,15 +25,10 @@
     </title>
     {% endblock head %}
 
-    <style>
-      
-    </style>
-  
   </head>
   
   <body>
-
-    <!-- Estructura de cada pagina -->
+    <!-- Cuerpo de cada pagina -->
     <div class="container my-4">
       {% block content %}
       {% endblock content %}
@@ -34,8 +40,8 @@
       {% endblock %}
     </div>
 
+    <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
-    <!-- Bootstrap icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   
   </body>
