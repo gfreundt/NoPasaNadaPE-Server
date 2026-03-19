@@ -35,10 +35,10 @@ def get_datos_alertas(db, premensaje):
                 """
 
         cmd += (
-            f" DATE ({config['campo_fecha_hasta']}) IN ("
+            f" DATE ({config.get('campo_fecha_hasta')}) IN ("
             + ",\n ".join(
                 f"DATE('now','localtime', '{-int(n):+d} days')"
-                for n in config["alerta_dias"]
+                for n in config.get("alerta_dias")
             )
             + ")"
         )

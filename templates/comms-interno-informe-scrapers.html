@@ -19,8 +19,8 @@
                     
                     <tr>
                         <td style="background-color: {% if resumen.fallos_totales > 0 %}#d32f2f{% else %}#2e7d32{% endif %}; padding: 30px 40px; text-align: left;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700;">{{ titulos.titulo }}</h1>
-                            <p style="color: rgba(255,255,255,0.85); margin: 5px 0 0; font-size: 14px;">{{ titulos.subtitulo }}</p>
+                            <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 700;">{{ titulos.titulo }}</h1>
+                            <p style="color: #ffffff; margin: 5px 0 0; font-size: 18px;">{{ titulos.subtitulo }}</p>
                         </td>
                     </tr>
 
@@ -29,20 +29,20 @@
                             <table width="100%" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td class="stat-box" width="25%" align="center" style="padding: 20px 0; border-right: 1px solid #eeeeee;">
-                                        <div style="font-size: 11px; color: #6a737d; text-transform: uppercase; font-weight: 600;">Total</div>
-                                        <div style="font-size: 20px; font-weight: bold; color: #24292e; margin-top: 4px;">{{ resumen.total }}</div>
+                                        <div style="font-size: 14px; color: #6a737d; text-transform: uppercase; font-weight: 600;">Total</div>
+                                        <div style="font-size: 22px; font-weight: bold; color: #24292e; margin-top: 4px;">{{ resumen.total }}</div>
                                     </td>
                                     <td class="stat-box" width="25%" align="center" style="padding: 20px 0; border-right: 1px solid #eeeeee;">
-                                        <div style="font-size: 11px; color: #6a737d; text-transform: uppercase; font-weight: 600;">Éxitos</div>
-                                        <div style="font-size: 20px; font-weight: bold; color: #2e7d32; margin-top: 4px;">{{ resumen.exitos }}</div>
+                                        <div style="font-size: 14px; color: #6a737d; text-transform: uppercase; font-weight: 600;">Ok</div>
+                                        <div style="font-size: 22px; font-weight: bold; color: #2e7d32; margin-top: 4px;">{{ resumen.exitos }}</div>
                                     </td>
                                     <td class="stat-box" width="25%" align="center" style="padding: 20px 0; border-right: 1px solid #eeeeee;">
-                                        <div style="font-size: 11px; color: #6a737d; text-transform: uppercase; font-weight: 600;">S. Fail</div>
-                                        <div style="font-size: 20px; font-weight: bold; color: #f57c00; margin-top: 4px;">{{ resumen.fallos_simples }}</div>
+                                        <div style="font-size: 14px; color: #6a737d; text-transform: uppercase; font-weight: 600;">Fallo Simple</div>
+                                        <div style="font-size: 22px; font-weight: bold; color: #f57c00; margin-top: 4px;">{{ resumen.fallos_simples }}</div>
                                     </td>
                                     <td class="stat-box" width="25%" align="center" style="padding: 20px 0;">
-                                        <div style="font-size: 11px; color: #6a737d; text-transform: uppercase; font-weight: 600;">T. Fail</div>
-                                        <div style="font-size: 20px; font-weight: bold; color: #d32f2f; margin-top: 4px;">{{ resumen.fallos_totales }}</div>
+                                        <div style="font-size: 14px; color: #6a737d; text-transform: uppercase; font-weight: 600;">Fallo Total</div>
+                                        <div style="font-size: 22px; font-weight: bold; color: #d32f2f; margin-top: 4px;">{{ resumen.fallos_totales }}</div>
                                     </td>
                                 </tr>
                             </table>
@@ -52,24 +52,24 @@
                     <tr>
                         <td style="padding: 30px 40px;">
                             
-                            <h3 style="font-size: 14px; color: #24292e; margin: 0 0 10px;">Scrapers Ok</h3>
+                            <h3 style="font-size: 18px; color: #24292e; margin: 0 0 10px;">Scrapers Ok</h3>
                             <div style="margin-bottom: 25px; padding: 12px; background-color: #f6fcf7; border-left: 4px solid #2e7d32; border-radius: 4px;">
-                                <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #2e7d32;">
-                                    {% if resultados.ok %}{{ resultados.ok | join(', ') }}{% else %}Ninguno{% endif %}
+                                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #2e7d32;">
+                                    {% if resultados.ok %}{{ resultados.ok | join(', ') }}{% else %}---{% endif %}
                                 </p>
                             </div>
 
-                            <h3 style="font-size: 14px; color: #24292e; margin: 0 0 10px;">Fallos Simples</h3>
+                            <h3 style="font-size: 18px; color: #24292e; margin: 0 0 10px;">Fallos Simples</h3>
                             <div style="margin-bottom: 25px; padding: 12px; background-color: #fffaf3; border-left: 4px solid #ffa000; border-radius: 4px;">
-                                <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #b56b00;">
-                                    {% if resultados.fallos_simples %}{{ resultados.fallos_simples | join(', ') }}{% else %}Ninguno{% endif %}
+                                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #b56b00;">
+                                    {% if resultados.fallos_simples %}{{ resultados.fallos_simples | join(', ') }}{% else %}---{% endif %}
                                 </p>
                             </div>
 
-                            <h3 style="font-size: 14px; color: #24292e; margin: 0 0 10px;">Fallos Totales</h3>
+                            <h3 style="font-size: 18px; color: #24292e; margin: 0 0 10px;">Fallos Totales</h3>
                             <div style="padding: 12px; background-color: #fff5f5; border-left: 4px solid #d32f2f; border-radius: 4px;">
-                                <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #d32f2f; font-weight: {% if resultados.fallos_totales %}bold{% else %}normal{% endif %};">
-                                    {% if resultados.fallos_totales %}{{ resultados.fallos_totales | join(', ') }}{% else %}Ninguno{% endif %}
+                                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #d32f2f; font-weight: {% if resultados.fallos_totales %}bold{% else %}normal{% endif %};">
+                                    {% if resultados.fallos_totales %}{{ resultados.fallos_totales | join(', ') }}{% else %}---{% endif %}
                                 </p>
                             </div>
 
@@ -78,7 +78,7 @@
 
                     <tr>
                         <td style="padding: 20px; background-color: #fafbfc; text-align: center; border-top: 1px solid #eeeeee;">
-                            <p style="margin: 0; font-size: 12px; color: #6a737d;">Este es un mensaje automático generado por el sistema de monitoreo.</p>
+                            <p style="margin: 0; font-size: 12px; color: #6a737d;">| mensaje automático generado por el sistema de monitoreo |</p>
                         </td>
                     </tr>
                 </table>

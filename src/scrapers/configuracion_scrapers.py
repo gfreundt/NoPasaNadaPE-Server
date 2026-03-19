@@ -117,7 +117,7 @@ def config():
             },
             "campo_fecha_hasta": "FechaHasta",
             "alerta_dias": [-25, -15, -5, 0, 1, 2, 3],
-            "genera_alerta": False,
+            "genera_alerta": True,
         },
         "DataSutranMultas": {
             "activo": True,
@@ -228,6 +228,7 @@ def config():
                 "Comentario": 8,
             },
             "campo_fecha_hasta": "",
+            "alerta_dias": [-10, -5, -1, 0, 1, 2, 3],
             "genera_alerta": True,
         },
     }

@@ -275,6 +275,7 @@ def generar_data_servicios(cursor, correo):
     )
 
     for satmul in cursor.fetchall():
+        dias_desde = (dt.now() - dt.strptime(satmul["LastUpdate"], "%Y-%m-%d")).days
         existentes.append(
             {
                 "titulo": "SAT Lima",
@@ -287,9 +288,7 @@ def generar_data_servicios(cursor, correo):
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(satmul["LastUpdate"]),
-                    "dias_desde": f"{
-                        (dt.now() - dt.strptime(satmul['LastUpdate'], '%Y-%m-%d')).days
-                    } días",
+                    "dias_desde": f"{dias_desde + ' días' if dias_desde > 0 else 'hoy'}",
                 },
                 "boton_detalle": True,
             }
@@ -311,6 +310,7 @@ def generar_data_servicios(cursor, correo):
     )
 
     for sutran in cursor.fetchall():
+        dias_desde = (dt.now() - dt.strptime(sutran["LastUpdate"], "%Y-%m-%d")).days
         existentes.append(
             {
                 "titulo": "SUTRAN",
@@ -323,9 +323,7 @@ def generar_data_servicios(cursor, correo):
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(sutran["LastUpdate"]),
-                    "dias_desde": f"{
-                        (dt.now() - dt.strptime(sutran['LastUpdate'], '%Y-%m-%d')).days
-                    } días",
+                    "dias_desde": f"{dias_desde + ' días' if dias_desde > 0 else 'hoy'}",
                 },
                 "boton_detalle": True,
             }
@@ -347,6 +345,7 @@ def generar_data_servicios(cursor, correo):
     )
 
     for calmul in cursor.fetchall():
+        dias_desde = (dt.now() - dt.strptime(calmul["LastUpdate"], "%Y-%m-%d")).days
         existentes.append(
             {
                 "titulo": "Municipalidad del Callao",
@@ -359,9 +358,7 @@ def generar_data_servicios(cursor, correo):
                 },
                 "ultima_actualizacion": {
                     "fecha": date_to_user_format(calmul["LastUpdate"]),
-                    "dias_desde": f"{
-                        (dt.now() - dt.strptime(calmul['LastUpdate'], '%Y-%m-%d')).days
-                    } días",
+                    "dias_desde": f"{dias_desde + ' días' if dias_desde > 0 else 'hoy'}",
                 },
                 "boton_detalle": True,
             }
