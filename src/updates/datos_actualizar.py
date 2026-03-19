@@ -78,7 +78,7 @@ def get_datos_alertas(db, premensaje):
                  """
 
     # extrae informacion de base de datos
-    logger.debug(query)
+    logger.info(query)
     cursor = db.cursor()
     cursor.execute(query)
     return [{i: j for i, j in dict(k).items()} for k in cursor.fetchall()]

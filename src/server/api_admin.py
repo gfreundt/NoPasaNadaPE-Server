@@ -8,6 +8,7 @@ from security.keys import INTERNAL_AUTH_TOKEN
 from src.utils.utils import hash_text, NETWORK_PATH
 from src.server import do_updates, prueba_scrapers
 from src.updates import extrae_data_terceros, datos_actualizar, do_actualizar
+from src.comms import do_mensajes
 
 
 logger = logging.getLogger(__name__)
@@ -168,16 +169,16 @@ def main():
                 logger.exception("Error al forzar Prueba Scrapers.")
                 return jsonify("No se lanzo prueba scrapers."), 500
 
-        if solicitud == "trigger_alertas":
+        if solicitud == "gatillar_alertas":
             try:
-                do_actualizar.main(db, "alertas")
+                do_mensajes.main(db, "alertas")
                 return jsonify("Proceso de Alertas Gatillado"), 200
             except Exception as e:
                 return jsonify(f"No se lanzo alertas: {e}"), 500
 
-        if solicitud == "trigger_boletines":
+        if solicitud == "gatillar_boletines":
             try:
-                do_actualizar.main(db, "boletines")
+                do_mensajes.main(db, "boletines")
                 return jsonify("Proceso de Boletines Gatillado."), 200
             except Exception as e:
                 return jsonify(f"No se lanzo boletines: {e}"), 500

@@ -79,6 +79,7 @@ def crea_flask_app():
     configuraciones.configurar_flask(app)
     configuraciones.definir_rutas(app)
     configuraciones.configurar_oauth(app)
+    configuraciones.parametros_scrapers(app)
     return app
 
 
