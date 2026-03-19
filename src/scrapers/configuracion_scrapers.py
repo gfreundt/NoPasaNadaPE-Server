@@ -227,7 +227,7 @@ def config():
                 "FechaHasta": 7,
                 "Comentario": 8,
             },
-            "campo_fecha_hasta": "",
+            "campo_fecha_hasta": "FechaHasta",
             "alerta_dias": [-10, -5, -1, 0, 1, 2, 3],
             "genera_alerta": True,
         },
